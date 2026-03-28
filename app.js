@@ -363,6 +363,26 @@
     setTimeout(()=>{
       document.querySelectorAll('.remote-flash').forEach(e => e.classList.remove('remote-flash'));
     }, 3000);
+    playSyncChime();
+  }
+
+  function playSyncChime(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.9);
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.9);
+      osc.connect(gain);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.9);
+      osc.onended = () => ctx.close();
+    } catch(e){}
   }
 
   document.addEventListener("DOMContentLoaded", ()=>{
@@ -1423,6 +1443,16 @@ function _doExportToExcel(){
 }
 
 const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
+
+// Zorg dat alle DEFAULT_USERS altijd in de opgeslagen lijst staan
+(function seedDefaultUsers(){
+  try {
+    const d = load();
+    const current = d._users && d._users.length ? d._users : [];
+    const missing = DEFAULT_USERS.filter(u => !current.map(x=>x.toLowerCase()).includes(u.toLowerCase()));
+    if(missing.length > 0) saveUsers([...current, ...missing]);
+  } catch(e){}
+})();
 
 window.rebuildNameDropdown = rebuildNameDropdown;
 
@@ -2488,3 +2518,25 @@ function resizeTextarea(el){
 document.addEventListener('input', e=>{
   if(e.target.tagName === 'TEXTAREA') resizeTextarea(e.target);
 });
+
+// ── Swipe to go back (left-edge swipe → back button) ─────────────
+(function(){
+  let startX = 0, startY = 0, tracking = false;
+  document.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = startX < 30;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if(!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    if(dx > 80 && dy < 60){
+      const activePage = document.querySelector('.page.active');
+      const backBtn = activePage && activePage.querySelector('.back-btn');
+      if(backBtn) backBtn.click();
+    }
+  }, { passive: true });
+})();
