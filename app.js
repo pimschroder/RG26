@@ -569,6 +569,7 @@ function updateLastUpdateLabel(){
   if(el) el.textContent=d._lastUpdate?"Laatste update: "+fmtTime(d._lastUpdate):"Geen wijzigingen";
 }
 
+let _handlingPop = false;
 function goTo(id){
   const d = load();
   if(id !== 'page-login' && !d.loggedIn){
@@ -578,6 +579,9 @@ function goTo(id){
   const el = document.getElementById(id);
   if(el) el.classList.add("active");
   window.scrollTo(0,0);
+  if(!_handlingPop){
+    history.pushState({ page: id }, '', location.pathname + location.search);
+  }
   refreshAll();
   // Auto-init pages that need it
   if(id === 'page-overdracht'){ buildOverdracht(); setOdLastRead(); }
@@ -933,6 +937,7 @@ function camCollapse(cid, camNum){
 function camToggle(sk, camNum, row, j, cid, boxEl){
   boxEl.classList.toggle("on");
   const isDone=boxEl.classList.contains("on");
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   document.getElementById(`${cid}-row-${camNum}-${j}`).classList.toggle("row-done",isDone);
   const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
@@ -1046,6 +1051,7 @@ function posToggle(sk, pos, j, cid, rowEl){
   const boxEl = rowEl.querySelector(".pos-check-box");
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   rowEl.classList.toggle("row-done", isDone);
   const chk = POS_CHECKS[j];
@@ -1144,6 +1150,7 @@ function buildSimpleList(containerId, storageKey, items){
 function simpleToggle(sk, i, cid, boxEl){
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   const rowEl = document.getElementById(`${cid}-srow-${i}`);
   if(rowEl) rowEl.classList.toggle("row-done", isDone);
@@ -2520,6 +2527,15 @@ function resizeTextarea(el){
 }
 document.addEventListener('input', e=>{
   if(e.target.tagName === 'TEXTAREA') resizeTextarea(e.target);
+});
+
+// ── Android hardware back button via History API ─────────────────
+window.addEventListener('popstate', e => {
+  const page = e.state?.page;
+  if(!page) return;
+  _handlingPop = true;
+  goTo(page);
+  _handlingPop = false;
 });
 
 // ── Swipe to go back (left-edge swipe → back button) ─────────────

@@ -129,3 +129,12 @@
   animation:remoteFlash 2.5s ease-out forwards;
   border-radius:6px;
 }
+
+/* ── Check pop animation ─────────────────────────────────────── */
+@keyframes checkPop{
+  0%   { transform:scale(1); }
+  35%  { transform:scale(1.35); }
+  65%  { transform:scale(0.88); }
+  100% { transform:scale(1); }
+}
+.check-pop{ animation:checkPop .28s cubic-bezier(.36,.07,.19,.97); }
