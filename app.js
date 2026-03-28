@@ -256,6 +256,8 @@
       .then(({data: row, error})=>{
         if(error){ setSyncStatus("error"); showToast("Kon data niet ophalen van server."); return; }
         if(row?.data) applyRemote(row.data);
+        // Seed default users AFTER first remote sync so we don't get overwritten
+        seedDefaultUsers();
         // Als er ongesyncte lokale wijzigingen zijn, push de gemerge data terug
         if(localStorage.getItem('rg_pending_sync')){
           const current = window._localLoad ? window._localLoad() : {};
@@ -1444,15 +1446,16 @@ function _doExportToExcel(){
 
 const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
 
-// Zorg dat alle DEFAULT_USERS altijd in de opgeslagen lijst staan
-(function seedDefaultUsers(){
+// Zorg dat alle DEFAULT_USERS altijd in de opgeslagen lijst staan.
+// Wordt aangeroepen ná de eerste Supabase-sync zodat remote niet wint.
+function seedDefaultUsers(){
   try {
     const d = load();
     const current = d._users && d._users.length ? d._users : [];
     const missing = DEFAULT_USERS.filter(u => !current.map(x=>x.toLowerCase()).includes(u.toLowerCase()));
     if(missing.length > 0) saveUsers([...current, ...missing]);
   } catch(e){}
-})();
+}
 
 window.rebuildNameDropdown = rebuildNameDropdown;
 
