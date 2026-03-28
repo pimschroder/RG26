@@ -1094,9 +1094,9 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
   if(selEl){ selEl.value=newStatus; selEl.className="cam-status-sel"+(isDone?" s-ok":""); }
 
   const cd=d[sk][`cam${camNum}`]||{};
-  const totalRows = camNum === 7 || (camNum === 11 && sk === 'pc') ? 1 : (((camNum >= 12 && camNum <= 15 && sk === 'pc') || (camNum === 10 && sk === 'pc') || (camNum === 18 && sk === 'pc')) ? 3 : ((camNum === 16 || camNum === 17) && sk === 'pc') ? 2 : CAM_ROWS.length);
-  const n=Object.keys(cd).filter(r=>cd[r]?.checked).length;
-  const pEl=document.getElementById(`${cid}-pct-${camNum}`); if(pEl) pEl.textContent=n+"/"+totalRows;
+  const _rows=getRows(sk,camNum);
+  const n=_rows.filter(r=>cd[r]?.checked).length;
+  const pEl=document.getElementById(`${cid}-pct-${camNum}`); if(pEl) pEl.textContent=n+"/"+_rows.length;
 
   const pillEl=document.getElementById(`${cid}-pills-${camNum}`); if(pillEl) pillEl.innerHTML=pillHtml(sk,camNum);
 
@@ -1117,9 +1117,9 @@ function camStatus(sk, camNum, row, j, cid, sel){
   else          { d[sk][`cam${camNum}`][row].checked=false; if(boxEl) boxEl.classList.remove("on"); if(rowEl) rowEl.classList.remove("row-done"); }
   save(d, sk);
   const cd=d[sk][`cam${camNum}`]||{};
-  const totalRows = camNum === 7 || (camNum === 11 && sk === 'pc') ? 1 : (((camNum >= 12 && camNum <= 15 && sk === 'pc') || (camNum === 10 && sk === 'pc') || (camNum === 18 && sk === 'pc')) ? 3 : ((camNum === 16 || camNum === 17) && sk === 'pc') ? 2 : CAM_ROWS.length);
-  const n=Object.keys(cd).filter(r=>cd[r]?.checked).length;
-  const pEl=document.getElementById(`${cid}-pct-${camNum}`); if(pEl) pEl.textContent=n+"/"+totalRows;
+  const _rows2=getRows(sk,camNum);
+  const n=_rows2.filter(r=>cd[r]?.checked).length;
+  const pEl=document.getElementById(`${cid}-pct-${camNum}`); if(pEl) pEl.textContent=n+"/"+_rows2.length;
   const pillEl=document.getElementById(`${cid}-pills-${camNum}`); if(pillEl) pillEl.innerHTML=pillHtml(sk,camNum);
   checkCamComplete(sk, camNum, cid, d);
   refreshAll();
