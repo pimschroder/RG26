@@ -109,7 +109,8 @@
   .cam-row-label{grid-column:2;grid-row:1;padding:6px 10px;}
   .cam-status-sel{grid-column:3;grid-row:1;}
   .cam-note-input{grid-column:2/4;grid-row:2;margin:1px 0 5px;font-size:12px;height:auto;}
-  .cam-note-input:placeholder-shown{height:24px;}
+  .cam-note-input:placeholder-shown{height:0;padding:0;margin:0;border-color:transparent;pointer-events:none;opacity:0;transition:none;}
+  .cam-row:hover .cam-note-input:placeholder-shown,.cam-note-input:focus{height:auto;padding:6px 9px;margin:1px 0 5px;border-color:rgba(193,68,14,.15);pointer-events:auto;opacity:1;}
   .cam-block{margin-bottom:5px;}
 }
 .od-badge-wrap{ position:relative; }
