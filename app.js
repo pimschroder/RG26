@@ -373,9 +373,21 @@
     playSyncChime();
   }
 
-  function playCheckTick(){
+  // Gedeelde AudioContext — één instantie, nooit sluiten.
+  // iOS Safari staat max ~12 contexts toe; elke new AudioContext() per geluidje loopt die vol.
+  let _audioCtx = null;
+  function _getAudioCtx(){
     try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if(!_audioCtx || _audioCtx.state === 'closed')
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(_audioCtx.state === 'suspended') _audioCtx.resume();
+      return _audioCtx;
+    } catch(e){ return null; }
+  }
+
+  function playCheckTick(){
+    const ctx = _getAudioCtx(); if(!ctx) return;
+    try{
       const gain = ctx.createGain();
       gain.connect(ctx.destination);
       gain.gain.setValueAtTime(0.07, ctx.currentTime);
@@ -386,14 +398,13 @@
       osc.connect(gain);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.08);
-      osc.onended = () => ctx.close();
     } catch(e){}
   }
   window.playCheckTick = playCheckTick;
 
   function playSyncChime(){
+    const ctx = _getAudioCtx(); if(!ctx) return;
     try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const gain = ctx.createGain();
       gain.connect(ctx.destination);
       gain.gain.setValueAtTime(0, ctx.currentTime);
@@ -406,7 +417,6 @@
       osc.connect(gain);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.9);
-      osc.onended = () => ctx.close();
     } catch(e){}
   }
 
@@ -607,7 +617,7 @@ function goTo(id){
   const el = document.getElementById(id);
   if(el) el.classList.add("active");
   window.scrollTo(0,0);
-  if(!_handlingPop){
+  if(!_handlingPop && history.state?.page !== id){
     history.pushState({ page: id }, '', location.pathname + location.search);
   }
   refreshAll();
@@ -752,12 +762,31 @@ window.rebuildPage = function rebuildPage(id){
   }
 };
 
+function showOfflineBanner(){
+  if(document.getElementById('offline-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'offline-banner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#C1440E;color:#fff;text-align:center;padding:10px 16px;font-size:13px;z-index:10000;';
+  b.textContent = 'Geen internetverbinding — de app werkt offline maar synchroniseert niet.';
+  document.body.appendChild(b);
+}
+window.addEventListener('online',  ()=>{ document.getElementById('offline-banner')?.remove(); });
+window.addEventListener('offline', ()=>showOfflineBanner());
+
 function initApp(){
   // Apply saved theme immediately before anything renders
   const savedTheme = localStorage.getItem('rg_theme');
   if(savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
   const darkBtn = document.querySelector('.dark-toggle');
   if(darkBtn) darkBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+  // User label
+  const saved = getCurrentUser();
+  const userLbl = document.getElementById('logged-in-user');
+  if(userLbl && saved) userLbl.textContent = '👤 ' + saved;
+  updateLastUpdateLabel();
+
+  if(!navigator.onLine) showOfflineBanner();
 
   buildAllLists();
   var d = load();
@@ -2008,73 +2037,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-(function init(){
-
-  // Offline-banner bij opstarten
-  if(!navigator.onLine){
-    let banner = document.getElementById("offline-banner");
-    if(!banner){
-      banner = document.createElement("div");
-      banner.id = "offline-banner";
-      banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#C1440E;color:#fff;text-align:center;padding:10px 16px;font-size:13px;z-index:10000;";
-      banner.textContent = "Geen internetverbinding — de app werkt offline maar synchroniseert niet.";
-      document.body.appendChild(banner);
-    }
-  }
-  window.addEventListener("online",  ()=>{ document.getElementById("offline-banner")?.remove(); });
-  window.addEventListener("offline", ()=>{
-    if(!document.getElementById("offline-banner")){
-      const b = document.createElement("div");
-      b.id = "offline-banner";
-      b.style.cssText = "position:fixed;top:0;left:0;right:0;background:#C1440E;color:#fff;text-align:center;padding:10px 16px;font-size:13px;z-index:10000;";
-      b.textContent = "Geen internetverbinding — de app werkt offline maar synchroniseert niet.";
-      document.body.appendChild(b);
-    }
-  });
-
-  const savedTheme = localStorage.getItem("rg_theme")||"light";
-  document.documentElement.setAttribute("data-theme", savedTheme);
-  const dtBtn = document.querySelector(".dark-toggle");
-  if(dtBtn) dtBtn.textContent = savedTheme==="dark" ? "☀️" : "🌙";
-
-  const remembered = getCurrentUser();
-  const nameInp = document.getElementById("login-name");
-  if(nameInp && remembered){
-
-    Array.from(nameInp.options).forEach(o=>{ if(o.value===remembered) o.selected=true; });
-  }
-
-  const saved = getCurrentUser();
-  const userLbl = document.getElementById("logged-in-user");
-  if(userLbl && saved) userLbl.textContent = "👤 " + saved;
-  updateLastUpdateLabel();
-
-  try{
-
-    if(window.initSupabase) setTimeout(()=>window.initSupabase(), 600);
-  }catch(e){}
-  buildGallery();
-  buildSimpleList("list-gal-CCSR","gal_CCSR",CCSR_ITEMS);
-
-  rebuildNameDropdown();
-
-  const remembered2 = getCurrentUser();
-  if(remembered2){
-    const sel = document.getElementById("login-name");
-    if(sel) Array.from(sel.options).forEach(o=>{ if(o.value===remembered2) o.selected=true; });
-  }
-  buildCamPage("list-c14","c14",C14_CAMS);
-  buildCamPage("list-pc","pc",PC_CAMS);
-  buildCamPage("list-sl","sl",SL_CAMS);
-  buildCamPage("list-sm","sm",SM_CAMS);
-  buildPosList("list-comm-pc5th","comm_pc5th",PC5TH_POSITIONS);
-  buildPosList("list-comm-sl","comm_sl",COMMSL_POSITIONS);
-  buildPosList("list-comm-sm","comm_sm",COMMSM_POSITIONS);
-  buildPosList("list-comm-pc4th","comm_pc4th",PC4TH_POSITIONS);
-  restoreChecks("courts");
-  restoreChecks("comm");
-  refreshAll();
-})();
 
 
 function openLightbox(img){
