@@ -820,21 +820,16 @@ setInterval(()=>{
   }
 }, 60 * 60 * 1000);
 
-function toggle(el, section){
-  el.classList.toggle("done");
-  const d = load();
-  if(!d.checks) d.checks={};
-  const items = document.querySelectorAll(`#list-${section} .check-item`);
-  items.forEach((item,i)=>{ d.checks[`${section}_${i}`] = item.classList.contains("done"); });
-  save(d); refreshAll();
-}
-
-function restoreChecks(section){
-  const d = load();
-  if(!d.checks) return;
-  const items = document.querySelectorAll(`#list-${section} .check-item`);
-  items.forEach((item,i)=>{ if(d.checks[`${section}_${i}`]) item.classList.add("done"); });
-}
+// Legacy toggle()/restoreChecks() verwijderd — vervangen door camToggle/simpleToggle/posToggle.
+// Eenmalige migratie: verwijder verouderd d.checks object uit localStorage.
+(function cleanLegacyChecks(){
+  try{
+    const raw = localStorage.getItem(SK);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    if(d.checks){ delete d.checks; localStorage.setItem(SK, JSON.stringify(d)); _dataCache = d; }
+  }catch(e){}
+})();
 
 function buildGallery(){
   const d = load();
