@@ -1079,6 +1079,9 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
   else { d[sk][`cam${camNum}`][row].ts=null; d[sk][`cam${camNum}`][row].user=null; }
   save(d, sk);
 
+  const metaEl = document.querySelector(`#${cid}-row-${camNum}-${j} .row-meta`);
+  if(metaEl) metaEl.textContent = isDone ? (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now()) : "";
+
   const selEl = document.querySelector(`#${cid}-row-${camNum}-${j} .cam-status-sel`);
   if(selEl){ selEl.value=newStatus; selEl.className="cam-status-sel"+(isDone?" s-ok":""); }
 
@@ -1192,6 +1195,9 @@ function posToggle(sk, pos, j, cid, rowEl){
   if(isDone){ d[sk][pos][chk+"_ts"]=Date.now(); d[sk][pos][chk+"_user"]=getCurrentUser(); }
   else { d[sk][pos][chk+"_ts"]=null; d[sk][pos][chk+"_user"]=null; }
   save(d, sk);
+
+  const posMetaEl = rowEl.querySelector('.row-meta');
+  if(posMetaEl) posMetaEl.textContent = isDone ? (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now()) : "";
   const pd = d[sk][pos] || {};
   const doneN = POS_CHECKS.filter(c => pd[c]).length;
   const pEl = document.getElementById(`${cid}-pospct-${pos}`);
