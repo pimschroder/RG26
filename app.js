@@ -607,7 +607,55 @@ function updateLastUpdateLabel(){
   if(el) el.textContent=d._lastUpdate?"Laatste update: "+fmtTime(d._lastUpdate):"Geen wijzigingen";
 }
 
+// ── Screen Wake Lock — scherm blijft aan tijdens gebruik ─────────
+let _wakeLock = null;
+async function acquireWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', ()=>{ _wakeLock = null; });
+  } catch(e){}
+}
+function releaseWakeLock(){
+  if(_wakeLock){ _wakeLock.release(); _wakeLock = null; }
+}
+// Heractiveer na tab-switch (spec vereist dit)
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && load().loggedIn) acquireWakeLock();
+});
+
 let _handlingPop = false;
+const FILTER_PAGES = new Set([
+  'page-pc','page-sl','page-sm','page-c14',
+  'page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14',
+  'page-comm-pc4th','page-comm-pc5th','page-comm-sl','page-comm-sm',
+  'page-galleries','page-courts',
+]);
+
+function _updateFilterBtn(pageId){
+  let btn = document.getElementById('filter-btn');
+  if(FILTER_PAGES.has(pageId) || (pageId && pageId.startsWith('page-gal-'))){
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'filter-btn';
+      btn.textContent = 'Open';
+      btn.onclick = () => {
+        const active = document.querySelector('.page.active');
+        if(!active) return;
+        active.classList.toggle('show-open-only');
+        btn.classList.toggle('active', active.classList.contains('show-open-only'));
+      };
+      // Inject after back-btn inside the active sub-header
+      const subHeader = document.querySelector('.page.active .sub-header-inner');
+      if(subHeader) subHeader.appendChild(btn);
+    }
+    btn.classList.remove('active');
+    document.querySelector('.page.active')?.classList.remove('show-open-only');
+  } else {
+    if(btn) btn.remove();
+  }
+}
+
 function goTo(id){
   const d = load();
   if(id !== 'page-login' && !d.loggedIn){
@@ -622,6 +670,7 @@ function goTo(id){
   }
   refreshAll();
   rebuildPage(id);
+  _updateFilterBtn(id);
   if(id === 'page-overdracht') setOdLastRead();
   // Resize textareas met bestaande inhoud na pagina-wissel
   requestAnimationFrame(()=>{ document.querySelectorAll('textarea').forEach(resizeTextarea); });
@@ -668,6 +717,7 @@ async function doLogin(){
     if(name) setCurrentUser(name);
     const d = load(); d.loggedIn = true; d.loginTs = Date.now(); save(d);
     if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    acquireWakeLock();
     goTo('page-home');
     setTimeout(initPresence, 800);
   } else {
@@ -680,6 +730,7 @@ async function doLogin(){
 }
 
 function logout(){
+  releaseWakeLock();
   try {
     const d = load();
     delete d.loggedIn;

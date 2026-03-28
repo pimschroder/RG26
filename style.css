@@ -141,3 +141,13 @@
 
 /* ── Overdracht word counter ─────────────────────────────────── */
 .od-wc{font-size:10px;color:#aaa;letter-spacing:.05em;text-align:right;margin-top:-6px;margin-bottom:8px;font-family:"DM Mono",monospace;}
+
+/* ── Touch targets 44px (werkhandschoenen) ───────────────────── */
+.cam-check-box,.simple-check,.pos-check-box{position:relative;}
+.cam-check-box::after,.simple-check::after,.pos-check-box::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:44px;min-height:44px;}
+
+/* ── "Toon alleen onvoltooid" filter ─────────────────────────── */
+.show-open-only .row-done{display:none !important;}
+#filter-btn{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:6px;border:none;cursor:pointer;touch-action:manipulation;transition:all .2s;background:rgba(193,68,14,.1);color:var(--clay-dark);}
+#filter-btn.active{background:var(--green);color:#fff;}
+#filter-btn:active{transform:scale(.95);}
