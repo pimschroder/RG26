@@ -109,33 +109,6 @@
   .cam-status-sel{grid-column:3;grid-row:1;}
   .cam-note-input{grid-column:2/4;grid-row:2;margin:2px 0 8px;font-size:13px;height:auto;}
   .cam-note-input:placeholder-shown{height:32px;}
-
-  /* Audio pagina: audioplan links sticky, lijsten rechts */
-  [id^="page-audio"] main{
-    display:grid;
-    grid-template-columns:55% 1fr;
-    gap:20px;
-    align-items:start;
-    padding:16px 0;
-  }
-  [id^="page-audio"] main > .section:nth-child(1){
-    grid-column:1;
-    grid-row:1/4;
-    position:sticky;
-    top:16px;
-  }
-  [id^="page-audio"] main > .section:nth-child(2){
-    grid-column:2;
-    grid-row:1;
-  }
-  [id^="page-audio"] main > .section:nth-child(3){
-    grid-column:2;
-    grid-row:2;
-  }
-  [id^="page-audio"] main > .completion-msg{
-    grid-column:1/3;
-  }
-  .audioplan-hint{ display:none; }
 }
 .od-badge-wrap{ position:relative; }
 .od-badge{
