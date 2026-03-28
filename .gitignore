@@ -1,0 +1,5 @@
+.DS_Store
+.claude/
+.vscode/
+*.code-workspace
+Main.html
