@@ -263,6 +263,11 @@
     if(!supaClient) return;
 
     // ── Broadcast channel (instant peer-to-peer) ──────────────
+    // Postgres_changes channel verwijderd: stuurde bij elke DB-write de
+    // volledige ~80KB rij naar alle clients. In plaats daarvan doen we
+    // een gerichte DB-pull alleen wanneer de broadcast-channel opnieuw
+    // verbinding maakt na een onderbreking.
+    let _wasDisconnected = false;
     broadcastChannel = supaClient.channel("rg-live-updates");
     broadcastChannel
       .on("broadcast", { event: "state_update" }, ({ payload })=>{
@@ -271,21 +276,21 @@
         applyRemote(payload.data);
       })
       .subscribe(status=>{
-        if(status === "SUBSCRIBED") setSyncStatus("synced");
-        if(status === "CLOSED" || status === "CHANNEL_ERROR") setSyncStatus("offline");
+        if(status === "SUBSCRIBED"){
+          setSyncStatus("synced");
+          if(_wasDisconnected){
+            // Reconnect na onderbreking: pull meest recente DB-state om
+            // gemiste broadcast-berichten te compenseren
+            _wasDisconnected = false;
+            supaClient.from("checklist_state").select("data").eq("id",1).single()
+              .then(({data: row})=>{ if(row?.data && !suppressRemote) applyRemote(row.data); });
+          }
+        }
+        if(status === "CLOSED" || status === "CHANNEL_ERROR"){
+          setSyncStatus("offline");
+          _wasDisconnected = true;
+        }
       });
-
-    // ── DB channel (catch up on reconnect / missed messages) ──
-    supaClient
-      .channel("rg-db-sync")
-      .on("postgres_changes",{ event:"UPDATE", schema:"public", table:"checklist_state" },
-        payload=>{
-          if(suppressRemote) return;
-          const remoteData = payload.new?.data;
-          if(!remoteData) return;
-          applyRemote(remoteData);
-        })
-      .subscribe();
 
     // ── Pull latest state on first connect ────────────────────
     supaClient.from("checklist_state")
