@@ -671,6 +671,7 @@ function goTo(id){
   refreshAll();
   rebuildPage(id);
   _updateFilterBtn(id);
+  _updateCourtDots(id);
   if(id === 'page-overdracht') setOdLastRead();
   // Resize textareas met bestaande inhoud na pagina-wissel
   requestAnimationFrame(()=>{ document.querySelectorAll('textarea').forEach(resizeTextarea); });
@@ -2658,5 +2659,64 @@ window.addEventListener('popstate', e => {
       const backBtn = activePage && activePage.querySelector('.back-btn');
       if(backBtn) backBtn.click();
     }
+  }, { passive: true });
+})();
+
+// ── Swipe tussen courts (left/right navigatie) ────────────────────
+const COURT_SEQUENCES = {
+  'page-pc':  ['page-pc','page-sl','page-sm','page-c14'],
+  'page-sl':  ['page-pc','page-sl','page-sm','page-c14'],
+  'page-sm':  ['page-pc','page-sl','page-sm','page-c14'],
+  'page-c14': ['page-pc','page-sl','page-sm','page-c14'],
+  'page-audio-pc':  ['page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14'],
+  'page-audio-sl':  ['page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14'],
+  'page-audio-sm':  ['page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14'],
+  'page-audio-c14': ['page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14'],
+};
+const COURT_LABELS = {
+  'page-pc':'PC','page-sl':'SL','page-sm':'SM','page-c14':'C14',
+  'page-audio-pc':'PC','page-audio-sl':'SL','page-audio-sm':'SM','page-audio-c14':'C14',
+};
+
+function _updateCourtDots(pageId){
+  let bar = document.getElementById('court-dot-bar');
+  const seq = COURT_SEQUENCES[pageId];
+  if(!seq){
+    if(bar) bar.remove();
+    return;
+  }
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'court-dot-bar';
+    // Insert below the sub-header
+    const page = document.querySelector('.page.active');
+    const subHeader = page && page.querySelector('.sub-header');
+    if(subHeader) subHeader.after(bar);
+    else if(page) page.prepend(bar);
+  }
+  bar.innerHTML = seq.map(id =>
+    `<span class="court-dot${id===pageId?' active':''}" onclick="goTo('${id}')">${COURT_LABELS[id]}</span>`
+  ).join('');
+}
+
+(function(){
+  let sx = 0, sy = 0, sTime = 0;
+  document.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    sTime = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if(Date.now() - sTime > 500) return; // te langzaam
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = Math.abs(e.changedTouches[0].clientY - sy);
+    if(Math.abs(dx) < 60 || dy > 80 || sx < 30) return; // te kort, te verticaal, of edge-swipe
+    const pageId = document.querySelector('.page.active')?.id;
+    const seq = COURT_SEQUENCES[pageId];
+    if(!seq) return;
+    const idx = seq.indexOf(pageId);
+    const next = dx < 0 ? seq[idx+1] : seq[idx-1];
+    if(next) goTo(next);
   }, { passive: true });
 })();
