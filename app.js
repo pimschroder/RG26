@@ -148,7 +148,9 @@
     for(const k of new Set([...Object.keys(preSnap), ...Object.keys(postSnap)])){
       if((preSnap[k]||false) !== (postSnap[k]||false)) flashSet.add(k);
     }
-    if(window.buildAllLists) window.buildAllLists();
+    // Herbouw alleen de actieve pagina, niet alle 30+ lijsten
+    const _ap = document.querySelector('.page.active');
+    if(_ap && window.rebuildPage) window.rebuildPage(_ap.id);
     if(window.refreshAll) window.refreshAll();
     if(window.renderOdLog) window.renderOdLog();
     if(flashSet.size > 0) flashRemoteItems(flashSet, merged);
@@ -159,15 +161,18 @@
   let offlineQueue  = null; // last data to sync when back online
   let pendingRemote = null; // remote update received during suppress window
 
-  window.pushToSupabase = function(data){
+  window.pushToSupabase = function(data, changedKey){
     if(!supaClient) return;
 
-    // 1. Broadcast instantly via websocket
+    // 1. Broadcast: partial if changedKey — bespaart bandbreedte op 3G/4G
     if(broadcastChannel){
+      const broadcastPayload = changedKey
+        ? { [changedKey]: data[changedKey], _lastUpdate: data._lastUpdate }
+        : data;
       broadcastChannel.send({
         type: "broadcast",
         event: "state_update",
-        payload: { data }
+        payload: { data: broadcastPayload }
       }).catch(()=>{});
     }
 
@@ -555,22 +560,27 @@ const SM_CAMS = [
 ];
 
 const SK = "rg2025_v1";
-function load(){ try{ return JSON.parse(localStorage.getItem(SK))||{}; }catch{ return {}; } }
-function _localSaveRaw(d){ try{ localStorage.setItem(SK,JSON.stringify(d)); }catch{} }
+let _dataCache = null;
+function load(){
+  if(_dataCache !== null) return _dataCache;
+  try{ _dataCache = JSON.parse(localStorage.getItem(SK))||{}; }catch{ _dataCache = {}; }
+  return _dataCache;
+}
+function _localSaveRaw(d){ _dataCache = d; try{ localStorage.setItem(SK,JSON.stringify(d)); }catch{} }
 window._localLoad = load;
 window._localSaveRaw = _localSaveRaw;
 
-function save(d){
+function save(d, changedKey){
   d._lastUpdate = Date.now();
   _localSaveRaw(d);
   updateLastUpdateLabel();
-  if(window.pushToSupabase) window.pushToSupabase(d);
+  if(window.pushToSupabase) window.pushToSupabase(d, changedKey);
 }
-function saveFast(d){
+function saveFast(d, changedKey){
   d._lastUpdate = Date.now();
   _localSaveRaw(d);
   updateLastUpdateLabel();
-  if(window.pushToSupabase) window.pushToSupabase(d);
+  if(window.pushToSupabase) window.pushToSupabase(d, changedKey);
   refreshCounters(); refreshAudioCounters();
 }
 function getCurrentUser(){ return localStorage.getItem("rg_user")||""; }
@@ -601,12 +611,8 @@ function goTo(id){
     history.pushState({ page: id }, '', location.pathname + location.search);
   }
   refreshAll();
-  // Auto-init pages that need it
-  if(id === 'page-overdracht'){ buildOverdracht(); setOdLastRead(); }
-  if(['page-audio-pc','page-audio-sl','page-audio-sm','page-audio-c14'].includes(id)) buildAudioLists();
-  if(id === 'page-users') buildUsers();
-  if(id === 'page-problems') buildProblems();
-  if(id === 'page-persons') buildPersons();
+  rebuildPage(id);
+  if(id === 'page-overdracht') setOdLastRead();
   // Resize textareas met bestaande inhoud na pagina-wissel
   requestAnimationFrame(()=>{ document.querySelectorAll('textarea').forEach(resizeTextarea); });
 }
@@ -714,6 +720,37 @@ window.buildAllLists = function buildAllLists(){
     if(sel) Array.from(sel.options).forEach(o=>{ if(o.value===remembered) o.selected=true; });
   }
 }
+
+// Herbouw alleen de lijst voor de opgegeven pagina.
+// Aangeroepen vanuit goTo() en applyRemote() — niet meer buildAllLists() bij elke sync.
+window.rebuildPage = function rebuildPage(id){
+  switch(id){
+    case 'page-pc':          buildCamPage("list-pc","pc",PC_CAMS); break;
+    case 'page-sl':          buildCamPage("list-sl","sl",SL_CAMS); break;
+    case 'page-sm':          buildCamPage("list-sm","sm",SM_CAMS); break;
+    case 'page-c14':         buildCamPage("list-c14","c14",C14_CAMS); break;
+    case 'page-audio-pc':
+    case 'page-audio-sl':
+    case 'page-audio-sm':
+    case 'page-audio-c14':   buildAudioLists(); break;
+    case 'page-comm-pc4th':  buildPosList("list-comm-pc4th","comm_pc4th",PC4TH_POSITIONS); break;
+    case 'page-comm-pc5th':  buildPosList("list-comm-pc5th","comm_pc5th",PC5TH_POSITIONS); break;
+    case 'page-comm-sl':     buildPosList("list-comm-sl","comm_sl",COMMSL_POSITIONS); break;
+    case 'page-comm-sm':     buildPosList("list-comm-sm","comm_sm",COMMSM_POSITIONS); break;
+    case 'page-galleries':   buildGallery(); break;
+    case 'page-overdracht':  buildOverdracht(); break;
+    case 'page-users':       buildUsers(); break;
+    case 'page-problems':    buildProblems(); break;
+    case 'page-persons':     buildPersons(); break;
+    default:
+      if(id && id.startsWith('page-gal-')){
+        const key = id.slice(9);
+        const sk  = 'gal_' + key.replace(/-/g,'_');
+        const items = window[key.replace(/-/g,'_') + '_ITEMS'];
+        if(items) buildSimpleList('list-gal-' + key, sk, items);
+      }
+  }
+};
 
 function initApp(){
   // Apply saved theme immediately before anything renders
@@ -965,7 +1002,7 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
   d[sk][`cam${camNum}`][row].status = newStatus;
   if(isDone){ d[sk][`cam${camNum}`][row].ts=Date.now(); d[sk][`cam${camNum}`][row].user=getCurrentUser(); }
   else { d[sk][`cam${camNum}`][row].ts=null; d[sk][`cam${camNum}`][row].user=null; }
-  save(d);
+  save(d, sk);
 
   const selEl = document.querySelector(`#${cid}-row-${camNum}-${j} .cam-status-sel`);
   if(selEl){ selEl.value=newStatus; selEl.className="cam-status-sel"+(isDone?" s-ok":""); }
@@ -992,7 +1029,7 @@ function camStatus(sk, camNum, row, j, cid, sel){
   const rowEl=document.getElementById(`${cid}-row-${camNum}-${j}`);
   if(val==="OK"){ d[sk][`cam${camNum}`][row].checked=true; if(boxEl) boxEl.classList.add("on"); if(rowEl) rowEl.classList.add("row-done"); }
   else          { d[sk][`cam${camNum}`][row].checked=false; if(boxEl) boxEl.classList.remove("on"); if(rowEl) rowEl.classList.remove("row-done"); }
-  save(d);
+  save(d, sk);
   const cd=d[sk][`cam${camNum}`]||{};
   const totalRows = camNum === 7 || (camNum === 11 && sk === 'pc') ? 1 : (((camNum >= 12 && camNum <= 15 && sk === 'pc') || (camNum === 10 && sk === 'pc') || (camNum === 18 && sk === 'pc')) ? 3 : ((camNum === 16 || camNum === 17) && sk === 'pc') ? 2 : CAM_ROWS.length);
   const n=Object.keys(cd).filter(r=>cd[r]?.checked).length;
@@ -1005,7 +1042,7 @@ function camStatus(sk, camNum, row, j, cid, sel){
 function camNote(sk, camNum, row, ta){
   const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
   if(!d[sk][`cam${camNum}`][row]) d[sk][`cam${camNum}`][row]={};
-  d[sk][`cam${camNum}`][row].note=ta.value; save(d);
+  d[sk][`cam${camNum}`][row].note=ta.value; save(d, sk);
 }
 
 function camDone(sk, cams){
@@ -1079,7 +1116,7 @@ function posToggle(sk, pos, j, cid, rowEl){
   d[sk][pos][chk] = isDone;
   if(isDone){ d[sk][pos][chk+"_ts"]=Date.now(); d[sk][pos][chk+"_user"]=getCurrentUser(); }
   else { d[sk][pos][chk+"_ts"]=null; d[sk][pos][chk+"_user"]=null; }
-  save(d);
+  save(d, sk);
   const pd = d[sk][pos] || {};
   const doneN = POS_CHECKS.filter(c => pd[c]).length;
   const pEl = document.getElementById(`${cid}-pospct-${pos}`);
@@ -1116,7 +1153,7 @@ function posNote(sk, pos, chk, ta){
   if(!d[sk]) d[sk] = {};
   if(!d[sk][pos]) d[sk][pos] = {};
   d[sk][pos][chk+"_note"] = ta.value;
-  save(d);
+  save(d, sk);
 }
 
 function posCollapse(cid, pos){
@@ -1178,7 +1215,7 @@ function simpleToggle(sk, i, cid, boxEl){
   d[sk][i].checked = isDone;
   if(isDone){ d[sk][i].ts=Date.now(); d[sk][i].user=getCurrentUser(); }
   else { d[sk][i].ts=null; d[sk][i].user=null; }
-  save(d);
+  save(d, sk);
 
   const metaEl = document.getElementById(`${cid}-smeta-${i}`);
   if(metaEl) metaEl.textContent = isDone ? (getCurrentUser()?getCurrentUser()+" · ":"")+fmtTime(Date.now()) : "";
@@ -1190,7 +1227,7 @@ function simpleNote(sk, i, ta){
   if(!d[sk]) d[sk] = {};
   if(!d[sk][i]) d[sk][i] = {};
   d[sk][i].note = ta.value;
-  save(d);
+  save(d, sk);
 }
 
 function simpleDone(sk, total){
@@ -2474,8 +2511,7 @@ function audioToggle(key, i, listId){
   d[key][i].checked = !d[key][i].checked;
   if(d[key][i].checked){ d[key][i].ts = Date.now(); d[key][i].user = getCurrentUser(); }
   else { d[key][i].ts = null; d[key][i].user = null; }
-  save(d);
-  if(window.pushToSupabase) window.pushToSupabase(d);
+  save(d, key);
   const row = document.getElementById(listId+'-srow-'+i);
   if(row){
     row.classList.toggle('row-done', d[key][i].checked);
@@ -2499,8 +2535,7 @@ function audioNote(key, i, el){
   if(!d[key]) d[key] = {};
   if(!d[key][i]) d[key][i] = {};
   d[key][i].note = el.value;
-  save(d);
-  if(window.pushToSupabase) window.pushToSupabase(d);
+  save(d, key);
 }
 
 function refreshAudioCounters(){
