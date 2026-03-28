@@ -13,15 +13,17 @@
     const el = document.getElementById("sync-status");
     if(!el) return;
     const map = {
-      connected: ["☁️ Live",             "#2D5A1B"],
-      synced:    ["✅ Gesynchroniseerd",  "#2D5A1B"],
-      offline:   ["📴 Offline",           "#aaa"],
-      error:     ["⚠️ Sync fout",         "#C1440E"],
-      saving:    ["💾 Opslaan…",          "#C9A84C"],
-      receiving: ["🔄 Ontvangen…",        "#C9A84C"]
+      connected: ["☁️ Live",                      "#2D5A1B"],
+      synced:    ["✅ Gesynchroniseerd",           "#2D5A1B"],
+      offline:   ["📴 Offline",                    "#aaa"],
+      error:     ["⚠️ Sync fout — tik om opnieuw", "#C1440E"],
+      saving:    ["💾 Opslaan…",                   "#C9A84C"],
+      receiving: ["🔄 Ontvangen…",                 "#C9A84C"]
     };
     const [txt,col] = map[s]||["—","#aaa"];
     el.textContent = txt; el.style.color = col;
+    el.style.cursor = s === 'error' ? 'pointer' : '';
+    el.onclick = s === 'error' ? () => window._retrySync && window._retrySync() : null;
   }
 
   window.initSupabase = function initSupabase(url, key){
@@ -148,6 +150,8 @@
     for(const k of new Set([...Object.keys(preSnap), ...Object.keys(postSnap)])){
       if((preSnap[k]||false) !== (postSnap[k]||false)) flashSet.add(k);
     }
+    // Conflict detection: remote overwrote something the current user changed <60s ago
+    if(flashSet.size > 0) detectConflicts(flashSet, local, merged);
     // Herbouw alleen de actieve pagina, niet alle 30+ lijsten
     const _ap = document.querySelector('.page.active');
     if(_ap && window.rebuildPage) window.rebuildPage(_ap.id);
@@ -155,6 +159,34 @@
     if(window.renderOdLog) window.renderOdLog();
     if(flashSet.size > 0) flashRemoteItems(flashSet, merged);
     setSyncStatus("synced");
+  }
+
+  function detectConflicts(flashSet, preLocal, merged){
+    const myUser = window.getCurrentUser?.();
+    if(!myUser) return;
+    const now = Date.now();
+    const camSections = new Set(['pc','sl','sm','c14']);
+    const conflictUsers = new Set();
+    for(const path of flashSet){
+      const parts = path.split('/');
+      const sk = parts[0];
+      let localEntry, remoteUser;
+      if(camSections.has(sk)){
+        localEntry = (preLocal[sk]||{})[parts[1]]?.[parts[2]];
+        remoteUser = (merged[sk]||{})[parts[1]]?.[parts[2]]?.user;
+      } else if(!sk.startsWith('comm_')){
+        localEntry = (preLocal[sk]||{})[parts[1]];
+        remoteUser = (merged[sk]||{})[parts[1]]?.user;
+      }
+      // Conflict: ik heb dit item <60s geleden gewijzigd, maar remote heeft een andere waarde weggeschreven
+      if(localEntry?.ts && now - localEntry.ts < 60000 &&
+         localEntry.user === myUser && remoteUser && remoteUser !== myUser){
+        conflictUsers.add(remoteUser);
+      }
+    }
+    if(conflictUsers.size > 0){
+      showConflictToast([...conflictUsers].join(', '));
+    }
   }
 
   // ── PUSH: broadcast instantly + debounced DB write ──────────
@@ -197,9 +229,9 @@
         setSyncStatus("error");
         pushFailCount++;
         if(pushFailCount === 1){
-          showToast("Opslaan mislukt — wijzigingen worden lokaal bewaard.");
+          showToast("Opslaan mislukt — wijzigingen worden lokaal bewaard.", { retry: true, persist: true });
         } else if(pushFailCount >= 3){
-          showToast("Verbinding verbroken. Controleer je internet.");
+          showToast("Verbinding verbroken. Controleer je internet.", { retry: true, persist: true });
           pushFailCount = 0;
         }
       }
@@ -275,19 +307,42 @@
 
   let pushFailCount = 0;
 
-  function showToast(msg){
+  function showToast(msg, opts={}){
     let el = document.getElementById("sync-toast");
     if(!el){
       el = document.createElement("div");
       el.id = "sync-toast";
-      el.style.cssText = "position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#C1440E;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:opacity .3s";
+      el.style.cssText = "position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#C1440E;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:opacity .3s;text-align:center;max-width:90vw;";
       document.body.appendChild(el);
     }
-    el.textContent = msg;
+    if(opts.retry){
+      el.innerHTML = `${msg} <button onclick="window._retrySync&&window._retrySync()" style="margin-left:10px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-family:inherit;font-size:11px;padding:3px 10px;border-radius:4px;cursor:pointer;">Opnieuw</button>`;
+    } else {
+      el.textContent = msg;
+    }
     el.style.opacity = "1";
     clearTimeout(el._t);
-    el._t = setTimeout(()=>{ el.style.opacity = "0"; }, 4000);
+    el._t = setTimeout(()=>{ el.style.opacity = "0"; }, opts.persist ? 12000 : 4000);
   }
+
+  function showConflictToast(who){
+    let el = document.getElementById("conflict-toast");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "conflict-toast";
+      el.style.cssText = "position:fixed;top:72px;right:14px;background:#C9A84C;color:#1A1208;padding:9px 14px;border-radius:8px;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:opacity .3s;max-width:260px;line-height:1.4;";
+      document.body.appendChild(el);
+    }
+    el.textContent = `⚠️ Conflict: ${who} heeft hetzelfde item tegelijk gewijzigd. Nieuwste versie is opgeslagen.`;
+    el.style.opacity = "1";
+    clearTimeout(el._t);
+    el._t = setTimeout(()=>{ el.style.opacity = "0"; }, 7000);
+  }
+
+  window._retrySync = function(){
+    const d = window._localLoad ? window._localLoad() : {};
+    if(window.pushToSupabase) window.pushToSupabase(d);
+  };
 
   function flatCheckedSnap(data){
     const snap = {};
