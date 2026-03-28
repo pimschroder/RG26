@@ -607,6 +607,7 @@ async function doLogin(){
   if(!authError){
     if(name) setCurrentUser(name);
     const d = load(); d.loggedIn = true; d.loginTs = Date.now(); save(d);
+    if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
     goTo('page-home');
     setTimeout(initPresence, 800);
   } else {
@@ -624,6 +625,7 @@ function logout(){
     delete d.loggedIn;
     localStorage.setItem(SK, JSON.stringify(d));
   } catch(e){}
+  if(navigator.vibrate) navigator.vibrate(20);
   // Navigate first, always
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const loginPage = document.getElementById('page-login');
@@ -679,7 +681,8 @@ function initApp(){
   buildAllLists();
   var d = load();
   const SESSION_HOURS = 12;
-  const sessionExpired = d.loginTs && (Date.now() - d.loginTs) > SESSION_HOURS * 60 * 60 * 1000;
+  const lastActivity = parseInt(localStorage.getItem('rg_last_activity') || '0') || (d.loginTs || 0);
+  const sessionExpired = lastActivity && (Date.now() - lastActivity) > SESSION_HOURS * 60 * 60 * 1000;
   if(d.loggedIn && !sessionExpired){
     goTo('page-home');
     setTimeout(initPresence, 1000);
@@ -691,10 +694,17 @@ function initApp(){
 
 document.addEventListener('DOMContentLoaded', initApp);
 
-// Controleer sessie elk uur
+// Houd laatste activiteit bij
+function touchActivity(){ localStorage.setItem('rg_last_activity', Date.now()); }
+document.addEventListener('click',      touchActivity, { passive: true });
+document.addEventListener('touchstart', touchActivity, { passive: true });
+
+// Controleer sessie elk uur — alleen uitloggen bij inactiviteit
 setInterval(()=>{
   const d = load();
-  if(d.loggedIn && d.loginTs && (Date.now() - d.loginTs) > 12 * 60 * 60 * 1000){
+  if(!d.loggedIn) return;
+  const lastActivity = parseInt(localStorage.getItem('rg_last_activity') || '0') || (d.loginTs || 0);
+  if(Date.now() - lastActivity > 12 * 60 * 60 * 1000){
     logout();
     goTo('page-login');
   }
@@ -1276,6 +1286,7 @@ function _doRefresh(){
   bar("home-bar",gP); txt("home-lbl",gD+" / "+gT);
   txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",gP+"%");
   const hMsg=document.getElementById("home-done-msg"); if(hMsg) gD===gT&&gT>0?hMsg.classList.add("visible"):hMsg.classList.remove("visible");
+  if(document.getElementById('page-problems')?.classList.contains('active')) buildProblems();
 }
 
 const DASH_CARDS = [

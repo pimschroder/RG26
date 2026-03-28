@@ -1016,6 +1016,10 @@ window._loadXLSX = function(cb){
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
+    // Auto-reload wanneer een nieuwe SW actief wordt
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
 }
 </script>
