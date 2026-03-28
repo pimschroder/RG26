@@ -1394,6 +1394,7 @@ const SECTIONS = [
 function pct(d,t){ return t?Math.round(d/t*100):0; }
 function bar(id,p){ const el=document.getElementById(id); if(el&&el.style.width!==p+"%") el.style.width=p+"%"; }
 function txt(id,v){ const el=document.getElementById(id); if(el&&el.textContent!==String(v)) el.textContent=v; }
+function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; const v=d+"/"+t; if(el.textContent!==v) el.textContent=v; el.classList.toggle('done', t>0&&d===t); }
 
 function refreshCounters(){
   const totals={}, dones={};
@@ -1434,21 +1435,21 @@ function _doRefresh(){
   ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF-CAMS', 'NOVA-105', 'SL-PRODUCTION', 'SL-AUDIO', 'SM-PRODUCTION', 'SM-AUDIO', 'EIC-AIC', 'EMG-OFFICE', 'EVS-SL', 'EVS-PC', 'QC-AUDIO', 'QC-PRODUCTION', 'VENUE-SCREEN', 'GFX'].forEach(key=>{
     const d=galItemDone(key), t=galItemTotal(key);
     txt("gal-note-"+key, d+" van "+t+" voltooid");
-    txt("gal-pct-"+key, d+"/"+t);
+    chip("gal-pct-"+key, d, t);
   });
 
   bar("c14-bar",    pct(dones.c14,totals.c14));       txt("c14-lbl",dones.c14+"/"+totals.c14);         txt("count-c14",dones.c14+"/"+totals.c14);
   const c14Msg=document.getElementById("c14-done-msg"); if(c14Msg) dones.c14===totals.c14&&totals.c14>0?c14Msg.classList.add("visible"):c14Msg.classList.remove("visible");
-  txt("chip-c14",dones.c14+"/"+totals.c14); txt("c14-note-label",dones.c14+" van "+totals.c14+" voltooid");
+  chip("chip-c14",dones.c14,totals.c14); txt("c14-note-label",dones.c14+" van "+totals.c14+" voltooid");
 
-  bar("pc-bar",     pct(dones.pc,totals.pc));  txt("pc-lbl",dones.pc+"/"+totals.pc);   txt("count-pc",dones.pc+"/"+totals.pc);  txt("chip-pc",dones.pc+"/"+totals.pc);  txt("pc-note-label",dones.pc+" van "+totals.pc+" voltooid");
-  bar("sl-bar",     pct(dones.sl,totals.sl));  txt("sl-lbl",dones.sl+"/"+totals.sl);   txt("count-sl",dones.sl+"/"+totals.sl);  txt("chip-sl",dones.sl+"/"+totals.sl);  txt("sl-note-label",dones.sl+" van "+totals.sl+" voltooid");
-  bar("sm-bar",     pct(dones.sm,totals.sm));  txt("sm-lbl",dones.sm+"/"+totals.sm);   txt("count-sm",dones.sm+"/"+totals.sm);  txt("chip-sm",dones.sm+"/"+totals.sm);  txt("sm-note-label",dones.sm+" van "+totals.sm+" voltooid");
+  bar("pc-bar",     pct(dones.pc,totals.pc));  txt("pc-lbl",dones.pc+"/"+totals.pc);   txt("count-pc",dones.pc+"/"+totals.pc);  chip("chip-pc",dones.pc,totals.pc);  txt("pc-note-label",dones.pc+" van "+totals.pc+" voltooid");
+  bar("sl-bar",     pct(dones.sl,totals.sl));  txt("sl-lbl",dones.sl+"/"+totals.sl);   txt("count-sl",dones.sl+"/"+totals.sl);  chip("chip-sl",dones.sl,totals.sl);  txt("sl-note-label",dones.sl+" van "+totals.sl+" voltooid");
+  bar("sm-bar",     pct(dones.sm,totals.sm));  txt("sm-lbl",dones.sm+"/"+totals.sm);   txt("count-sm",dones.sm+"/"+totals.sm);  chip("chip-sm",dones.sm,totals.sm);  txt("sm-note-label",dones.sm+" van "+totals.sm+" voltooid");
 
   [["pc4th"],["pc5th"],["sl"],["sm"]].forEach(([k])=>{
     const sk="comm_"+k, d=dones[sk]||0, t=totals[sk]||0, p=pct(d,t);
     bar(`comm-${k}-bar`,p); txt(`comm-${k}-lbl`,d+"/"+t); txt(`count-comm-${k}`,d+"/"+t);
-    txt(`chip-comm-${k}`,d+"/"+t);
+    chip(`chip-comm-${k}`,d,t);
     txt(`comm-${k}-note`,d+" van "+t+" voltooid");
   });
 
