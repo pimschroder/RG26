@@ -1004,7 +1004,7 @@ function buildCamPage(containerId, storageKey, cams){
       <div class="cam-header${cam.num===7?" cam-header-rf":""}" onclick="camCollapse('${containerId}',${cam.num})">
         <span class="cam-badge">CAM ${cam.num}</span>
         <span class="cam-name">Camera ${cam.num} ${subLine}</span>
-        <span class="cam-pct" id="${containerId}-pct-${cam.num}">${checkedN}/${CAM_ROWS.length}</span>
+        <span class="cam-pct" id="${containerId}-pct-${cam.num}">${checkedN}/${rows.length}</span>
         <span class="cam-arrow">&#9660;</span>
       </div>
       <div class="cam-body" style="max-height:${collapsed?'0':'9999px'}">
