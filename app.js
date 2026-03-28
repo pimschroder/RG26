@@ -1079,8 +1079,14 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
   else { d[sk][`cam${camNum}`][row].ts=null; d[sk][`cam${camNum}`][row].user=null; }
   save(d, sk);
 
-  const metaEl = document.querySelector(`#${cid}-row-${camNum}-${j} .row-meta`);
-  if(metaEl) metaEl.textContent = isDone ? (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now()) : "";
+  const labelEl = document.querySelector(`#${cid}-row-${camNum}-${j} .cam-row-label`);
+  if(labelEl){
+    let metaEl = labelEl.querySelector('.row-meta');
+    if(isDone){
+      if(!metaEl){ metaEl = document.createElement('span'); metaEl.className='row-meta'; labelEl.appendChild(metaEl); }
+      metaEl.textContent = (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now());
+    } else if(metaEl){ metaEl.textContent = ""; }
+  }
 
   const selEl = document.querySelector(`#${cid}-row-${camNum}-${j} .cam-status-sel`);
   if(selEl){ selEl.value=newStatus; selEl.className="cam-status-sel"+(isDone?" s-ok":""); }
@@ -1196,8 +1202,14 @@ function posToggle(sk, pos, j, cid, rowEl){
   else { d[sk][pos][chk+"_ts"]=null; d[sk][pos][chk+"_user"]=null; }
   save(d, sk);
 
-  const posMetaEl = rowEl.querySelector('.row-meta');
-  if(posMetaEl) posMetaEl.textContent = isDone ? (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now()) : "";
+  const posLabelEl = rowEl.querySelector('.pos-row-label')?.parentElement;
+  if(posLabelEl){
+    let posMetaEl = posLabelEl.querySelector('.row-meta');
+    if(isDone){
+      if(!posMetaEl){ posMetaEl = document.createElement('span'); posMetaEl.className='row-meta'; posLabelEl.appendChild(posMetaEl); }
+      posMetaEl.textContent = (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now());
+    } else if(posMetaEl){ posMetaEl.textContent = ""; }
+  }
   const pd = d[sk][pos] || {};
   const doneN = POS_CHECKS.filter(c => pd[c]).length;
   const pEl = document.getElementById(`${cid}-pospct-${pos}`);
