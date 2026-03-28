@@ -2055,8 +2055,10 @@ window.renderOdLog = function renderOdLog(){
             ${esc(e.name||'')}
           </div>
         </div>
-        ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
-        ${e.todo?`<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>`:''}
+        <div class="od-sections-grid">
+          ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
+          ${e.todo?`<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>`:''}
+        </div>
         ${(e.user||e.name)===getCurrentUser() ? `
         <div class="od-item-actions">
           <button class="od-action-btn" onclick="openOdEdit(${e.id})" style="touch-action:manipulation;">✏️ Aanpassen</button>
