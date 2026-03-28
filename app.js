@@ -962,9 +962,10 @@ function buildCamPage(containerId, storageKey, cams){
   cams.forEach(cam=>{
     const ck=`cam${cam.num}`;
     const cd = d[storageKey][ck]||{};
-    const collapsed = cd.collapsed||false;
     const rows = getRows(storageKey, cam.num);
     const checkedN = rows.filter(r=>cd[r]?.checked).length;
+    const allDone = checkedN === rows.length && rows.length > 0;
+    const collapsed = allDone;
 
     const rowsHTML = rows.map((row,j)=>{
       const rd = cd[row]||{};
@@ -1145,9 +1146,9 @@ function buildPosList(containerId, storageKey, positions){
 
   positions.forEach(pos => {
     const pd = d[storageKey][pos] || {};
-    const collapsed = pd.collapsed || false;
     const doneN = POS_CHECKS.filter(c => pd[c]).length;
     const allDone = doneN === POS_CHECKS.length;
+    const collapsed = allDone;
 
     const section = document.createElement("div");
     section.className = "pos-section" + (collapsed ? " collapsed" : "");
