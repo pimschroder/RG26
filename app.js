@@ -1534,6 +1534,109 @@ async function checkAdminPw(){
   }
 }
 
+function buildActivity(){
+  const wrap = document.getElementById('activity-log');
+  if(!wrap) return;
+  const d = load();
+  const filterEl = document.getElementById('activity-filter');
+  const onlyToday = !filterEl || filterEl.value === 'today';
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  const events = [];
+
+  const courtLabels = { pc:'Philippe-Chatrier', sl:'Suzanne-Lenglen', sm:'Simonne-Mathieu', c14:'Court 14' };
+
+  // Camera
+  for(const [sk, lbl] of Object.entries(courtLabels)){
+    const sect = d[sk]||{};
+    for(const camKey of Object.keys(sect)){
+      const cd = sect[camKey];
+      if(typeof cd !== 'object') continue;
+      for(const row of Object.keys(cd)){
+        const rd = cd[row];
+        if(rd?.checked && rd.ts) events.push({ ts:rd.ts, user:rd.user||'—', label:row, section:`📷 ${lbl} · ${camKey.replace('cam','CAM ')}` });
+      }
+    }
+  }
+
+  // Audio + Stageboxes
+  const audioMap = [
+    {key:'audio_pc',items:PC_MIC_ITEMS,lbl:'🎙 Audio PC'},
+    {key:'audio_sl',items:SL_MIC_ITEMS,lbl:'🎙 Audio SL'},
+    {key:'audio_sm',items:SM_MIC_ITEMS,lbl:'🎙 Audio SM'},
+    {key:'audio_c14',items:C14_MIC_ITEMS,lbl:'🎙 Audio C14'},
+    {key:'sb_pc',items:PC_SB_ITEMS,lbl:'📦 Stageboxes PC'},
+    {key:'sb_sl',items:SL_SB_ITEMS,lbl:'📦 Stageboxes SL'},
+    {key:'sb_sm',items:SM_SB_ITEMS,lbl:'📦 Stageboxes SM'},
+    {key:'sb_c14',items:C14_SB_ITEMS,lbl:'📦 Stageboxes C14'},
+  ];
+  for(const {key,items,lbl} of audioMap){
+    const sect = d[key]||{};
+    items.forEach((name,i)=>{ const e=sect[i]; if(e?.checked&&e.ts) events.push({ts:e.ts,user:e.user||'—',label:name,section:lbl}); });
+  }
+
+  // Comm
+  const commMap = { comm_pc4th:{pos:PC4TH_POSITIONS,lbl:'🎙 Comm PC 4th'}, comm_pc5th:{pos:PC5TH_POSITIONS,lbl:'🎙 Comm PC 5th'}, comm_sl:{pos:COMMSL_POSITIONS,lbl:'🎙 Comm SL'}, comm_sm:{pos:COMMSM_POSITIONS,lbl:'🎙 Comm SM'} };
+  for(const [sk,{pos,lbl}] of Object.entries(commMap)){
+    pos.forEach(p=>{ POS_CHECKS.forEach(chk=>{ const pd=(d[sk]||{})[p]||{}; if(pd[chk]&&pd[chk+'_ts']) events.push({ts:pd[chk+'_ts'],user:pd[chk+'_user']||'—',label:chk,section:`${lbl} · ${p}`}); }); });
+  }
+
+  // Gallery
+  const galMap = [
+    {key:'gal_CCSR',items:CCSR_ITEMS,lbl:'🖼 CCSR'},{key:'gal_CIR',items:CIR_ITEMS,lbl:'🖼 CIR'},
+    {key:'gal_MCR',items:MCR_ITEMS,lbl:'🖼 MCR'},{key:'gal_INTERCOM',items:INTERCOM_ITEMS,lbl:'🖼 Intercom'},
+    {key:'gal_FFT',items:FFT_ITEMS,lbl:'🖼 FFT'},{key:'gal_RF_CAMS',items:RF_CAMS_ITEMS,lbl:'🖼 RF Cams'},
+    {key:'gal_NOVA_105',items:NOVA_105_ITEMS,lbl:'🖼 Nova 105'},{key:'gal_EIC_AIC',items:EIC_AIC_ITEMS,lbl:'🖼 EIC/AIC'},
+  ];
+  for(const {key,items,lbl} of galMap){
+    const sect=d[key]||{};
+    items.forEach((name,i)=>{ const e=sect[i]; if(e?.checked&&e.ts) events.push({ts:e.ts,user:e.user||'—',label:name,section:lbl}); });
+  }
+
+  // Filter op vandaag
+  const filtered = onlyToday
+    ? events.filter(e => new Date(e.ts).toISOString().slice(0,10) === todayStr)
+    : events;
+
+  // Sorteer nieuwste eerst
+  filtered.sort((a,b) => b.ts - a.ts);
+
+  if(!filtered.length){
+    wrap.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:12px;letter-spacing:.06em">${onlyToday?'Nog niets afgevinkt vandaag':'Geen activiteit gevonden'}</div>`;
+    return;
+  }
+
+  // Groepeer op uur
+  const groups = {};
+  filtered.forEach(e => {
+    const d2 = new Date(e.ts);
+    const hdr = d2.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d2.getHours().toString().padStart(2,'0') + ':00';
+    if(!groups[hdr]) groups[hdr] = [];
+    groups[hdr].push(e);
+  });
+
+  const userColors = ['#C1440E','#2D5A1B','#4a3a7a','#0e4f6e','#7a5800','#8B2E07','#1e4d10'];
+  const colorMap = {};
+  let colorIdx = 0;
+
+  wrap.innerHTML = Object.entries(groups).map(([hour, items]) => {
+    const rows = items.map(e => {
+      if(!colorMap[e.user]){ colorMap[e.user] = userColors[colorIdx++ % userColors.length]; }
+      const col = colorMap[e.user];
+      const time = new Date(e.ts).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+      return `<div style="display:grid;grid-template-columns:42px 80px 1fr;gap:8px;align-items:start;padding:8px 12px;border-bottom:1px solid var(--border);">
+        <span style="font-size:11px;color:#aaa;font-variant-numeric:tabular-nums;padding-top:1px">${time}</span>
+        <span style="font-size:10px;font-weight:600;color:${col};background:${col}18;border-radius:4px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(e.user)}</span>
+        <span style="font-size:11px;"><span style="color:var(--ink);font-weight:500">${esc(e.label)}</span><br><span style="font-size:9px;color:#aaa;letter-spacing:.04em">${esc(e.section)}</span></span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:8px 12px;background:var(--bg);border-bottom:1.5px solid var(--border);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--clay-dark)">${hour}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
 function buildPersons(){
   const d = load();
   const wrap = document.getElementById("persons-list");

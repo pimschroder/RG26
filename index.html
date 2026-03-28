@@ -975,6 +975,7 @@ window._loadXLSX = function(cb){
     <div id="admin-panel" style="display:none">
       <div style="font-size:11px;color:#aaa;letter-spacing:.06em;margin-bottom:14px;text-align:center;">🟢 Nu online: <span id="online-users-list">—</span></div>
       <div class="admin-actions">
+        <button class="admin-action-btn" onclick="closeAdminModal();buildActivity();goTo('page-activity')" style="touch-action:manipulation;">📋 Activiteit log</button>
         <button class="admin-action-btn" onclick="closeAdminModal();buildProblems();goTo('page-problems')" style="touch-action:manipulation;">⚠️ Bekijk problemen</button>
         <button class="admin-action-btn" onclick="closeAdminModal();buildPersons();goTo('page-persons')" style="touch-action:manipulation;">👥 Voortgang per persoon</button>
         <button class="admin-action-btn" onclick="closeAdminModal();buildUsers();goTo('page-users')" style="touch-action:manipulation;">👤 Gebruikersbeheer</button>
@@ -999,6 +1000,23 @@ window._loadXLSX = function(cb){
       </div>
     </div>
   </div>
+</div>
+
+<!-- Activiteit Log -->
+<div class="page" id="page-activity">
+  <div class="sub-header"><div class="sub-header-inner">
+    <button class="back-btn" onclick="closeAdminModal();goTo('page-home')" style="touch-action:manipulation;">Terug</button>
+    <div><div class="rg-badge" style="margin-bottom:4px">Admin</div><div class="sub-title">📋 <em>Activiteit log</em></div></div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <select id="activity-filter" onchange="buildActivity()" style="font-family:'DM Mono',monospace;font-size:10px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer;">
+        <option value="today">Vandaag</option>
+        <option value="all">Alles</option>
+      </select>
+    </div>
+  </div></div>
+  <main>
+    <div id="activity-log" style="padding:0 4px;"></div>
+  </main>
 </div>
 
 <!-- Lightbox -->
