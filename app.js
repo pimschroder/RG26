@@ -368,6 +368,24 @@
     playSyncChime();
   }
 
+  function playCheckTick(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1100, ctx.currentTime);
+      osc.connect(gain);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.08);
+      osc.onended = () => ctx.close();
+    } catch(e){}
+  }
+  window.playCheckTick = playCheckTick;
+
   function playSyncChime(){
     try{
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -937,7 +955,7 @@ function camCollapse(cid, camNum){
 function camToggle(sk, camNum, row, j, cid, boxEl){
   boxEl.classList.toggle("on");
   const isDone=boxEl.classList.contains("on");
-  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); if(window.playCheckTick) playCheckTick(); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   document.getElementById(`${cid}-row-${camNum}-${j}`).classList.toggle("row-done",isDone);
   const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
@@ -1051,7 +1069,7 @@ function posToggle(sk, pos, j, cid, rowEl){
   const boxEl = rowEl.querySelector(".pos-check-box");
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
-  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); if(window.playCheckTick) playCheckTick(); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   rowEl.classList.toggle("row-done", isDone);
   const chk = POS_CHECKS[j];
@@ -1150,7 +1168,7 @@ function buildSimpleList(containerId, storageKey, items){
 function simpleToggle(sk, i, cid, boxEl){
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
-  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); }
+  if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); if(window.playCheckTick) playCheckTick(); }
   if(navigator.vibrate) navigator.vibrate(isDone?30:15);
   const rowEl = document.getElementById(`${cid}-srow-${i}`);
   if(rowEl) rowEl.classList.toggle("row-done", isDone);
@@ -2099,6 +2117,8 @@ function saveOverdracht(){
   // Clear form + concept
   document.getElementById('od-verslag').value = '';
   document.getElementById('od-todo').value = '';
+  odWordCount('od-verslag','od-verslag-wc');
+  odWordCount('od-todo','od-todo-wc');
   localStorage.removeItem('rg_od_concept');
 
   if(navigator.vibrate) navigator.vibrate([20, 30, 20]);
@@ -2238,6 +2258,8 @@ function openOdEdit(id){
   _odEditId = id;
   document.getElementById('od-edit-verslag').value = entry.verslag || '';
   document.getElementById('od-edit-todo').value = entry.todo || '';
+  odWordCount('od-edit-verslag','od-edit-verslag-wc');
+  odWordCount('od-edit-todo','od-edit-todo-wc');
   const modal = document.getElementById('od-edit-modal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -2519,6 +2541,22 @@ function refreshAudioCounters(){
   txt('tab-audio-count', grandDone+'/'+grandTotal);
   txt('sel-audio-count', grandDone+'/'+grandTotal+' voltooid'); bar('sel-audio-bar', pct(grandDone,grandTotal));
 }
+
+// ── Overdracht word counter ──────────────────────────────────────
+function odWordCount(taId, countId){
+  const ta = document.getElementById(taId);
+  const el = document.getElementById(countId);
+  if(!ta || !el) return;
+  const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+  el.textContent = words + ' woord' + (words === 1 ? '' : 'en');
+}
+// Reset counters when overdracht form opens
+window._resetOdWordCounts = function(){
+  ['od-verslag','od-todo','od-edit-verslag','od-edit-todo'].forEach(id=>{
+    const wc = document.getElementById(id+'-wc');
+    if(wc) wc.textContent = '0 woorden';
+  });
+};
 
 // ── Auto-resize textareas ────────────────────────────────────────
 function resizeTextarea(el){

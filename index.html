@@ -925,8 +925,10 @@ window._loadXLSX = function(cb){
           </select>
         </div>
         <input type="date" id="od-date" class="modal-input">
-        <textarea id="od-verslag" class="modal-input" rows="4" placeholder="📋 Dagverslag — wat is er gedaan?" style="resize:vertical;"></textarea>
-        <textarea id="od-todo" class="modal-input" rows="3" placeholder="📌 To do voor volgende ploeg…" style="resize:vertical;"></textarea>
+        <textarea id="od-verslag" class="modal-input" rows="4" placeholder="📋 Dagverslag — wat is er gedaan?" style="resize:vertical;" oninput="odWordCount('od-verslag','od-verslag-wc')"></textarea>
+        <div class="od-wc" id="od-verslag-wc">0 woorden</div>
+        <textarea id="od-todo" class="modal-input" rows="3" placeholder="📌 To do voor volgende ploeg…" style="resize:vertical;" oninput="odWordCount('od-todo','od-todo-wc')"></textarea>
+        <div class="od-wc" id="od-todo-wc">0 woorden</div>
         <button class="overdracht-btn" onclick="saveOverdracht()" style="touch-action:manipulation;">Overdracht opslaan</button>
       </div>
     </div>
@@ -941,8 +943,10 @@ window._loadXLSX = function(cb){
 <div id="od-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
   <div style="background:var(--surface);border-radius:14px;padding:24px;width:calc(100% - 48px);max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
     <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:16px;">✏️ Overdracht aanpassen</div>
-    <textarea id="od-edit-verslag" class="modal-input" rows="4" placeholder="📋 Dagverslag…" style="width:100%;margin-bottom:10px;resize:vertical;box-sizing:border-box;"></textarea>
-    <textarea id="od-edit-todo" class="modal-input" rows="3" placeholder="📌 To do…" style="width:100%;margin-bottom:16px;resize:vertical;box-sizing:border-box;"></textarea>
+    <textarea id="od-edit-verslag" class="modal-input" rows="4" placeholder="📋 Dagverslag…" style="width:100%;margin-bottom:4px;resize:vertical;box-sizing:border-box;" oninput="odWordCount('od-edit-verslag','od-edit-verslag-wc')"></textarea>
+    <div class="od-wc" id="od-edit-verslag-wc" style="margin-bottom:10px;">0 woorden</div>
+    <textarea id="od-edit-todo" class="modal-input" rows="3" placeholder="📌 To do…" style="width:100%;margin-bottom:4px;resize:vertical;box-sizing:border-box;" oninput="odWordCount('od-edit-todo','od-edit-todo-wc')"></textarea>
+    <div class="od-wc" id="od-edit-todo-wc" style="margin-bottom:16px;">0 woorden</div>
     <div style="display:flex;gap:8px;">
       <button onclick="closeOdEdit()" style="flex:1;padding:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
       <button onclick="confirmOdEdit()" style="flex:1;padding:11px;background:var(--green);color:white;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;touch-action:manipulation;">Opslaan</button>

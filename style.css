@@ -138,3 +138,6 @@
   100% { transform:scale(1); }
 }
 .check-pop{ animation:checkPop .28s cubic-bezier(.36,.07,.19,.97); }
+
+/* ── Overdracht word counter ─────────────────────────────────── */
+.od-wc{font-size:10px;color:#aaa;letter-spacing:.05em;text-align:right;margin-top:-6px;margin-bottom:8px;font-family:"DM Mono",monospace;}
