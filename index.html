@@ -69,7 +69,7 @@ window._loadXLSX = function(cb){
     <span class="last-update" id="last-update-label">Geen wijzigingen</span>
     <span id="sync-status" style="font-size:10px;letter-spacing:.06em;">📴 Offline</span>
     <span class="user-bar-label" id="logged-in-user"></span>
-    <button class="dark-toggle" onclick="toggleDark()" title="Donkere modus">🌙</button>
+    <button class="dark-toggle" onclick="toggleDark()" title="Donkere modus" style="font-size:16px;background:none;border:1.5px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;cursor:pointer;touch-action:manipulation;min-width:36px;min-height:36px;">🌙</button>
     <button class="userbar-logout-btn" onclick="logout()" ontouchend="event.preventDefault();logout();" title="Uitloggen" style="touch-action:manipulation;min-width:44px;min-height:44px;">↩</button>
   </div>
   <div class="progress-wrap">
@@ -986,11 +986,16 @@ window._loadXLSX = function(cb){
           <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['c14','audio_c14','sb_c14'],'Court 14')" style="touch-action:manipulation;">🔄 C14</button>
         </div>
         <div id="admin-reset-confirm" style="display:none;margin-top:10px;background:rgba(193,68,14,.08);border:1.5px solid var(--clay);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:11px;color:var(--clay-dark);margin-bottom:10px;font-weight:500;">⚠️ Reset <span id="admin-reset-label"></span>?</div>
+          <div style="font-size:11px;color:var(--clay-dark);margin-bottom:6px;font-weight:500;">⚠️ Reset <span id="admin-reset-label"></span>?</div>
+          <div style="font-size:10px;color:#888;margin-bottom:10px;">Er wordt automatisch een backup gemaakt.</div>
           <div style="display:flex;gap:8px;justify-content:center;">
             <button onclick="adminResetConfirm()" style="background:var(--clay-dark);color:var(--cream);border:none;font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Ja, reset</button>
             <button onclick="adminResetCancel()" style="background:none;border:1.5px solid var(--border);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;padding:8px 14px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
           </div>
+        </div>
+        <div id="admin-restore-wrap" style="display:none;margin-top:10px;background:rgba(45,90,27,.07);border:1.5px solid rgba(45,90,27,.3);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--green);margin-bottom:8px;" id="admin-backup-label"></div>
+          <button onclick="adminRestoreBackup()" style="background:var(--green);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:11px;padding:7px 16px;border-radius:6px;cursor:pointer;touch-action:manipulation;">↩ Herstel backup</button>
         </div>
       </div>
     </div>

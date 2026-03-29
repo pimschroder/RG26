@@ -2117,6 +2117,7 @@ function resetCancel(){
 }
 function resetConfirm(){
   const d = load();
+  saveBackup(d, 'Volledige reset');
   const keep = { loggedIn: d.loggedIn, _users: d._users, _overdrachten: d._overdrachten, _resetTs: Date.now() };
   localStorage.setItem(SK, JSON.stringify(keep));
   if(window.pushToSupabase) window.pushToSupabase(keep);
@@ -2131,6 +2132,17 @@ function adminResetCourt(keys, label){
   _adminResetKeys = keys;
   document.getElementById('admin-reset-label').textContent = label;
   document.getElementById('admin-reset-confirm').style.display = 'block';
+  _showExistingBackup();
+}
+function _showExistingBackup(){
+  try{
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if(!raw) return;
+    const { label, ts } = JSON.parse(raw);
+    const wrap = document.getElementById('admin-restore-wrap');
+    const lbl  = document.getElementById('admin-backup-label');
+    if(wrap && lbl){ lbl.textContent = `Backup: ${label} · ${fmtTime(ts)}`; wrap.style.display = 'block'; }
+  } catch(e){}
 }
 function adminResetCancel(){
   _adminResetKeys = [];
@@ -2138,6 +2150,8 @@ function adminResetCancel(){
 }
 function adminResetConfirm(){
   const d = load();
+  // Backup opslaan vóór reset
+  saveBackup(d, 'Reset: ' + document.getElementById('admin-reset-label').textContent);
   const resetTs = Date.now();
   if(!d._courtResets) d._courtResets = {};
   _adminResetKeys.forEach(k => { delete d[k]; d._courtResets[k] = resetTs; });
@@ -2147,6 +2161,34 @@ function adminResetConfirm(){
   refreshAll();
   adminResetCancel();
   if(navigator.vibrate) navigator.vibrate([30,50,30]);
+}
+
+const BACKUP_KEY = 'rg_backup';
+function saveBackup(data, label){
+  try{
+    localStorage.setItem(BACKUP_KEY, JSON.stringify({ data, label, ts: Date.now() }));
+    const wrap = document.getElementById('admin-restore-wrap');
+    const lbl  = document.getElementById('admin-backup-label');
+    if(wrap && lbl){
+      lbl.textContent = `Backup: ${label} · ${fmtTime(Date.now())}`;
+      wrap.style.display = 'block';
+    }
+  } catch(e){}
+}
+
+function adminRestoreBackup(){
+  try{
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if(!raw) return;
+    const { data, label } = JSON.parse(raw);
+    if(!data) return;
+    if(!confirm(`Backup terugzetten?\n"${label}"\n\nHuidige staat wordt overschreven.`)) return;
+    _localSaveRaw(data);
+    if(window.pushToSupabase) window.pushToSupabase(data);
+    buildAllLists();
+    refreshAll();
+    showToast('Backup teruggezet.');
+  } catch(e){ showToast('Backup terugzetten mislukt.'); }
 }
 
 function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
