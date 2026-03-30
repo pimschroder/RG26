@@ -1029,9 +1029,15 @@ window._loadXLSX = function(cb){
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
-    // Auto-reload wanneer een nieuwe SW actief wordt
+    // Toon banner wanneer nieuwe SW klaar staat — geen auto-reload
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
+      let b = document.getElementById('sw-update-banner');
+      if(b) return;
+      b = document.createElement('div');
+      b.id = 'sw-update-banner';
+      b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#2D5A1B;color:#fff;font-family:"DM Mono",monospace;font-size:12px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:9999;';
+      b.innerHTML = '<span>🆕 Nieuwe versie beschikbaar</span><button onclick="window.location.reload()" style="background:#fff;color:#2D5A1B;border:none;border-radius:6px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">Vernieuwen</button>';
+      document.body.appendChild(b);
     });
   });
 }
