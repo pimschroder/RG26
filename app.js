@@ -1083,7 +1083,7 @@ function buildCamPage(containerId, storageKey, cams){
 
 function pillHtml(sk, camNum){
   const d=load(); const cd=(d[sk]||{})[`cam${camNum}`]||{};
-  const rows = CAM_ROWS;
+  const rows = getRows(sk, camNum);
   return rows.map(r=>{
     const s=cd[r]?.status||"";
     const [cls,lbl]=s==="OK"?["p-ok","OK"]:s==="NOK"?["p-nok","NOK"]:s==="PENDING"?["p-pend","…"]:["p-none","—"];
@@ -1394,38 +1394,55 @@ function simpleDone(sk, total){
 }
 
 const CAM_ROW_OVERRIDES = {
-  "c14": { 1: ["FIBERS","SMPTE","CAMERA"], 7: ["CAMERA"] },
+  "c14": { 1: ["FIBERS","SMPTE","CAMERA","MOUNT"], 5: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"], 6: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"], 7: ["CAMERA"] },
   "pc":  {
+    1:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    3:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    4:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    5:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
     7:  ["CAMERA"],
-    10: ["FIBERS","SMPTE","CAMERA"],
+    9:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    10: ["FIBERS","SMPTE","CAMERA","MOUNT"],
     11: ["CAMERA"],
-    12: ["FIBERS","CAMERA"],
-    13: ["FIBERS","CAMERA"],
-    14: ["FIBERS","SMPTE","CAMERA"],
-    15: ["FIBERS","SMPTE","CAMERA"],
+    12: ["FIBERS","CAMERA","MOUNT"],
+    13: ["FIBERS","CAMERA","MOUNT"],
+    14: ["FIBERS","SMPTE","CAMERA","MOUNT"],
+    15: ["FIBERS","SMPTE","CAMERA","MOUNT"],
+    16: ["FIBERS","CAMERA"],
+    17: ["FIBERS","CAMERA"],
+    18: ["FIBERS","CAMERA","MOUNT"],
+    20: ["CAMERA"],
+    21: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    22: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    24: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"]
+  },
+  "sl":  {
+    1:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    5:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    6:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    7:  ["CAMERA"],
+    8:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    9:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    10: ["FIBERS","SMPTE","CAMERA","MOUNT"],
+    11: ["CAMERA"],
+    12: ["FIBERS","CAMERA","MOUNT"],
+    13: ["FIBERS","CAMERA","MOUNT"],
+    14: ["FIBERS","SMPTE","CAMERA","MOUNT"],
+    15: ["FIBERS","SMPTE","CAMERA","MOUNT"],
     16: ["FIBERS","CAMERA"],
     17: ["FIBERS","CAMERA"],
     18: ["FIBERS","CAMERA"],
-    20: ["CAMERA"]
-  },
-  "sl":  {
-    7:  ["CAMERA"],
-    10: ["FIBERS","SMPTE","CAMERA"],
-    11: ["CAMERA"],
-    12: ["FIBERS","CAMERA"],
-    13: ["FIBERS","CAMERA"],
-    14: ["FIBERS","SMPTE","CAMERA"],
-    15: ["FIBERS","SMPTE","CAMERA"],
-    16: ["FIBERS","CAMERA"],
-    17: ["FIBERS","CAMERA"],
-    18: ["FIBERS","CAMERA"]
+    20: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"]
   },
   "sm":  {
+    1:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
+    2:  ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"],
     7:  ["CAMERA"],
-    8:  ["FIBERS","CAMERA"],
-    9:  ["FIBERS","CAMERA"],
+    8:  ["FIBERS","CAMERA","MOUNT"],
+    9:  ["FIBERS","CAMERA","MOUNT"],
     10: ["FIBERS","CAMERA"],
-    11: ["FIBERS","CAMERA"]
+    11: ["FIBERS","CAMERA"],
+    13: ["FIBERS","SMPTE","SHED/CCU","CAMERA","MOUNT"]
   }
 };
 function getRows(sk, camNum){
