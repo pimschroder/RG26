@@ -2807,11 +2807,13 @@ function _updateCourtDots(pageId){
   if(!bar){
     bar = document.createElement('div');
     bar.id = 'court-dot-bar';
-    // Insert below the sub-header
-    const page = document.querySelector('.page.active');
-    const subHeader = page && page.querySelector('.sub-header');
+  }
+  // Always move bar into the target page so it's visible after navigation
+  const page = document.getElementById(pageId);
+  if(page && !page.contains(bar)){
+    const subHeader = page.querySelector('.sub-header');
     if(subHeader) subHeader.after(bar);
-    else if(page) page.prepend(bar);
+    else page.prepend(bar);
   }
   bar.innerHTML = seq.map(id =>
     `<span class="court-dot${id===pageId?' active':''}" onclick="goTo('${id}')">${COURT_LABELS[id]}</span>`
