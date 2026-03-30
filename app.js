@@ -559,11 +559,6 @@ const QC_PRODUCTION_ITEMS = ["VIDEO QC 1", "VIDEO QC 2"];
 const VENUE_SCREEN_ITEMS = [];
 const GFX_ITEMS = ["GFX 1", "GFX 2"];
 
-const BLANK_CAMS = [
-  {num:1,type:"",pos:""},{num:2,type:"",pos:""},{num:3,type:"",pos:""},
-  {num:4,type:"",pos:""},{num:5,type:"",pos:""},{num:6,type:"",pos:""},
-  {num:7,type:"",pos:""},{num:8,type:"",pos:""},
-];
 
 const PC_CAMS = [
   {num:1,type:"Tripod · x22",pos:"Main - High centred"},
