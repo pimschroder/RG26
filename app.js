@@ -12,10 +12,11 @@
   function setSyncStatus(s){
     const el = document.getElementById("sync-status");
     if(!el) return;
+    const pending = !!localStorage.getItem('rg_pending_sync');
     const map = {
       connected: ["☁️ Live",                      "#2D5A1B"],
-      synced:    ["✅ Gesynchroniseerd",           "#2D5A1B"],
-      offline:   ["📴 Offline",                    "#aaa"],
+      synced:    [pending ? "⏳ Niet gesynchroniseerd" : "✅ Gesynchroniseerd", pending ? "#C9A84C" : "#2D5A1B"],
+      offline:   [pending ? "📴 Offline · wijzigingen wachten" : "📴 Offline", "#aaa"],
       error:     ["⚠️ Sync fout — tik om opnieuw", "#C1440E"],
       saving:    ["💾 Opslaan…",                   "#C9A84C"],
       receiving: ["🔄 Ontvangen…",                 "#C9A84C"]
@@ -519,7 +520,6 @@ const GALLERY_ITEMS = [
   ["EVS PC",         "Slomo's Philippe Chatrier"],
   ["QC AUDIO",       "Quality Control Audio"],
   ["QC PRODUCTION",  "Quality Control Production"],
-  ["VENUE SCREEN",   "Venue Screen Feed"],
   ["GFX",            "Graphics"],
 ];
 
@@ -556,7 +556,6 @@ const EVS_SL_ITEMS = ["SL EVS CO-ORD", "SL EVS OP 1", "SL EVS OP 2", "SL EVS OP 
 const EVS_PC_ITEMS = ["PC EVS CO-ORD", "PC EVS OP 1", "PC EVS OP 2", "PC EVS OP 3", "PC EVS OP 4", "PC EVS OP 5"];
 const QC_AUDIO_ITEMS = ["QC AUDIO"];
 const QC_PRODUCTION_ITEMS = ["VIDEO QC 1", "VIDEO QC 2"];
-const VENUE_SCREEN_ITEMS = [];
 const GFX_ITEMS = ["GFX 1", "GFX 2"];
 
 
@@ -624,7 +623,7 @@ const SM_CAMS = [
   {num:13,type:"Fixed · xWA",pos:"Beauty shot of court"},
 ];
 
-const SK = "rg2025_v1";
+const SK = "rg2026_v1";
 let _dataCache = null;
 function load(){
   if(_dataCache !== null) return _dataCache;
@@ -819,7 +818,6 @@ window.buildAllLists = function buildAllLists(){
   buildSimpleList("list-gal-EVS-PC","gal_EVS_PC",EVS_PC_ITEMS);
   buildSimpleList("list-gal-QC-AUDIO","gal_QC_AUDIO",QC_AUDIO_ITEMS);
   buildSimpleList("list-gal-QC-PRODUCTION","gal_QC_PRODUCTION",QC_PRODUCTION_ITEMS);
-  buildSimpleList("list-gal-VENUE-SCREEN","gal_VENUE_SCREEN",VENUE_SCREEN_ITEMS);
   buildSimpleList("list-gal-GFX","gal_GFX",GFX_ITEMS);
   buildCamPage("list-c14","c14",C14_CAMS);
   buildCamPage("list-pc","pc",PC_CAMS);
@@ -944,9 +942,9 @@ function buildGallery(){
   const wrap = document.getElementById("gal-nav-list");
   if(!wrap) return;
   wrap.innerHTML = "";
-  const keys = ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF-CAMS', 'NOVA-105', 'SL-PRODUCTION', 'SL-AUDIO', 'SM-PRODUCTION', 'SM-AUDIO', 'EIC-AIC', 'EMG-OFFICE', 'EVS-SL', 'EVS-PC', 'QC-AUDIO', 'QC-PRODUCTION', 'VENUE-SCREEN', 'GFX'];
-  const labels = ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF CAMS', 'NOVA 105', 'SL PRODUCTION', 'SL AUDIO', 'SM PRODUCTION', 'SM AUDIO', "EIC/AIC GALLERY'S", 'EMG OFFICE', 'EVS SL', 'EVS PC', 'QC AUDIO', 'QC PRODUCTION', 'VENUE SCREEN', 'GFX'];
-  const notes = ['Camera Control Shading Room', '', 'Master Control Room', 'Comms', 'Fédération Française de Tennis', 'RF', 'EMG NOVA 105', 'Suzanne Lenglen Production', 'Suzanne Lenglen Audio', 'Simonne Mathieu Production', 'Simonne Mathieu Audio', 'Engineer In Charge / Audio In Charge', 'Kantoor', "Slomo's Suzanne Lenglen", "Slomo's Philippe Chatrier", 'Quality Control Audio', 'Quality Control Production', 'Venue Screen Feed', 'Graphics'];
+  const keys = ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF-CAMS', 'NOVA-105', 'SL-PRODUCTION', 'SL-AUDIO', 'SM-PRODUCTION', 'SM-AUDIO', 'EIC-AIC', 'EMG-OFFICE', 'EVS-SL', 'EVS-PC', 'QC-AUDIO', 'QC-PRODUCTION', 'GFX'];
+  const labels = ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF CAMS', 'NOVA 105', 'SL PRODUCTION', 'SL AUDIO', 'SM PRODUCTION', 'SM AUDIO', "EIC/AIC GALLERY'S", 'EMG OFFICE', 'EVS SL', 'EVS PC', 'QC AUDIO', 'QC PRODUCTION', 'GFX'];
+  const notes = ['Camera Control Shading Room', '', 'Master Control Room', 'Comms', 'Fédération Française de Tennis', 'RF', 'EMG NOVA 105', 'Suzanne Lenglen Production', 'Suzanne Lenglen Audio', 'Simonne Mathieu Production', 'Simonne Mathieu Audio', 'Engineer In Charge / Audio In Charge', 'Kantoor', "Slomo's Suzanne Lenglen", "Slomo's Philippe Chatrier", 'Quality Control Audio', 'Quality Control Production', 'Graphics'];
   keys.forEach((key, i) => {
     const done = galItemDone(key);
     const total = galItemTotal(key);
@@ -975,7 +973,7 @@ const GAL_TOTALS = {
   "SM-AUDIO":SM_AUDIO_ITEMS.length,"EIC-AIC":EIC_AIC_ITEMS.length,
   "EMG-OFFICE":EMG_OFFICE_ITEMS.length,"EVS-SL":EVS_SL_ITEMS.length,
   "EVS-PC":EVS_PC_ITEMS.length,"QC-AUDIO":QC_AUDIO_ITEMS.length,
-  "QC-PRODUCTION":QC_PRODUCTION_ITEMS.length,"VENUE-SCREEN":VENUE_SCREEN_ITEMS.length,
+  "QC-PRODUCTION":QC_PRODUCTION_ITEMS.length,
   "GFX":GFX_ITEMS.length
 };
 const GAL_SK = {
@@ -986,7 +984,7 @@ const GAL_SK = {
   "EIC-AIC":"gal_EIC_AIC","EMG-OFFICE":"gal_EMG_OFFICE",
   "EVS-SL":"gal_EVS_SL","EVS-PC":"gal_EVS_PC",
   "QC-AUDIO":"gal_QC_AUDIO","QC-PRODUCTION":"gal_QC_PRODUCTION",
-  "VENUE-SCREEN":"gal_VENUE_SCREEN","GFX":"gal_GFX"
+  "GFX":"gal_GFX"
 };
 function galItemTotal(key){ return GAL_TOTALS[key] || 0; }
 function galItemDone(key){
@@ -1452,8 +1450,8 @@ const SECTIONS = [
     total:()=>PC_MIC_ITEMS.length+SL_MIC_ITEMS.length+SM_MIC_ITEMS.length+C14_MIC_ITEMS.length+PC_SB_ITEMS.length+SL_SB_ITEMS.length+SM_SB_ITEMS.length+C14_SB_ITEMS.length,
     done:()=>simpleDone("audio_pc",PC_MIC_ITEMS.length)+simpleDone("audio_sl",SL_MIC_ITEMS.length)+simpleDone("audio_sm",SM_MIC_ITEMS.length)+simpleDone("audio_c14",C14_MIC_ITEMS.length)+simpleDone("sb_pc",PC_SB_ITEMS.length)+simpleDone("sb_sl",SL_SB_ITEMS.length)+simpleDone("sb_sm",SM_SB_ITEMS.length)+simpleDone("sb_c14",C14_SB_ITEMS.length) },
   { key:"comm",       listId:"list-comm",      cams:null,       total:()=>PC4TH_POSITIONS.length*POS_CHECKS.length+PC5TH_POSITIONS.length*POS_CHECKS.length+COMMSL_POSITIONS.length*POS_CHECKS.length+COMMSM_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc4th",PC4TH_POSITIONS)+posDone("comm_pc5th",PC5TH_POSITIONS)+posDone("comm_sl",COMMSL_POSITIONS)+posDone("comm_sm",COMMSM_POSITIONS) },
-  { key:"gal",        listId:null,             cams:null,       total:()=>CCSR_ITEMS.length+CIR_ITEMS.length+MCR_ITEMS.length+INTERCOM_ITEMS.length+FFT_ITEMS.length+RF_CAMS_ITEMS.length+NOVA_105_ITEMS.length+SL_PRODUCTION_ITEMS.length+SL_AUDIO_ITEMS.length+SM_PRODUCTION_ITEMS.length+SM_AUDIO_ITEMS.length+EIC_AIC_ITEMS.length+EMG_OFFICE_ITEMS.length+EVS_SL_ITEMS.length+EVS_PC_ITEMS.length+QC_AUDIO_ITEMS.length+QC_PRODUCTION_ITEMS.length+VENUE_SCREEN_ITEMS.length+GFX_ITEMS.length,
-    done:()=>simpleDone("gal_CCSR",CCSR_ITEMS.length)+simpleDone("gal_CIR",CIR_ITEMS.length)+simpleDone("gal_MCR",MCR_ITEMS.length)+simpleDone("gal_INTERCOM",INTERCOM_ITEMS.length)+simpleDone("gal_FFT",FFT_ITEMS.length)+simpleDone("gal_RF_CAMS",RF_CAMS_ITEMS.length)+simpleDone("gal_NOVA_105",NOVA_105_ITEMS.length)+simpleDone("gal_SL_PRODUCTION",SL_PRODUCTION_ITEMS.length)+simpleDone("gal_SL_AUDIO",SL_AUDIO_ITEMS.length)+simpleDone("gal_SM_PRODUCTION",SM_PRODUCTION_ITEMS.length)+simpleDone("gal_SM_AUDIO",SM_AUDIO_ITEMS.length)+simpleDone("gal_EIC_AIC",EIC_AIC_ITEMS.length)+simpleDone("gal_EMG_OFFICE",EMG_OFFICE_ITEMS.length)+simpleDone("gal_EVS_SL",EVS_SL_ITEMS.length)+simpleDone("gal_EVS_PC",EVS_PC_ITEMS.length)+simpleDone("gal_QC_AUDIO",QC_AUDIO_ITEMS.length)+simpleDone("gal_QC_PRODUCTION",QC_PRODUCTION_ITEMS.length)+simpleDone("gal_VENUE_SCREEN",VENUE_SCREEN_ITEMS.length)+simpleDone("gal_GFX",GFX_ITEMS.length) },
+  { key:"gal",        listId:null,             cams:null,       total:()=>CCSR_ITEMS.length+CIR_ITEMS.length+MCR_ITEMS.length+INTERCOM_ITEMS.length+FFT_ITEMS.length+RF_CAMS_ITEMS.length+NOVA_105_ITEMS.length+SL_PRODUCTION_ITEMS.length+SL_AUDIO_ITEMS.length+SM_PRODUCTION_ITEMS.length+SM_AUDIO_ITEMS.length+EIC_AIC_ITEMS.length+EMG_OFFICE_ITEMS.length+EVS_SL_ITEMS.length+EVS_PC_ITEMS.length+QC_AUDIO_ITEMS.length+QC_PRODUCTION_ITEMS.length+GFX_ITEMS.length,
+    done:()=>simpleDone("gal_CCSR",CCSR_ITEMS.length)+simpleDone("gal_CIR",CIR_ITEMS.length)+simpleDone("gal_MCR",MCR_ITEMS.length)+simpleDone("gal_INTERCOM",INTERCOM_ITEMS.length)+simpleDone("gal_FFT",FFT_ITEMS.length)+simpleDone("gal_RF_CAMS",RF_CAMS_ITEMS.length)+simpleDone("gal_NOVA_105",NOVA_105_ITEMS.length)+simpleDone("gal_SL_PRODUCTION",SL_PRODUCTION_ITEMS.length)+simpleDone("gal_SL_AUDIO",SL_AUDIO_ITEMS.length)+simpleDone("gal_SM_PRODUCTION",SM_PRODUCTION_ITEMS.length)+simpleDone("gal_SM_AUDIO",SM_AUDIO_ITEMS.length)+simpleDone("gal_EIC_AIC",EIC_AIC_ITEMS.length)+simpleDone("gal_EMG_OFFICE",EMG_OFFICE_ITEMS.length)+simpleDone("gal_EVS_SL",EVS_SL_ITEMS.length)+simpleDone("gal_EVS_PC",EVS_PC_ITEMS.length)+simpleDone("gal_QC_AUDIO",QC_AUDIO_ITEMS.length)+simpleDone("gal_QC_PRODUCTION",QC_PRODUCTION_ITEMS.length)+simpleDone("gal_GFX",GFX_ITEMS.length) },
   { key:"c14",        listId:null,             cams:C14_CAMS,   total:()=>C14_CAMS.reduce((s,c)=>s+getRows("c14",c.num).length,0), done:()=>camDone("c14",C14_CAMS) },
   { key:"pc", listId:null, cams:null, total:()=>PC_CAMS.reduce((s,c)=>s+getRows("pc",c.num).length,0), done:()=>camDone("pc",PC_CAMS) },
   { key:"sl", listId:null, cams:null, total:()=>SL_CAMS.reduce((s,c)=>s+getRows("sl",c.num).length,0), done:()=>camDone("sl",SL_CAMS) },
@@ -1505,7 +1503,7 @@ function _doRefresh(){
   bar("gal-bar",    pct(dones.gal,totals.gal));       txt("gal-lbl",dones.gal+"/"+totals.gal);         txt("gal-count",dones.gal+"/"+totals.gal);
   const galMsg=document.getElementById("gal-done-msg"); if(galMsg) dones.gal===totals.gal&&totals.gal>0?galMsg.classList.add("visible"):galMsg.classList.remove("visible");
 
-  ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF-CAMS', 'NOVA-105', 'SL-PRODUCTION', 'SL-AUDIO', 'SM-PRODUCTION', 'SM-AUDIO', 'EIC-AIC', 'EMG-OFFICE', 'EVS-SL', 'EVS-PC', 'QC-AUDIO', 'QC-PRODUCTION', 'VENUE-SCREEN', 'GFX'].forEach(key=>{
+  ['CCSR', 'CIR', 'MCR', 'INTERCOM', 'FFT', 'RF-CAMS', 'NOVA-105', 'SL-PRODUCTION', 'SL-AUDIO', 'SM-PRODUCTION', 'SM-AUDIO', 'EIC-AIC', 'EMG-OFFICE', 'EVS-SL', 'EVS-PC', 'QC-AUDIO', 'QC-PRODUCTION', 'GFX'].forEach(key=>{
     const d=galItemDone(key), t=galItemTotal(key);
     txt("gal-note-"+key, d+" van "+t+" voltooid");
     chip("gal-pct-"+key, d, t);
@@ -1659,7 +1657,7 @@ function _doExportToExcel(){
     ["EIC-AIC",EIC_AIC_ITEMS,"gal_EIC_AIC"],["EMG-OFFICE",EMG_OFFICE_ITEMS,"gal_EMG_OFFICE"],
     ["EVS-SL",EVS_SL_ITEMS,"gal_EVS_SL"],["EVS-PC",EVS_PC_ITEMS,"gal_EVS_PC"],
     ["QC-AUDIO",QC_AUDIO_ITEMS,"gal_QC_AUDIO"],["QC-PRODUCTION",QC_PRODUCTION_ITEMS,"gal_QC_PRODUCTION"],
-    ["VENUE-SCREEN",VENUE_SCREEN_ITEMS,"gal_VENUE_SCREEN"],["GFX",GFX_ITEMS,"gal_GFX"]
+    ["GFX",GFX_ITEMS,"gal_GFX"]
   ];
   galExportMap.forEach(([label,items,sk])=>{
     items.forEach((name,i)=>{
