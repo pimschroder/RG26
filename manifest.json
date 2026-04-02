@@ -1,0 +1,25 @@
+{
+  "name": "RG2026 Checklist",
+  "short_name": "RG2026",
+  "description": "Roland Garros 2026 Opbouw Checklist",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5EDD8",
+  "theme_color": "#8B2E07",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -217,8 +217,12 @@
       suppressRemote = true;
       setSyncStatus("saving");
       try{
+        const _ctrl = new AbortController();
+        const _to = setTimeout(()=>_ctrl.abort(), 10000);
         const { error } = await supaClient.from("checklist_state")
-          .upsert({ id:1, data: offlineQueue }, { onConflict:"id" });
+          .upsert({ id:1, data: offlineQueue }, { onConflict:"id" })
+          .abortSignal(_ctrl.signal);
+        clearTimeout(_to);
         if(error) throw error;
         offlineQueue = null;
         pushFailCount = 0;
@@ -491,7 +495,7 @@
 
 // ── AUDIO STAGEBOX DATA ──────────────────────────────────────────
 const PC_SB_ITEMS  = ['A-STAGE64 NORTH PIT','A-STAGE64 SOUTH TRIBUNE','A-MIC8 WEST TRIBUNE','A-MIC8 EAST TRIBUNE'];
-const SL_SB_ITEMS  = ['A-STAGE64 SOUTH PIT','A-MIC8 SOUTH EAST TOWER','A-MIC8 SOUTH WEST TOWER'];
+const SL_SB_ITEMS  = ['A-STAGE64 SOUTH PIT','A-MIC8 SOUTH EAST TOWER','A-MIC8 SOUTH WEST TOWER','A-MIC8 CAM 2'];
 const SM_SB_ITEMS  = ['A-STAGE64 SOUTH PIT','S-STAGE64 TECH CABIN'];
 const C14_SB_ITEMS = ['A-STAGE64 WEST TRIBUNE','A-MIC8 TECH ROOM'];
 
@@ -787,6 +791,10 @@ async function doLogin(){
 function logout(){
   releaseWakeLock();
   try {
+    // Fire a final sync if there are pending changes before we navigate away
+    if(localStorage.getItem('rg_pending_sync') && window.pushToSupabase && navigator.onLine){
+      window.pushToSupabase(load());
+    }
     const d = load();
     delete d.loggedIn;
     localStorage.setItem(SK, JSON.stringify(d));
@@ -857,6 +865,7 @@ window.rebuildPage = function rebuildPage(id){
     case 'page-users':       buildUsers(); break;
     case 'page-problems':    buildProblems(); break;
     case 'page-persons':     buildPersons(); break;
+    case 'page-activity':    buildActivity(); break;
     default:
       if(id && id.startsWith('page-gal-')){
         const key = id.slice(9);
@@ -895,6 +904,16 @@ function initApp(){
 
   buildAllLists();
   var d = load();
+
+  // Pre-seed _courtWasDone from current data so courts that were already
+  // complete before this page load don't re-fire the toast.
+  const _courtMap = {c14:C14_CAMS,pc:PC_CAMS,sl:SL_CAMS,sm:SM_CAMS};
+  for(const [sk, cams] of Object.entries(_courtMap)){
+    _courtWasDone[sk] = cams.every(cam =>
+      getRows(sk, cam.num).every(r => (d[sk]||{})[`cam${cam.num}`]?.[r]?.checked)
+    );
+  }
+
   const SESSION_HOURS = 12;
   const lastActivity = parseInt(localStorage.getItem('rg_last_activity') || '0') || (d.loginTs || 0);
   const sessionExpired = lastActivity && (Date.now() - lastActivity) > SESSION_HOURS * 60 * 60 * 1000;
@@ -1037,7 +1056,7 @@ function buildCamPage(containerId, storageKey, cams){
           ${row}${rd.ts?`<span class="row-meta">${esc(rd.user||"")}${rd.user?" · ":""}${fmtTime(rd.ts)}</span>`:""}
           ${note?`<span class="cam-note-pill">📝 ${esc(note.length>50?note.slice(0,50)+'…':note)}</span>`:""}
         </div>
-        <textarea class="cam-note-input" rows="1" placeholder="Notes…" oninput="camNote('${storageKey}',${cam.num},'${row}',this)">${esc(note)}</textarea>
+        <textarea class="cam-note-input" rows="1" maxlength="500" placeholder="Notes…" oninput="camNote('${storageKey}',${cam.num},'${row}',this)">${esc(note)}</textarea>
         <select class="cam-status-sel ${sc}" onchange="camStatus('${storageKey}',${cam.num},'${row}',${j},'${containerId}',this)">
           <option value="">&#8212; status &#8212;</option>
           <option value="OK"      ${status==="OK"?"selected":""}>&#10003; OK</option>
@@ -1084,6 +1103,7 @@ function pillHtml(sk, camNum){
   }).join("");
 }
 
+const _courtWasDone = {};
 function checkCamComplete(sk, camNum, cid, d){
   const cd = d[sk][`cam${camNum}`]||{};
   const rows = getRows(sk, camNum);
@@ -1107,6 +1127,33 @@ function checkCamComplete(sk, camNum, cid, d){
   } else {
     header.classList.remove("cam-header-done");
   }
+
+  // Check if the whole court just became complete
+  const courtMap = {c14:C14_CAMS,pc:PC_CAMS,sl:SL_CAMS,sm:SM_CAMS};
+  const courtLabels = {c14:"Court 14",pc:"Philippe-Chatrier",sl:"Suzanne-Lenglen",sm:"Simonne-Mathieu"};
+  const cams = courtMap[sk]; if(!cams) return;
+  const courtDone  = cams.every(cam => getRows(sk,cam.num).every(r=>(d[sk]||{})[`cam${cam.num}`]?.[r]?.checked));
+  if(courtDone && !_courtWasDone[sk]){
+    setTimeout(()=>{
+      showCourtDoneToast(courtLabels[sk]);
+      if(navigator.vibrate) navigator.vibrate([40,80,40,80,40]);
+    }, 500);
+  }
+  _courtWasDone[sk] = courtDone;
+}
+
+function showCourtDoneToast(label){
+  let el = document.getElementById("court-done-toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "court-done-toast";
+    el.style.cssText = "position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#2D5A1B;color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:opacity .4s;text-align:center;max-width:90vw;pointer-events:none;";
+    document.body.appendChild(el);
+  }
+  el.textContent = `✅ ${label} — alle cameras klaar!`;
+  el.style.opacity = "1";
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity = "0"; }, 6000);
 }
 
 function camCollapse(cid, camNum){
@@ -1220,7 +1267,7 @@ function buildPosList(containerId, storageKey, positions){
             ${posMeta ? `<span class="row-meta">${posMeta}</span>` : ""}
           </div>
         </div>
-        <textarea class="pos-note-input" placeholder="Notes…" oninput="posNote('${storageKey}','${pos}','${chk}',this)">${esc(note)}</textarea>
+        <textarea class="pos-note-input" maxlength="500" placeholder="Notes…" oninput="posNote('${storageKey}','${pos}','${chk}',this)">${esc(note)}</textarea>
       </div>`;
     }).join("");
 
@@ -1343,7 +1390,7 @@ function buildSimpleList(containerId, storageKey, items){
           <span class="simple-label">${name}</span>
           <span class="row-meta" id="${containerId}-smeta-${i}">${sMeta}</span>
         </div>
-        <textarea class="simple-note" placeholder="Notes…" oninput="simpleNote('${storageKey}',${i},this)">${esc(note)}</textarea>
+        <textarea class="simple-note" maxlength="500" placeholder="Notes…" oninput="simpleNote('${storageKey}',${i},this)">${esc(note)}</textarea>
       </div>`;
     }).join("") +
   `</div>`;
@@ -1584,9 +1631,9 @@ function buildDash(totals, dones){
 
 function exportToExcel(){
   closeAdminModal();
-  if(window._loadXLSX){ window._loadXLSX(_doExportToExcel); return; } _doExportToExcel();
+  if(window._loadXLSX){ window._loadXLSX(_doExportExcel); return; } _doExportExcel();
 }
-function _doExportToExcel(){
+function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende opruimronde
   if(typeof XLSX === "undefined"){ alert("Excel library niet geladen. Controleer je internetverbinding."); return; }
 
   const d = load();
@@ -1619,13 +1666,14 @@ function _doExportToExcel(){
         const rd = (d[sk]||{})[`cam${cam.num}`]?.[row] || {};
         rows.push([
           "CAM " + cam.num,
-          cam.name || "",
+          cam.pos || "",
           row,
-          rd.checked ? "✓" : "✗"
+          rd.checked ? "✓" : "✗",
+          rd.note || ""
         ]);
       });
     });
-    const ws = makeWS(["CAM","Positie","Check","Status"], rows, courtLabels[sk]);
+    const ws = makeWS(["CAM","Positie","Check","Status","Notitie"], rows, courtLabels[sk]);
     XLSX.utils.book_append_sheet(wb, ws, courtLabels[sk].substring(0,31));
   }
 
@@ -1842,12 +1890,26 @@ function buildActivity(){
     pos.forEach(p=>{ POS_CHECKS.forEach(chk=>{ const pd=(d[sk]||{})[p]||{}; if(pd[chk]&&pd[chk+'_ts']) events.push({ts:pd[chk+'_ts'],user:pd[chk+'_user']||'—',label:chk,section:`${lbl} · ${p}`}); }); });
   }
 
-  // Gallery
+  // Gallery (alle 18 secties)
   const galMap = [
-    {key:'gal_CCSR',items:CCSR_ITEMS,lbl:'🖼 CCSR'},{key:'gal_CIR',items:CIR_ITEMS,lbl:'🖼 CIR'},
-    {key:'gal_MCR',items:MCR_ITEMS,lbl:'🖼 MCR'},{key:'gal_INTERCOM',items:INTERCOM_ITEMS,lbl:'🖼 Intercom'},
-    {key:'gal_FFT',items:FFT_ITEMS,lbl:'🖼 FFT'},{key:'gal_RF_CAMS',items:RF_CAMS_ITEMS,lbl:'🖼 RF Cams'},
-    {key:'gal_NOVA_105',items:NOVA_105_ITEMS,lbl:'🖼 Nova 105'},{key:'gal_EIC_AIC',items:EIC_AIC_ITEMS,lbl:'🖼 EIC/AIC'},
+    {key:'gal_CCSR',items:CCSR_ITEMS,lbl:'🖼 CCSR'},
+    {key:'gal_CIR',items:CIR_ITEMS,lbl:'🖼 CIR'},
+    {key:'gal_MCR',items:MCR_ITEMS,lbl:'🖼 MCR'},
+    {key:'gal_INTERCOM',items:INTERCOM_ITEMS,lbl:'🖼 Intercom'},
+    {key:'gal_FFT',items:FFT_ITEMS,lbl:'🖼 FFT'},
+    {key:'gal_RF_CAMS',items:RF_CAMS_ITEMS,lbl:'🖼 RF Cams'},
+    {key:'gal_NOVA_105',items:NOVA_105_ITEMS,lbl:'🖼 Nova 105'},
+    {key:'gal_SL_PRODUCTION',items:SL_PRODUCTION_ITEMS,lbl:'🖼 SL Production'},
+    {key:'gal_SL_AUDIO',items:SL_AUDIO_ITEMS,lbl:'🖼 SL Audio'},
+    {key:'gal_SM_PRODUCTION',items:SM_PRODUCTION_ITEMS,lbl:'🖼 SM Production'},
+    {key:'gal_SM_AUDIO',items:SM_AUDIO_ITEMS,lbl:'🖼 SM Audio'},
+    {key:'gal_EIC_AIC',items:EIC_AIC_ITEMS,lbl:'🖼 EIC/AIC'},
+    {key:'gal_EMG_OFFICE',items:EMG_OFFICE_ITEMS,lbl:'🖼 EMG Office'},
+    {key:'gal_EVS_SL',items:EVS_SL_ITEMS,lbl:'🖼 EVS SL'},
+    {key:'gal_EVS_PC',items:EVS_PC_ITEMS,lbl:'🖼 EVS PC'},
+    {key:'gal_QC_AUDIO',items:QC_AUDIO_ITEMS,lbl:'🖼 QC Audio'},
+    {key:'gal_QC_PRODUCTION',items:QC_PRODUCTION_ITEMS,lbl:'🖼 QC Production'},
+    {key:'gal_GFX',items:GFX_ITEMS,lbl:'🖼 GFX'},
   ];
   for(const {key,items,lbl} of galMap){
     const sect=d[key]||{};
@@ -1932,9 +1994,48 @@ function buildPersons(){
     });
   }
 
-  CCSR_ITEMS.forEach((name,i)=>{
-    const e=(d.gal_CCSR||{})[i]||{};
-    if(e.checked) addItem(e.user, "CCSR", name, e.ts);
+  const galMap = [
+    {key:'gal_CCSR',          items:CCSR_ITEMS,           lbl:'CCSR'},
+    {key:'gal_CIR',           items:CIR_ITEMS,            lbl:'CIR'},
+    {key:'gal_MCR',           items:MCR_ITEMS,            lbl:'MCR'},
+    {key:'gal_INTERCOM',      items:INTERCOM_ITEMS,       lbl:'Intercom'},
+    {key:'gal_FFT',           items:FFT_ITEMS,            lbl:'FFT'},
+    {key:'gal_RF_CAMS',       items:RF_CAMS_ITEMS,        lbl:'RF Cams'},
+    {key:'gal_NOVA_105',      items:NOVA_105_ITEMS,       lbl:'Nova 105'},
+    {key:'gal_SL_PRODUCTION', items:SL_PRODUCTION_ITEMS,  lbl:'SL Production'},
+    {key:'gal_SL_AUDIO',      items:SL_AUDIO_ITEMS,       lbl:'SL Audio'},
+    {key:'gal_SM_PRODUCTION', items:SM_PRODUCTION_ITEMS,  lbl:'SM Production'},
+    {key:'gal_SM_AUDIO',      items:SM_AUDIO_ITEMS,       lbl:'SM Audio'},
+    {key:'gal_EIC_AIC',       items:EIC_AIC_ITEMS,        lbl:'EIC/AIC'},
+    {key:'gal_EMG_OFFICE',    items:EMG_OFFICE_ITEMS,     lbl:'EMG Office'},
+    {key:'gal_EVS_SL',        items:EVS_SL_ITEMS,         lbl:'EVS SL'},
+    {key:'gal_EVS_PC',        items:EVS_PC_ITEMS,         lbl:'EVS PC'},
+    {key:'gal_QC_AUDIO',      items:QC_AUDIO_ITEMS,       lbl:'QC Audio'},
+    {key:'gal_QC_PRODUCTION', items:QC_PRODUCTION_ITEMS,  lbl:'QC Production'},
+    {key:'gal_GFX',           items:GFX_ITEMS,            lbl:'GFX'},
+  ];
+  galMap.forEach(({key,items,lbl})=>{
+    items.forEach((name,i)=>{
+      const e=(d[key]||{})[i]||{};
+      if(e.checked) addItem(e.user, lbl, name, e.ts);
+    });
+  });
+
+  const audioMap=[
+    {key:'audio_pc',items:PC_MIC_ITEMS,lbl:'Audio PC'},
+    {key:'audio_sl',items:SL_MIC_ITEMS,lbl:'Audio SL'},
+    {key:'audio_sm',items:SM_MIC_ITEMS,lbl:'Audio SM'},
+    {key:'audio_c14',items:C14_MIC_ITEMS,lbl:'Audio C14'},
+    {key:'sb_pc',items:PC_SB_ITEMS,lbl:'Stagebox PC'},
+    {key:'sb_sl',items:SL_SB_ITEMS,lbl:'Stagebox SL'},
+    {key:'sb_sm',items:SM_SB_ITEMS,lbl:'Stagebox SM'},
+    {key:'sb_c14',items:C14_SB_ITEMS,lbl:'Stagebox C14'},
+  ];
+  audioMap.forEach(({key,items,lbl})=>{
+    items.forEach((name,i)=>{
+      const e=(d[key]||{})[i]||{};
+      if(e.checked) addItem(e.user, lbl, name, e.ts);
+    });
   });
 
   if(Object.keys(persons).length===0){
@@ -2019,23 +2120,52 @@ function buildProblems(){
     });
   }
 
-  if(d.gal_CCSR){
-    CCSR_ITEMS.forEach((name,i)=>{
-      const e = d.gal_CCSR[i]||{};
+  const galMap2 = [
+    {key:'gal_CCSR',          items:CCSR_ITEMS,          lbl:'CCSR'},
+    {key:'gal_CIR',           items:CIR_ITEMS,           lbl:'CIR'},
+    {key:'gal_MCR',           items:MCR_ITEMS,           lbl:'MCR'},
+    {key:'gal_INTERCOM',      items:INTERCOM_ITEMS,      lbl:'Intercom'},
+    {key:'gal_FFT',           items:FFT_ITEMS,           lbl:'FFT'},
+    {key:'gal_RF_CAMS',       items:RF_CAMS_ITEMS,       lbl:'RF Cams'},
+    {key:'gal_NOVA_105',      items:NOVA_105_ITEMS,      lbl:'Nova 105'},
+    {key:'gal_SL_PRODUCTION', items:SL_PRODUCTION_ITEMS, lbl:'SL Production'},
+    {key:'gal_SL_AUDIO',      items:SL_AUDIO_ITEMS,      lbl:'SL Audio'},
+    {key:'gal_SM_PRODUCTION', items:SM_PRODUCTION_ITEMS, lbl:'SM Production'},
+    {key:'gal_SM_AUDIO',      items:SM_AUDIO_ITEMS,      lbl:'SM Audio'},
+    {key:'gal_EIC_AIC',       items:EIC_AIC_ITEMS,       lbl:'EIC/AIC'},
+    {key:'gal_EMG_OFFICE',    items:EMG_OFFICE_ITEMS,    lbl:'EMG Office'},
+    {key:'gal_EVS_SL',        items:EVS_SL_ITEMS,        lbl:'EVS SL'},
+    {key:'gal_EVS_PC',        items:EVS_PC_ITEMS,        lbl:'EVS PC'},
+    {key:'gal_QC_AUDIO',      items:QC_AUDIO_ITEMS,      lbl:'QC Audio'},
+    {key:'gal_QC_PRODUCTION', items:QC_PRODUCTION_ITEMS, lbl:'QC Production'},
+    {key:'gal_GFX',           items:GFX_ITEMS,           lbl:'GFX'},
+  ];
+  galMap2.forEach(({key,items:list,lbl})=>{
+    list.forEach((name,i)=>{
+      const e=(d[key]||{})[i]||{};
       if(!e.checked || e.note){
-        items.push({ section:"CCSR", label:name+(e.checked?" ✓":""), note:e.note||"", done:e.checked||false, user:e.user||"", ts:e.ts||null });
+        items.push({ section:lbl, label:name+(e.checked?' ✓':''), note:e.note||'', done:e.checked||false, user:e.user||'', ts:e.ts||null });
       }
     });
-  }
+  });
 
-  document.getElementById("problems-count").textContent = items.filter(i=>!i.done).length+" open";
+  const openCount = items.filter(i=>!i.done).length;
+  const noteCount = items.filter(i=>i.note).length;
+  document.getElementById("problems-count").textContent = openCount+" open"+(noteCount?` · ${noteCount} notities`:'');
 
   if(items.length===0){
     wrap.innerHTML='<p style="color:#aaa;font-size:12px;padding:20px 0;text-align:center;">Geen openstaande items 🎾</p>';
     return;
   }
 
-  wrap.innerHTML = items.map(item=>`
+  // Items met notities bovenaan, daarna de rest
+  const withNote    = items.filter(i=>i.note);
+  const withoutNote = items.filter(i=>!i.note);
+  const sorted = [...withNote, ...withoutNote];
+
+  wrap.innerHTML = (withNote.length ? `<div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--clay-dark);padding:8px 0 4px">📝 Met notitie (${withNote.length})</div>` : '')
+    + sorted.map((item,idx)=>`
+    ${idx===withNote.length && withNote.length>0 && withoutNote.length>0 ? `<div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#aaa;padding:12px 0 4px">Overige open (${withoutNote.length})</div>` : ''}
     <div class="problem-item${item.note?' has-note':''}">
       <div class="problem-section">${esc(item.section)}</div>
       <div class="problem-label">${esc(item.label)}${item.done?'':' <span style="color:var(--clay);font-size:10px">● Open</span>'}</div>
@@ -2044,59 +2174,41 @@ function buildProblems(){
     </div>`).join('');
 }
 
-function exportExcel(){
-  if(window._loadXLSX){ window._loadXLSX(_doExportExcel); return; } _doExportExcel();
-}
 function _doExportExcel(){
   if(typeof XLSX === "undefined"){ alert("Excel library niet geladen. Controleer je internetverbinding."); return; }
   const d = load();
   const wb = XLSX.utils.book_new();
-  const now = new Date().toLocaleDateString("nl-NL");
+  const now = new Date();
+  const nowStr = now.toLocaleDateString("nl-NL");
 
   function fmtStatus(checked){ return checked ? "✓" : "—"; }
   function fmtUser(user){ return user||""; }
   function fmtTs(ts){ return ts ? new Date(ts).toLocaleString("nl-NL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""; }
 
+  // ── Cameras ──
   const courtMap = {c14:{cams:C14_CAMS,label:"C14"}, pc:{cams:PC_CAMS,label:"Philippe-Chatrier"}, sl:{cams:SL_CAMS,label:"Suzanne-Lenglen"}, sm:{cams:SM_CAMS,label:"Simonne-Mathieu"}};
-
   for(const [sk, {cams, label}] of Object.entries(courtMap)){
-    const rows = [["CAM", "Naam/Positie", "Rij", "Status", "Door", "Tijdstip", "Notitie"]];
+    const rows = [["CAM","Positie","Rij","Status","Door","Tijdstip","Notitie"]];
     cams.forEach(cam=>{
-      const camKey = `cam${cam.num}`;
-      const cd = (d[sk]||{})[camKey]||{};
+      const cd = (d[sk]||{})[`cam${cam.num}`]||{};
       getRows(sk, cam.num).forEach(row=>{
         const rd = cd[row]||{};
-        rows.push([
-          `CAM ${cam.num}`,
-          cam.name||cam.pos||"",
-          row,
-          fmtStatus(rd.checked),
-          fmtUser(rd.user),
-          fmtTs(rd.ts),
-          rd.note||""
-        ]);
+        rows.push([`CAM ${cam.num}`, cam.pos||"", row, fmtStatus(rd.checked), fmtUser(rd.user), fmtTs(rd.ts), rd.note||""]);
       });
     });
     const ws = XLSX.utils.aoa_to_sheet(rows);
-
     ws["!cols"] = [{wch:8},{wch:28},{wch:12},{wch:8},{wch:14},{wch:16},{wch:35}];
-
     XLSX.utils.book_append_sheet(wb, ws, label.substring(0,31));
   }
 
+  // ── Commentaar ──
   const commRows = [["Box","Positie","Check","Status","Door","Tijdstip","Notitie"]];
   const commMap = {comm_pc4th:{pos:PC4TH_POSITIONS,lbl:"PC 4TH"}, comm_pc5th:{pos:PC5TH_POSITIONS,lbl:"PC 5TH"}, comm_sl:{pos:COMMSL_POSITIONS,lbl:"SL"}, comm_sm:{pos:COMMSM_POSITIONS,lbl:"SM"}};
   for(const [sk,{pos,lbl}] of Object.entries(commMap)){
     pos.forEach(p=>{
       const pd = (d[sk]||{})[p]||{};
       POS_CHECKS.forEach(chk=>{
-        commRows.push([
-          lbl, p, chk,
-          fmtStatus(pd[chk]),
-          fmtUser(pd[chk+"_user"]),
-          fmtTs(pd[chk+"_ts"]),
-          pd[chk+"_note"]||""
-        ]);
+        commRows.push([lbl, p, chk, fmtStatus(pd[chk]), fmtUser(pd[chk+"_user"]), fmtTs(pd[chk+"_ts"]), pd[chk+"_note"]||""]);
       });
     });
   }
@@ -2104,16 +2216,46 @@ function _doExportExcel(){
   wsComm["!cols"] = [{wch:10},{wch:10},{wch:12},{wch:8},{wch:14},{wch:16},{wch:35}];
   XLSX.utils.book_append_sheet(wb, wsComm, "Commentaar");
 
+  // ── Gallery (alle secties) ──
   const galRows = [["Gallery","Item","Status","Door","Tijdstip","Notitie"]];
-  CCSR_ITEMS.forEach((name,i)=>{
-    const e = (d.gal_CCSR||{})[i]||{};
-    galRows.push(["CCSR", name, fmtStatus(e.checked), fmtUser(e.user), fmtTs(e.ts), e.note||""]);
+  [
+    ["CCSR",CCSR_ITEMS,"gal_CCSR"],["CIR",CIR_ITEMS,"gal_CIR"],["MCR",MCR_ITEMS,"gal_MCR"],
+    ["INTERCOM",INTERCOM_ITEMS,"gal_INTERCOM"],["FFT",FFT_ITEMS,"gal_FFT"],
+    ["RF-CAMS",RF_CAMS_ITEMS,"gal_RF_CAMS"],["NOVA-105",NOVA_105_ITEMS,"gal_NOVA_105"],
+    ["SL-PRODUCTION",SL_PRODUCTION_ITEMS,"gal_SL_PRODUCTION"],["SL-AUDIO",SL_AUDIO_ITEMS,"gal_SL_AUDIO"],
+    ["SM-PRODUCTION",SM_PRODUCTION_ITEMS,"gal_SM_PRODUCTION"],["SM-AUDIO",SM_AUDIO_ITEMS,"gal_SM_AUDIO"],
+    ["EIC-AIC",EIC_AIC_ITEMS,"gal_EIC_AIC"],["EMG-OFFICE",EMG_OFFICE_ITEMS,"gal_EMG_OFFICE"],
+    ["EVS-SL",EVS_SL_ITEMS,"gal_EVS_SL"],["EVS-PC",EVS_PC_ITEMS,"gal_EVS_PC"],
+    ["QC-AUDIO",QC_AUDIO_ITEMS,"gal_QC_AUDIO"],["QC-PRODUCTION",QC_PRODUCTION_ITEMS,"gal_QC_PRODUCTION"],
+    ["GFX",GFX_ITEMS,"gal_GFX"]
+  ].forEach(([lbl,items,sk])=>{
+    items.forEach((name,i)=>{
+      const e=(d[sk]||{})[i]||{};
+      galRows.push([lbl, name, fmtStatus(e.checked), fmtUser(e.user), fmtTs(e.ts), e.note||""]);
+    });
   });
   const wsGal = XLSX.utils.aoa_to_sheet(galRows);
-  wsGal["!cols"] = [{wch:14},{wch:20},{wch:8},{wch:14},{wch:16},{wch:35}];
+  wsGal["!cols"] = [{wch:14},{wch:28},{wch:8},{wch:14},{wch:16},{wch:35}];
   XLSX.utils.book_append_sheet(wb, wsGal, "Gallery's");
 
-  const filename = `RolandGarros_Status_${now.replace(/\//g,"-")}.xlsx`;
+  // ── Audio ──
+  const audioRows = [["Sectie","Item","Status","Door","Tijdstip","Notitie"]];
+  [
+    ["Audio PC · Mics",PC_MIC_ITEMS,"audio_pc"],["Audio SL · Mics",SL_MIC_ITEMS,"audio_sl"],
+    ["Audio SM · Mics",SM_MIC_ITEMS,"audio_sm"],["Audio C14 · Mics",C14_MIC_ITEMS,"audio_c14"],
+    ["Stageboxes PC",PC_SB_ITEMS,"sb_pc"],["Stageboxes SL",SL_SB_ITEMS,"sb_sl"],
+    ["Stageboxes SM",SM_SB_ITEMS,"sb_sm"],["Stageboxes C14",C14_SB_ITEMS,"sb_c14"],
+  ].forEach(([lbl,items,sk])=>{
+    items.forEach((name,i)=>{
+      const e=(d[sk]||{})[i]||{};
+      audioRows.push([lbl, name, fmtStatus(e.checked), fmtUser(e.user), fmtTs(e.ts), e.note||""]);
+    });
+  });
+  const wsAudio = XLSX.utils.aoa_to_sheet(audioRows);
+  wsAudio["!cols"] = [{wch:20},{wch:40},{wch:8},{wch:14},{wch:16},{wch:35}];
+  XLSX.utils.book_append_sheet(wb, wsAudio, "Audio");
+
+  const filename = `RG2026_Status_${nowStr.replace(/\//g,"-")}.xlsx`;
   XLSX.writeFile(wb, filename);
 }
 
@@ -2142,17 +2284,7 @@ function adminResetCourt(keys, label){
   _adminResetKeys = keys;
   document.getElementById('admin-reset-label').textContent = label;
   document.getElementById('admin-reset-confirm').style.display = 'block';
-  _showExistingBackup();
-}
-function _showExistingBackup(){
-  try{
-    const raw = localStorage.getItem(BACKUP_KEY);
-    if(!raw) return;
-    const { label, ts } = JSON.parse(raw);
-    const wrap = document.getElementById('admin-restore-wrap');
-    const lbl  = document.getElementById('admin-backup-label');
-    if(wrap && lbl){ lbl.textContent = `Backup: ${label} · ${fmtTime(ts)}`; wrap.style.display = 'block'; }
-  } catch(e){}
+  _showExistingBackup_slots();
 }
 function adminResetCancel(){
   _adminResetKeys = [];
@@ -2173,35 +2305,59 @@ function adminResetConfirm(){
   if(navigator.vibrate) navigator.vibrate([30,50,30]);
 }
 
-const BACKUP_KEY = 'rg_backup';
+const BACKUP_KEY = 'rg_backups';
+const BACKUP_MAX = 3;
+
 function saveBackup(data, label){
   try{
-    localStorage.setItem(BACKUP_KEY, JSON.stringify({ data, label, ts: Date.now() }));
-    const wrap = document.getElementById('admin-restore-wrap');
-    const lbl  = document.getElementById('admin-backup-label');
-    if(wrap && lbl){
-      lbl.textContent = `Backup: ${label} · ${fmtTime(Date.now())}`;
-      wrap.style.display = 'block';
-    }
+    const raw = localStorage.getItem(BACKUP_KEY);
+    const slots = raw ? JSON.parse(raw) : [];
+    slots.unshift({ data, label, ts: Date.now() });
+    if(slots.length > BACKUP_MAX) slots.length = BACKUP_MAX;
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(slots));
+    _renderBackupSlots(slots);
   } catch(e){}
 }
 
-function adminRestoreBackup(){
+function _renderBackupSlots(slots){
+  const wrap = document.getElementById('admin-restore-wrap');
+  if(!wrap) return;
+  if(!slots || slots.length === 0){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = slots.map((s, i) =>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:${i<slots.length-1?'6px':'0'}">
+      <span style="flex:1;font-size:10px;color:var(--green);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(s.label)} · ${fmtTime(s.ts)}</span>
+      <button onclick="adminRestoreBackup(${i})" style="background:var(--green);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;">↩ Herstel</button>
+    </div>`
+  ).join('');
+}
+
+function _showExistingBackup_slots(){
   try{
     const raw = localStorage.getItem(BACKUP_KEY);
     if(!raw) return;
-    const { data, label } = JSON.parse(raw);
-    if(!data) return;
-    if(!confirm(`Backup terugzetten?\n"${label}"\n\nHuidige staat wordt overschreven.`)) return;
-    _localSaveRaw(data);
-    if(window.pushToSupabase) window.pushToSupabase(data);
+    _renderBackupSlots(JSON.parse(raw));
+  } catch(e){}
+}
+
+function adminRestoreBackup(idx){
+  try{
+    idx = idx || 0;
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if(!raw) return;
+    const slots = JSON.parse(raw);
+    const slot = slots[idx];
+    if(!slot || !slot.data) return;
+    if(!confirm(`Backup terugzetten?\n"${slot.label}"\n\nHuidige staat wordt overschreven.`)) return;
+    _localSaveRaw(slot.data);
+    if(window.pushToSupabase) window.pushToSupabase(slot.data);
     buildAllLists();
     refreshAll();
     showToast('Backup teruggezet.');
   } catch(e){ showToast('Backup terugzetten mislukt.'); }
 }
 
-function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('img').forEach(img => {
@@ -2638,7 +2794,7 @@ function buildAudioLists(){
           <span class="simple-item-label">${esc(name)}${meta}</span>
           ${note?`<span class="cam-note-pill">📝 ${esc(note.length>50?note.slice(0,50)+'…':note)}</span>`:''}
         </div>
-        <textarea class="simple-note" placeholder="Notitie…" oninput="audioNote('${key}',${i},this)">${esc(note)}</textarea>
+        <textarea class="simple-note" maxlength="500" placeholder="Notitie…" oninput="audioNote('${key}',${i},this)">${esc(note)}</textarea>
       </div>`;
     }).join('');
   });

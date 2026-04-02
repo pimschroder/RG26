@@ -1,9 +1,11 @@
-const CACHE = 'rg2026-v6';
+const CACHE = 'rg2026-v8';
 const STATIC = [
   './',
   './index.html',
   './app.js',
   './style.css',
+  './manifest.json',
+  './icon.svg',
 ];
 
 // Install: cache de app shell

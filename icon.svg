@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#8B2E07"/>
+
+  <!-- Racket head (oval) -->
+  <ellipse cx="224" cy="208" rx="144" ry="168" fill="none" stroke="#C9A84C" stroke-width="32"/>
+
+  <!-- Racket strings horizontal -->
+  <line x1="88"  y1="144" x2="360" y2="144" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="80"  y1="192" x2="368" y2="192" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="80"  y1="240" x2="368" y2="240" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="88"  y1="288" x2="360" y2="288" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+
+  <!-- Racket strings vertical -->
+  <line x1="144" y1="45"  x2="144" y2="371" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="192" y1="40"  x2="192" y2="376" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="240" y1="40"  x2="240" y2="376" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+  <line x1="288" y1="45"  x2="288" y2="371" stroke="#C9A84C" stroke-width="11" opacity="0.7"/>
+
+  <!-- Racket head border on top -->
+  <ellipse cx="224" cy="208" rx="144" ry="168" fill="none" stroke="#C9A84C" stroke-width="32"/>
+
+  <!-- Racket throat -->
+  <path d="M 128 368 L 176 448 L 272 448 L 320 368" fill="none" stroke="#C9A84C" stroke-width="32" stroke-linejoin="round"/>
+  <!-- Racket handle -->
+  <rect x="192" y="432" width="64" height="56" rx="12" fill="#C9A84C"/>
+
+  <!-- Check circle (bottom right) -->
+  <circle cx="384" cy="384" r="112" fill="#2D5A1B"/>
+  <!-- Checkmark -->
+  <polyline points="320,384 368,432 448,320" fill="none" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
