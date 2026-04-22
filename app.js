@@ -651,7 +651,12 @@ function saveFast(d, changedKey){
   if(window.pushToSupabase) window.pushToSupabase(d, changedKey);
   refreshCounters(); refreshAudioCounters();
 }
-function getCurrentUser(){ return localStorage.getItem("rg_user")||""; }
+function getCurrentUser(){
+  const u = localStorage.getItem("rg_user")||"";
+  if(!u) return "";
+  const users = getUsers();
+  return users.length === 0 || users.includes(u) ? u : "";
+}
 function setCurrentUser(n){ localStorage.setItem("rg_user",n); }
 function fmtTime(ts){
   if(!ts) return "—";
@@ -892,7 +897,7 @@ function initApp(){
   const savedTheme = localStorage.getItem('rg_theme');
   if(savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
   const darkBtn = document.querySelector('.dark-toggle');
-  if(darkBtn) darkBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  if(darkBtn) darkBtn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
 
   // User label
   const saved = getCurrentUser();
@@ -2348,12 +2353,20 @@ function adminRestoreBackup(idx){
     const slots = JSON.parse(raw);
     const slot = slots[idx];
     if(!slot || !slot.data) return;
-    if(!confirm(`Backup terugzetten?\n"${slot.label}"\n\nHuidige staat wordt overschreven.`)) return;
-    _localSaveRaw(slot.data);
-    if(window.pushToSupabase) window.pushToSupabase(slot.data);
-    buildAllLists();
-    refreshAll();
-    showToast('Backup teruggezet.');
+    // Custom confirm — native confirm() is blocked in some PWA/iOS standalone contexts
+    const wrap = document.getElementById('admin-restore-wrap');
+    if(!wrap) return;
+    const existing = wrap.querySelector('.restore-confirm');
+    if(existing) existing.remove();
+    const conf = document.createElement('div');
+    conf.className = 'restore-confirm';
+    conf.style.cssText = 'margin-top:10px;background:rgba(193,68,14,.08);border:1.5px solid var(--clay);border-radius:8px;padding:10px 12px;font-size:11px;';
+    conf.innerHTML = `<div style="margin-bottom:8px;color:var(--clay-dark);font-weight:600;">⚠️ "${esc(slot.label)}" terugzetten?<br><span style="font-weight:400;color:#888;">Huidige staat wordt overschreven.</span></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="(function(){var s=JSON.parse(localStorage.getItem('${BACKUP_KEY}')||'[]');var sl=s[${idx}];if(sl&&sl.data){_localSaveRaw(sl.data);if(window.pushToSupabase)window.pushToSupabase(sl.data);buildAllLists();refreshAll();showToast('Backup teruggezet.');}document.querySelector('.restore-confirm')?.remove();})()" style="flex:1;padding:8px;background:var(--clay-dark);color:white;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;touch-action:manipulation;">Ja, terugzetten</button>
+        <button onclick="this.closest('.restore-confirm').remove()" style="padding:8px 12px;background:none;border:1.5px solid var(--border);color:var(--ink);border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
+      </div>`;
+    wrap.appendChild(conf);
   } catch(e){ showToast('Backup terugzetten mislukt.'); }
 }
 
