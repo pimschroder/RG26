@@ -147,8 +147,7 @@
 .cam-check-box,.simple-check,.pos-check-box{position:relative;}
 .cam-check-box::after,.simple-check::after,.pos-check-box::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:44px;min-height:44px;}
 
-/* ── Done rows: verberg lege textarea, compactere padding ────── */
-.row-done .cam-note-input:placeholder-shown{display:none;}
+/* ── Done rows: compactere padding ───────────────────────────── */
 .row-done .cam-check-cell{padding-top:4px;padding-bottom:4px;}
 .row-done .cam-row-label{padding-top:4px;padding-bottom:4px;}
 
