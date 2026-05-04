@@ -1053,7 +1053,7 @@ function buildCamPage(containerId, storageKey, cams){
       const sc=status==="OK"?"s-ok":status==="NOK"?"s-nok":status==="PENDING"?"s-pend":"";
       return `<div class="cam-row${isDone?' row-done':''}" id="${containerId}-row-${cam.num}-${j}">
         <div class="cam-check-cell">
-          <div class="cam-check-box${isDone?' on':''}" onclick="camToggle('${storageKey}',${cam.num},'${row}',${j},'${containerId}',this)">
+          <div class="cam-check-box${isDone?' on':''}${isDone&&note?' has-note':''}" onclick="camToggle('${storageKey}',${cam.num},'${row}',${j},'${containerId}',this)">
             <span class="ck">&#10003;</span>
           </div>
         </div>
@@ -1197,6 +1197,8 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
 
   const selEl = document.querySelector(`#${cid}-row-${camNum}-${j} .cam-status-sel`);
   if(selEl){ selEl.value=newStatus; selEl.className="cam-status-sel"+(isDone?" s-ok":""); }
+  const hasNote = !!(d[sk]?.[`cam${camNum}`]?.[row]?.note);
+  boxEl.classList.toggle("has-note", isDone && hasNote);
 
   const cd=d[sk][`cam${camNum}`]||{};
   const _rows=getRows(sk,camNum);
@@ -1230,12 +1232,6 @@ function camStatus(sk, camNum, row, j, cid, sel){
   refreshAll();
 }
 
-function camNote(sk, camNum, row, ta){
-  const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
-  if(!d[sk][`cam${camNum}`][row]) d[sk][`cam${camNum}`][row]={};
-  d[sk][`cam${camNum}`][row].note=ta.value; save(d, sk);
-}
-
 function camDone(sk, cams){
   const d=load(); if(!d[sk]) return 0;
   let n=0; cams.forEach(cam=>getRows(sk,cam.num).forEach(r=>{ if(d[sk][`cam${cam.num}`]?.[r]?.checked) n++; })); return n;
@@ -1266,7 +1262,7 @@ function buildPosList(containerId, storageKey, positions){
       const posMeta = (isDone && (pd[chk+"_user"]||pd[chk+"_ts"])) ? esc(pd[chk+"_user"]||"")+(pd[chk+"_user"]&&pd[chk+"_ts"]?" · ":"")+fmtTime(pd[chk+"_ts"]||null) : "";
       return `<div class="pos-row${isDone ? " row-done" : ""}" id="${containerId}-posrow-${pos}-${j}">
         <div class="pos-row-left" onclick="posToggle('${storageKey}','${pos}',${j},'${containerId}',document.getElementById('${containerId}-posrow-${pos}-${j}'))">
-          <div class="pos-check-box${isDone ? " on" : ""}"><span class="ck">&#10003;</span></div>
+          <div class="pos-check-box${isDone ? " on" : ""}${isDone&&note?" has-note":""}"><span class="ck">&#10003;</span></div>
           <div>
             <span class="pos-row-label">${chk}</span>
             ${posMeta ? `<span class="row-meta">${posMeta}</span>` : ""}
@@ -1317,6 +1313,8 @@ function posToggle(sk, pos, j, cid, rowEl){
       posMetaEl.textContent = (getCurrentUser()||"")+(getCurrentUser()?" · ":"")+fmtTime(Date.now());
     } else if(posMetaEl){ posMetaEl.textContent = ""; }
   }
+  const hasNotePos = !!(d[sk]?.[pos]?.[chk+"_note"]);
+  boxEl.classList.toggle("has-note", isDone && hasNotePos);
   const pd = d[sk][pos] || {};
   const doneN = POS_CHECKS.filter(c => pd[c]).length;
   const pEl = document.getElementById(`${cid}-pospct-${pos}`);
@@ -1354,6 +1352,8 @@ function posNote(sk, pos, chk, ta){
   if(!d[sk][pos]) d[sk][pos] = {};
   d[sk][pos][chk+"_note"] = ta.value;
   save(d, sk);
+  const box = ta.closest('.pos-row')?.querySelector('.pos-check-box');
+  if(box) box.classList.toggle("has-note", box.classList.contains("on") && !!ta.value);
 }
 
 function posCollapse(cid, pos){
@@ -1390,7 +1390,7 @@ function buildSimpleList(containerId, storageKey, items){
       const note   = entry.note || "";
       const sMeta = (isDone && (entry.user||entry.ts)) ? (entry.user||"")+(entry.user&&entry.ts?" · ":"")+fmtTime(entry.ts||null) : "";
       return `<div class="simple-row${isDone ? " row-done" : ""}" id="${containerId}-srow-${i}">
-        <div class="simple-check${isDone ? " on" : ""}" onclick="simpleToggle('${storageKey}',${i},'${containerId}',this)"><span class="ck">&#10003;</span></div>
+        <div class="simple-check${isDone ? " on" : ""}${isDone&&note?" has-note":""}" onclick="simpleToggle('${storageKey}',${i},'${containerId}',this)"><span class="ck">&#10003;</span></div>
         <div class="simple-label-wrap" onclick="simpleToggle('${storageKey}',${i},'${containerId}',document.querySelector('#${containerId}-srow-${i} .simple-check'))">
           <span class="simple-label">${name}</span>
           <span class="row-meta" id="${containerId}-smeta-${i}">${sMeta}</span>
@@ -1419,6 +1419,8 @@ function simpleToggle(sk, i, cid, boxEl){
 
   const metaEl = document.getElementById(`${cid}-smeta-${i}`);
   if(metaEl) metaEl.textContent = isDone ? (getCurrentUser()?getCurrentUser()+" · ":"")+fmtTime(Date.now()) : "";
+  const hasNoteSim = !!(d[sk]?.[i]?.note);
+  boxEl.classList.toggle("has-note", isDone && hasNoteSim);
   refreshAll();
 }
 
@@ -1428,6 +1430,16 @@ function simpleNote(sk, i, ta){
   if(!d[sk][i]) d[sk][i] = {};
   d[sk][i].note = ta.value;
   save(d, sk);
+  const box = ta.closest('.simple-row')?.querySelector('.simple-check');
+  if(box) box.classList.toggle("has-note", box.classList.contains("on") && !!ta.value);
+}
+
+function camNote(sk, camNum, row, ta){
+  const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
+  if(!d[sk][`cam${camNum}`][row]) d[sk][`cam${camNum}`][row]={};
+  d[sk][`cam${camNum}`][row].note=ta.value; save(d, sk);
+  const box = ta.closest('.cam-row')?.querySelector('.cam-check-box');
+  if(box) box.classList.toggle("has-note", box.classList.contains("on") && !!ta.value);
 }
 
 function simpleDone(sk, total){
