@@ -9,7 +9,7 @@
 .od-select{background:none;border:none;outline:none;font-family:"DM Mono",monospace;font-size:12px;color:var(--ink);width:100%;cursor:pointer;padding:4px 0}
 
 .od-textarea{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:16px;font-family:"DM Mono",monospace;font-size:16px;color:var(--ink);resize:none;min-height:80px;overflow:hidden;outline:none;line-height:1.8;box-sizing:border-box;display:block}
-.cam-note-input,.simple-note,.pos-note-input{overflow:hidden;resize:none;}
+.cam-note-input,.simple-note,.pos-note-input{overflow:hidden;resize:none;}.cam-note-input:focus,.simple-note:focus,.pos-note-input:focus{min-height:80px;}
 .od-textarea:focus{border-color:var(--clay)}
 .od-textarea::placeholder{color:#bbb}
 

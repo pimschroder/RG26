@@ -2923,6 +2923,11 @@ function resizeTextarea(el){
 document.addEventListener('input', e=>{
   if(e.target.tagName === 'TEXTAREA') resizeTextarea(e.target);
 });
+document.addEventListener('blur', e=>{
+  if(e.target.matches('.cam-note-input,.simple-note,.pos-note-input') && !e.target.value.trim()){
+    e.target.style.height = '';
+  }
+}, true);
 
 // ── Android hardware back button via History API ─────────────────
 window.addEventListener('popstate', e => {
