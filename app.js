@@ -14,15 +14,16 @@
     if(!el) return;
     const pending = !!localStorage.getItem('rg_pending_sync');
     const map = {
-      connected: ["☁️ Live",                      "#2D5A1B"],
-      synced:    [pending ? "⏳ Niet gesynchroniseerd" : "✅ Gesynchroniseerd", pending ? "#C9A84C" : "#2D5A1B"],
-      offline:   [pending ? "📴 Offline · wijzigingen wachten" : "📴 Offline", "#aaa"],
-      error:     ["⚠️ Sync fout — tik om opnieuw", "#C1440E"],
-      saving:    ["💾 Opslaan…",                   "#C9A84C"],
-      receiving: ["🔄 Ontvangen…",                 "#C9A84C"]
+      connected: ["live",    "Live"],
+      synced:    [pending ? "saving" : "live",  pending ? "Niet gesynchroniseerd" : "Gesynchroniseerd"],
+      offline:   ["offline", pending ? "Offline · wacht" : "Offline"],
+      error:     ["error",   "Sync fout"],
+      saving:    ["saving",  "Opslaan…"],
+      receiving: ["saving",  "Ontvangen…"]
     };
-    const [txt,col] = map[s]||["—","#aaa"];
-    el.textContent = txt; el.style.color = col;
+    const [cls, txt] = map[s] || ["offline", "—"];
+    el.className = cls;
+    el.textContent = txt;
     el.style.cursor = s === 'error' ? 'pointer' : '';
     el.onclick = s === 'error' ? () => window._retrySync && window._retrySync() : null;
   }
@@ -1081,6 +1082,7 @@ function buildCamPage(containerId, storageKey, cams){
       <div class="cam-header${cam.num===7?" cam-header-rf":""}" onclick="camCollapse('${containerId}',${cam.num})">
         <span class="cam-badge">CAM ${cam.num}</span>
         <span class="cam-name">Camera ${cam.num} ${subLine}</span>
+        <span class="cam-note-dot" id="${containerId}-notedot-${cam.num}"></span>
         <span class="cam-pct" id="${containerId}-pct-${cam.num}">${checkedN}/${rows.length}</span>
         <span class="cam-arrow">&#9660;</span>
       </div>
@@ -1094,6 +1096,10 @@ function buildCamPage(containerId, storageKey, cams){
     if(getRows(storageKey, cam.num).every(r=>cdCheck[r]?.checked)){
       const hdr = block.querySelector(".cam-header");
       if(hdr) hdr.classList.add("cam-header-done");
+    }
+    if(rows.some(r => !!(d[storageKey]?.[`cam${cam.num}`]?.[r]?.note))){
+      const dot = block.querySelector('.cam-note-dot');
+      if(dot) dot.classList.add('has-note');
     }
   });
 }
@@ -1440,6 +1446,13 @@ function camNote(sk, camNum, row, ta){
   d[sk][`cam${camNum}`][row].note=ta.value; save(d, sk);
   const box = ta.closest('.cam-row')?.querySelector('.cam-check-box');
   if(box) box.classList.toggle("has-note", box.classList.contains("on") && !!ta.value);
+  updateCamNoteDot(sk, camNum);
+}
+function updateCamNoteDot(sk, camNum){
+  const d = load();
+  const hasNote = getRows(sk, camNum).some(r => !!(d[sk]?.[`cam${camNum}`]?.[r]?.note));
+  const dot = document.getElementById(`list-${sk.replace(/_/g,'-')}-notedot-${camNum}`);
+  if(dot) dot.classList.toggle('has-note', hasNote);
 }
 
 function simpleDone(sk, total){

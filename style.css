@@ -131,6 +131,20 @@
   border-radius:6px;
 }
 
+/* ── Sync-status dot ─────────────────────────────────────────── */
+#sync-status{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:5px;}
+#sync-status::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;}
+#sync-status.live{color:var(--green);}
+#sync-status.offline{color:#888;}
+#sync-status.error{color:var(--clay);}
+#sync-status.saving{color:var(--gold);}
+@keyframes syncPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+#sync-status.live::before{animation:syncPulse 2.5s ease-in-out infinite;}
+
+/* ── Cam block note indicator dot ───────────────────────────── */
+.cam-note-dot{display:none;width:8px;height:8px;border-radius:50%;background:#E07B2A;flex-shrink:0;box-shadow:0 0 0 2px rgba(224,123,42,.3);}
+.cam-note-dot.has-note{display:block;}
+
 /* ── Check pop animation ─────────────────────────────────────── */
 @keyframes checkPop{
   0%   { transform:scale(1); }
