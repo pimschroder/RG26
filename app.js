@@ -1395,7 +1395,9 @@ function buildPosList(containerId, storageKey, positions){
   if(!d[storageKey]) d[storageKey] = {};
   container.innerHTML = "";
 
-  positions.forEach(pos => {
+  positions.forEach(posObj => {
+    const pos = typeof posObj === 'object' ? posObj.id : posObj;
+    const posName = typeof posObj === 'object' ? posObj.name : posObj;
     const pd = d[storageKey][pos] || {};
     const doneN = POS_CHECKS.filter(c => pd[c]).length;
     const allDone = doneN === POS_CHECKS.length;
@@ -1425,8 +1427,8 @@ function buildPosList(containerId, storageKey, positions){
       <div class="pos-header${allDone ? " pos-done" : ""}" onclick="posCollapse('${containerId}','${pos}')">
         <span class="pos-badge">${pos}</span>
         <span class="pos-title-wrap">
-          <span class="pos-title">${pos}</span>
-          <input class="pos-subtitle" type="text" placeholder="achtertitel…" value="${pd.subtitle||''}" onclick="event.stopPropagation()" oninput="posSubtitle('${storageKey}','${pos}',this)">
+          <span class="pos-title">${posName}</span>
+          <input class="pos-subtitle" type="text" placeholder="Extra info…" value="${pd.subtitle||''}" onclick="event.stopPropagation()" oninput="posSubtitle('${storageKey}','${pos}',this)">
         </span>
         <span class="pos-pct" id="${containerId}-pospct-${pos}">${doneN}/${POS_CHECKS.length}</span>
         <span class="pos-arrow">&#9660;</span>
@@ -1518,14 +1520,31 @@ function posCollapse(cid, pos){
 function posDone(sk, positions){
   const d = load(); if(!d[sk]) return 0;
   let n = 0;
-  positions.forEach(pos => POS_CHECKS.forEach(c => { if(d[sk][pos]?.[c]) n++; }));
+  positions.forEach(p => { const id = typeof p === 'object' ? p.id : p; POS_CHECKS.forEach(c => { if(d[sk][id]?.[c]) n++; }); });
   return n;
 }
 
-const PC4TH_POSITIONS = ['403', '404', '405', '406', '407', '408', '409', '410', '411', '412', '413', '414'];
-const PC5TH_POSITIONS = ['506','507','508','512'];
-const COMMSL_POSITIONS = ['306','307','308','305'];
-const COMMSM_POSITIONS = ['TV1','TV2','TV3'];
+const PC4TH_POSITIONS = [
+  {id:'403',name:'FRANCE TV DIGITAL'},{id:'404',name:'CHRTS-TV'},
+  {id:'405',name:'TENNIS CHANNEL'},   {id:'406',name:'CHSRF-TV'},
+  {id:'407',name:'PRIME'},            {id:'408',name:'FRANCE TV'},
+  {id:'409',name:'CANAL+'},           {id:'410',name:'WBD/TNT'},
+  {id:'411',name:'ESPN'},             {id:'412',name:'RTBF'},
+  {id:'413',name:'CMG'},              {id:'414',name:'CHRSI-TV'},
+];
+const PC5TH_POSITIONS = [
+  {id:'505',name:'SPIDER'},  {id:'506',name:'HB CT14'},
+  {id:'507',name:'HB PC'},   {id:'508',name:'EUROSPORT'},
+  {id:'512',name:'EUROSPORT'},
+];
+const COMMSL_POSITIONS = [
+  {id:'305',name:'TENNIS CHANNEL'},{id:'306',name:'WBD/TNT'},
+  {id:'307',name:'FRANCE TV'},     {id:'308',name:'HB SL'},
+  {id:'309',name:'SPIDER'},
+];
+const COMMSM_POSITIONS = [
+  {id:'TV1',name:'FRANCE TV'},{id:'TV2',name:'HB SM'},{id:'TV3',name:'WBD/TNT'},
+];
 
 function buildSimpleList(containerId, storageKey, items){
   const container = document.getElementById(containerId);
