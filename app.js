@@ -1524,7 +1524,7 @@ function posDone(sk, positions){
 
 const PC4TH_POSITIONS = ['403', '404', '405', '406', '407', '408', '409', '410', '411', '412', '413', '414'];
 const PC5TH_POSITIONS = ['506','507','508','512'];
-const COMMSL_POSITIONS = ['306','307','308','309'];
+const COMMSL_POSITIONS = ['306','307','308','305'];
 const COMMSM_POSITIONS = ['TV1','TV2','TV3'];
 
 function buildSimpleList(containerId, storageKey, items){
