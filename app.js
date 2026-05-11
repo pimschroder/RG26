@@ -628,6 +628,60 @@ const SM_CAMS = [
   {num:13,type:"Fixed · xWA",pos:"Beauty shot of court"},
 ];
 
+// ── CAM Checklist (Excel matrix) ─────────────────────────────────
+const CAM_CHECK_GROUPS = [
+  {label:'FIBER',    checks:['CAM','CCU']},
+  {label:'CONTROL',  checks:['IRIS','B-FOCUS']},
+  {label:'VIDEO',    checks:['UHD','HDR','SDR']},
+  {label:'RETURN',   checks:['RET 1','RET 2','RET 3']},
+  {label:'TALLY',    checks:['RED','GREEN']},
+  {label:'INTERCOM', checks:['PROD','ENG','PGM']},
+  {label:'AUDIO',    checks:['IN 1','IN 2']},
+];
+const ALL_CAM_CHECKS = CAM_CHECK_GROUPS.flatMap(g=>g.checks); // 17 items
+
+const CAMCHECK_PC = [
+  {id:'PC.01',mcs:'1', type:'3500'}, {id:'PC.02',mcs:'2', type:'3500'},
+  {id:'PC.03',mcs:'3', type:'3500'}, {id:'PC.04',mcs:'4', type:'3500'},
+  {id:'PC.05',mcs:'32',type:'SSM'},  {id:'PC.06',mcs:'37',type:'SSM'},
+  {id:'PC.07',mcs:'-', type:'RF'},   {id:'PC.08',mcs:'31',type:'UM'},
+  {id:'PC.09',mcs:'5', type:'3500'}, {id:'PC.10',mcs:'40',type:'HOTHEAD'},
+  {id:'PC.11',mcs:'',  type:'SPIDER'},{id:'PC.12',mcs:'', type:'PTZ'},
+  {id:'PC.13',mcs:'',  type:'PTZ'},  {id:'PC.14',mcs:'',  type:'PLAYERBOX'},
+  {id:'PC.15',mcs:'',  type:'PLAYERBOX'},{id:'PC.16',mcs:'',type:'NETCAM'},
+  {id:'PC.17',mcs:'',  type:'NETCAM'},{id:'PC.18',mcs:'', type:'PTZ'},
+  {id:'PC.19',mcs:'6', type:'3500'}, {id:'PC.20',mcs:'',  type:'RF'},
+  {id:'PC.21',mcs:'',  type:'PTZ'},  {id:'PC.22',mcs:'',  type:'PTZ'},
+  {id:'PC.23',mcs:'7', type:'3500'}, {id:'PC.24',mcs:'8', type:'3500'},
+];
+const CAMCHECK_SL = [
+  {id:'SL.01',mcs:'9', type:'3500'}, {id:'SL.02',mcs:'10',type:'3500'},
+  {id:'SL.03',mcs:'11',type:'3500'}, {id:'SL.04',mcs:'12',type:'3500'},
+  {id:'SL.05',mcs:'34',type:'SSM'},  {id:'SL.06',mcs:'38',type:'SSM'},
+  {id:'SL.07',mcs:'',  type:'RF'},   {id:'SL.08',mcs:'33',type:'UM'},
+  {id:'SL.09',mcs:'13',type:'3500'}, {id:'SL.10',mcs:'41',type:'HOTHEAD'},
+  {id:'SL.11',mcs:'',  type:'SPIDER'},{id:'SL.12',mcs:'', type:'PTZ'},
+  {id:'SL.13',mcs:'',  type:'PTZ'},  {id:'SL.14',mcs:'',  type:'PLAYERBOX'},
+  {id:'SL.15',mcs:'',  type:'PLAYERBOX'},{id:'SL.16',mcs:'',type:'NETCAM'},
+  {id:'SL.17',mcs:'',  type:'NETCAM'},{id:'SL.18',mcs:'', type:'PTZ'},
+  {id:'SL.19',mcs:'14',type:'3500'}, {id:'SL.20',mcs:'15',type:'3500'},
+];
+const CAMCHECK_SM = [
+  {id:'SM.01',mcs:'42',type:'HOTHEAD'},{id:'SM.02',mcs:'16',type:'3500'},
+  {id:'SM.03',mcs:'17',type:'3500'},  {id:'SM.04',mcs:'18',type:'3500'},
+  {id:'SM.05',mcs:'35',type:'SSM'},   {id:'SM.06',mcs:'36',type:'UM'},
+  {id:'SM.07',mcs:'',  type:'RF'},    {id:'SM.08',mcs:'',  type:'PTZ'},
+  {id:'SM.09',mcs:'',  type:'PTZ'},   {id:'SM.10',mcs:'',  type:'NETCAM'},
+  {id:'SM.11',mcs:'',  type:'NETCAM'},{id:'SM.12',mcs:'19',type:'3500'},
+  {id:'SM.13',mcs:'20',type:'3500'},
+];
+const CAMCHECK_CT14 = [
+  {id:'CT14.01',mcs:'43',type:'HOTHEAD'},{id:'CT14.02',mcs:'21',type:'3500'},
+  {id:'CT14.03',mcs:'22',type:'3500'},  {id:'CT14.04',mcs:'23',type:'3500'},
+  {id:'CT14.05',mcs:'24',type:'3500'},  {id:'CT14.06',mcs:'39',type:'SSM'},
+  {id:'CT14.07',mcs:'',  type:'RF'},    {id:'CT14.08',mcs:'25',type:'3500'},
+];
+
 const SK = "rg2026_v1";
 let _dataCache = null;
 function load(){
@@ -837,6 +891,10 @@ window.buildAllLists = function buildAllLists(){
   buildCamPage("list-pc","pc",PC_CAMS);
   buildCamPage("list-sl","sl",SL_CAMS);
   buildCamPage("list-sm","sm",SM_CAMS);
+  buildCamCheckPage("list-camcheck-pc","camck_pc",CAMCHECK_PC);
+  buildCamCheckPage("list-camcheck-sl","camck_sl",CAMCHECK_SL);
+  buildCamCheckPage("list-camcheck-sm","camck_sm",CAMCHECK_SM);
+  buildCamCheckPage("list-camcheck-c14","camck_c14",CAMCHECK_CT14);
   buildAudioLists();
   buildPosList("list-comm-pc4th","comm_pc4th",PC4TH_POSITIONS);
   buildPosList("list-comm-pc5th","comm_pc5th",PC5TH_POSITIONS);
@@ -854,10 +912,14 @@ window.buildAllLists = function buildAllLists(){
 // Aangeroepen vanuit goTo() en applyRemote() — niet meer buildAllLists() bij elke sync.
 window.rebuildPage = function rebuildPage(id){
   switch(id){
-    case 'page-pc':          buildCamPage("list-pc","pc",PC_CAMS); break;
-    case 'page-sl':          buildCamPage("list-sl","sl",SL_CAMS); break;
-    case 'page-sm':          buildCamPage("list-sm","sm",SM_CAMS); break;
-    case 'page-c14':         buildCamPage("list-c14","c14",C14_CAMS); break;
+    case 'page-pc':              buildCamPage("list-pc","pc",PC_CAMS); break;
+    case 'page-sl':              buildCamPage("list-sl","sl",SL_CAMS); break;
+    case 'page-sm':              buildCamPage("list-sm","sm",SM_CAMS); break;
+    case 'page-c14':             buildCamPage("list-c14","c14",C14_CAMS); break;
+    case 'page-camcheck-pc':     buildCamCheckPage("list-camcheck-pc","camck_pc",CAMCHECK_PC); break;
+    case 'page-camcheck-sl':     buildCamCheckPage("list-camcheck-sl","camck_sl",CAMCHECK_SL); break;
+    case 'page-camcheck-sm':     buildCamCheckPage("list-camcheck-sm","camck_sm",CAMCHECK_SM); break;
+    case 'page-camcheck-c14':    buildCamCheckPage("list-camcheck-c14","camck_c14",CAMCHECK_CT14); break;
     case 'page-audio-pc':
     case 'page-audio-sl':
     case 'page-audio-sm':
@@ -1243,6 +1305,87 @@ function camDone(sk, cams){
   let n=0; cams.forEach(cam=>getRows(sk,cam.num).forEach(r=>{ if(d[sk][`cam${cam.num}`]?.[r]?.checked) n++; })); return n;
 }
 
+// ── CAM Checklist (Excel matrix) ─────────────────────────────────
+function camCheckDone(sk, cams){
+  const d=load(); if(!d[sk]) return 0;
+  let n=0; cams.forEach(cam=>{ ALL_CAM_CHECKS.forEach(c=>{ if(d[sk]?.[cam.id]?.[c]) n++; }); }); return n;
+}
+
+function buildCamCheckPage(containerId, storageKey, cams){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = '';
+  const d = load();
+  if(!d[storageKey]) d[storageKey] = {};
+  const total = ALL_CAM_CHECKS.length;
+
+  cams.forEach(cam => {
+    const camData = d[storageKey][cam.id] || {};
+    const checkedN = ALL_CAM_CHECKS.filter(c => camData[c]).length;
+    const allDone = checkedN === total;
+    const safe = cam.id.replace(/\./g,'-');
+    const subInfo = [cam.type, cam.mcs ? 'MCS '+cam.mcs : ''].filter(Boolean).join(' · ');
+
+    const groupsHTML = CAM_CHECK_GROUPS.map(g =>
+      `<div class="ccl-group"><span class="ccl-group-label">${g.label}</span><div class="ccl-chips">${
+        g.checks.map(c => {
+          const on = !!camData[c];
+          const ck = c.replace(/'/g,"\\'");
+          return `<button class="ccl-chip${on?' on':''}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${c}</button>`;
+        }).join('')
+      }</div></div>`
+    ).join('');
+
+    const block = document.createElement('div');
+    block.className = 'cam-block';
+    block.id = `${containerId}-block-${safe}`;
+    block.innerHTML = `
+      <div class="cam-header${allDone?' cam-header-done':''}" onclick="camCheckCollapse('${containerId}','${safe}')">
+        <span class="cam-badge">${cam.id}</span>
+        <span class="cam-name"><span class="cam-sub">${subInfo}</span></span>
+        <span class="cam-pct" id="${containerId}-pct-${safe}">${checkedN}/${total}</span>
+        <span class="cam-arrow">&#9660;</span>
+      </div>
+      <div class="cam-body" style="max-height:9999px">${groupsHTML}</div>`;
+    container.appendChild(block);
+  });
+}
+
+function camCheckToggle(sk, camId, checkKey, cid, el){
+  const d = load();
+  if(!d[sk]) d[sk] = {};
+  if(!d[sk][camId]) d[sk][camId] = {};
+  const isDone = !d[sk][camId][checkKey];
+  d[sk][camId][checkKey] = isDone;
+  save(d, sk);
+  el.classList.toggle('on', isDone);
+
+  const safe = camId.replace(/\./g,'-');
+  const camData = d[sk][camId];
+  const checkedN = ALL_CAM_CHECKS.filter(c => camData[c]).length;
+  const total = ALL_CAM_CHECKS.length;
+  const pctEl = document.getElementById(`${cid}-pct-${safe}`);
+  if(pctEl) pctEl.textContent = `${checkedN}/${total}`;
+  const block = document.getElementById(`${cid}-block-${safe}`);
+  if(block){
+    block.querySelector('.cam-header')?.classList.toggle('cam-header-done', checkedN===total);
+    if(checkedN===total && !block.classList.contains('collapsed')){
+      setTimeout(()=>{ block.classList.add('collapsed'); block.querySelector('.cam-body').style.maxHeight='0'; },400);
+    }
+  }
+  el.classList.add('check-pop');
+  setTimeout(()=>el.classList.remove('check-pop'),300);
+  refreshAll();
+}
+
+function camCheckCollapse(cid, safe){
+  const block = document.getElementById(`${cid}-block-${safe}`);
+  if(!block) return;
+  const body = block.querySelector('.cam-body');
+  const collapsed = block.classList.toggle('collapsed');
+  body.style.maxHeight = collapsed ? '0' : '9999px';
+}
+
 const POS_CHECKS = ["Monitors","Tablet","Audio","Netjes"];
 
 function buildPosList(containerId, storageKey, positions){
@@ -1537,6 +1680,10 @@ const SECTIONS = [
   { key:"comm_pc5th", listId:null, cams:null, total:()=>PC5TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc5th",PC5TH_POSITIONS) },
   { key:"comm_sl",    listId:null, cams:null, total:()=>COMMSL_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sl",COMMSL_POSITIONS) },
   { key:"comm_sm",    listId:null, cams:null, total:()=>COMMSM_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sm",COMMSM_POSITIONS) },
+  { key:"camck_pc",   listId:null, cams:null, total:()=>CAMCHECK_PC.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_pc",CAMCHECK_PC)   },
+  { key:"camck_sl",   listId:null, cams:null, total:()=>CAMCHECK_SL.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_sl",CAMCHECK_SL)   },
+  { key:"camck_sm",   listId:null, cams:null, total:()=>CAMCHECK_SM.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_sm",CAMCHECK_SM)   },
+  { key:"camck_c14",  listId:null, cams:null, total:()=>CAMCHECK_CT14.length*ALL_CAM_CHECKS.length, done:()=>camCheckDone("camck_c14",CAMCHECK_CT14) },
 ];
 
 function pct(d,t){ return t?Math.round(d/t*100):0; }
@@ -1593,6 +1740,15 @@ function _doRefresh(){
   bar("pc-bar",     pct(dones.pc,totals.pc));  txt("pc-lbl",dones.pc+"/"+totals.pc);   txt("count-pc",dones.pc+"/"+totals.pc);  chip("chip-pc",dones.pc,totals.pc);  txt("pc-note-label",dones.pc+" van "+totals.pc+" voltooid");
   bar("sl-bar",     pct(dones.sl,totals.sl));  txt("sl-lbl",dones.sl+"/"+totals.sl);   txt("count-sl",dones.sl+"/"+totals.sl);  chip("chip-sl",dones.sl,totals.sl);  txt("sl-note-label",dones.sl+" van "+totals.sl+" voltooid");
   bar("sm-bar",     pct(dones.sm,totals.sm));  txt("sm-lbl",dones.sm+"/"+totals.sm);   txt("count-sm",dones.sm+"/"+totals.sm);  chip("chip-sm",dones.sm,totals.sm);  txt("sm-note-label",dones.sm+" van "+totals.sm+" voltooid");
+
+  // CAM Checklist nav badges
+  bar("camck-pc-bar",  pct(dones.camck_pc, totals.camck_pc));  txt("camck-pc-lbl", dones.camck_pc+"/"+totals.camck_pc);   chip("chip-camck-pc", dones.camck_pc, totals.camck_pc);   txt("camck-pc-note",  dones.camck_pc+" van "+totals.camck_pc+" voltooid");
+  bar("camck-sl-bar",  pct(dones.camck_sl, totals.camck_sl));  txt("camck-sl-lbl", dones.camck_sl+"/"+totals.camck_sl);   chip("chip-camck-sl", dones.camck_sl, totals.camck_sl);   txt("camck-sl-note",  dones.camck_sl+" van "+totals.camck_sl+" voltooid");
+  bar("camck-sm-bar",  pct(dones.camck_sm, totals.camck_sm));  txt("camck-sm-lbl", dones.camck_sm+"/"+totals.camck_sm);   chip("chip-camck-sm", dones.camck_sm, totals.camck_sm);   txt("camck-sm-note",  dones.camck_sm+" van "+totals.camck_sm+" voltooid");
+  bar("camck-c14-bar", pct(dones.camck_c14,totals.camck_c14)); txt("camck-c14-lbl",dones.camck_c14+"/"+totals.camck_c14); chip("chip-camck-c14",dones.camck_c14,totals.camck_c14);  txt("camck-c14-note", dones.camck_c14+" van "+totals.camck_c14+" voltooid");
+  const camckTotal = (totals.camck_pc||0)+(totals.camck_sl||0)+(totals.camck_sm||0)+(totals.camck_c14||0);
+  const camckDone  = (dones.camck_pc||0)+(dones.camck_sl||0)+(dones.camck_sm||0)+(dones.camck_c14||0);
+  txt("camck-total-count", camckDone+"/"+camckTotal);
 
   [["pc4th"],["pc5th"],["sl"],["sm"]].forEach(([k])=>{
     const sk="comm_"+k, d=dones[sk]||0, t=totals[sk]||0, p=pct(d,t);

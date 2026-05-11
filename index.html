@@ -201,6 +201,40 @@ window._loadXLSX = function(cb){
           </div>
         </div>
       </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:8px">
+      <div class="section-header"><div class="section-icon">📋</div><span class="section-title">CAM Checklist</span><span class="section-count" id="camck-total-count">0/0</span></div>
+      <div class="checklist">
+        <div class="nav-item" onclick="goTo('page-camcheck-pc')" style="touch-action:manipulation;">
+          <div class="nav-item-text">
+            <div class="item-label">Philippe-Chatrier</div>
+            <div class="item-note" id="camck-pc-note">0 van 0 voltooid</div>
+          </div>
+          <div class="nav-item-right"><span class="nav-pct" id="chip-camck-pc">0/0</span><span class="nav-arrow">→</span></div>
+        </div>
+        <div class="nav-item" onclick="goTo('page-camcheck-sl')" style="touch-action:manipulation;">
+          <div class="nav-item-text">
+            <div class="item-label">Suzanne-Lenglen</div>
+            <div class="item-note" id="camck-sl-note">0 van 0 voltooid</div>
+          </div>
+          <div class="nav-item-right"><span class="nav-pct" id="chip-camck-sl">0/0</span><span class="nav-arrow">→</span></div>
+        </div>
+        <div class="nav-item" onclick="goTo('page-camcheck-sm')" style="touch-action:manipulation;">
+          <div class="nav-item-text">
+            <div class="item-label">Simonne-Mathieu</div>
+            <div class="item-note" id="camck-sm-note">0 van 0 voltooid</div>
+          </div>
+          <div class="nav-item-right"><span class="nav-pct" id="chip-camck-sm">0/0</span><span class="nav-arrow">→</span></div>
+        </div>
+        <div class="nav-item" onclick="goTo('page-camcheck-c14')" style="touch-action:manipulation;">
+          <div class="nav-item-text">
+            <div class="item-label">Court 14</div>
+            <div class="item-note" id="camck-c14-note">0 van 0 voltooid</div>
+          </div>
+          <div class="nav-item-right"><span class="nav-pct" id="chip-camck-c14">0/0</span><span class="nav-arrow">→</span></div>
+        </div>
+      </div>
     </div>
     </div><!-- /courts-tab-camera -->
 
@@ -510,6 +544,66 @@ window._loadXLSX = function(cb){
       <h2>Court 14 is klaar!</h2><p>Alle camera's zijn geconfigureerd.</p>
     </div>
   </main>
+</div>
+
+<div class="page" id="page-camcheck-pc">
+  <div class="sub-header"><div class="sub-header-inner">
+    <button class="back-btn" onclick="goTo('page-courts')">Terug</button>
+    <div><div class="rg-badge" style="margin-bottom:6px">CAM Checklist</div><div class="sub-title">📋 Philippe-<em>Chatrier</em></div></div>
+  </div></div>
+  <div class="progress-wrap"><div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="camck-pc-bar"></div></div>
+    <div class="progress-label" id="camck-pc-lbl">0/0</div>
+  </div></div>
+  <main><div class="section">
+    <div class="section-header"><div class="section-icon">📋</div><span class="section-title">Philippe-Chatrier — CAM Checklist</span><span class="section-count" id="camck-count-pc">0/0</span></div>
+    <div id="list-camcheck-pc"></div>
+  </div></main>
+</div>
+
+<div class="page" id="page-camcheck-sl">
+  <div class="sub-header"><div class="sub-header-inner">
+    <button class="back-btn" onclick="goTo('page-courts')">Terug</button>
+    <div><div class="rg-badge" style="margin-bottom:6px">CAM Checklist</div><div class="sub-title">📋 Suzanne-<em>Lenglen</em></div></div>
+  </div></div>
+  <div class="progress-wrap"><div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="camck-sl-bar"></div></div>
+    <div class="progress-label" id="camck-sl-lbl">0/0</div>
+  </div></div>
+  <main><div class="section">
+    <div class="section-header"><div class="section-icon">📋</div><span class="section-title">Suzanne-Lenglen — CAM Checklist</span><span class="section-count" id="camck-count-sl">0/0</span></div>
+    <div id="list-camcheck-sl"></div>
+  </div></main>
+</div>
+
+<div class="page" id="page-camcheck-sm">
+  <div class="sub-header"><div class="sub-header-inner">
+    <button class="back-btn" onclick="goTo('page-courts')">Terug</button>
+    <div><div class="rg-badge" style="margin-bottom:6px">CAM Checklist</div><div class="sub-title">📋 Simonne-<em>Mathieu</em></div></div>
+  </div></div>
+  <div class="progress-wrap"><div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="camck-sm-bar"></div></div>
+    <div class="progress-label" id="camck-sm-lbl">0/0</div>
+  </div></div>
+  <main><div class="section">
+    <div class="section-header"><div class="section-icon">📋</div><span class="section-title">Simonne-Mathieu — CAM Checklist</span><span class="section-count" id="camck-count-sm">0/0</span></div>
+    <div id="list-camcheck-sm"></div>
+  </div></main>
+</div>
+
+<div class="page" id="page-camcheck-c14">
+  <div class="sub-header"><div class="sub-header-inner">
+    <button class="back-btn" onclick="goTo('page-courts')">Terug</button>
+    <div><div class="rg-badge" style="margin-bottom:6px">CAM Checklist</div><div class="sub-title">📋 Court <em>14</em></div></div>
+  </div></div>
+  <div class="progress-wrap"><div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="camck-c14-bar"></div></div>
+    <div class="progress-label" id="camck-c14-lbl">0/0</div>
+  </div></div>
+  <main><div class="section">
+    <div class="section-header"><div class="section-icon">📋</div><span class="section-title">Court 14 — CAM Checklist</span><span class="section-count" id="camck-count-c14">0/0</span></div>
+    <div id="list-camcheck-c14"></div>
+  </div></main>
 </div>
 
 <div class="page" id="page-comm-pc4th">
