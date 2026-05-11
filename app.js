@@ -1890,7 +1890,8 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
     comm_sm:    { pos: COMMSM_POSITIONS, lbl: "SM" }
   };
   for(const [sk, {pos, lbl}] of Object.entries(commMap)){
-    pos.forEach(p => {
+    pos.forEach(posObj => {
+      const p = typeof posObj === 'object' ? posObj.id : posObj;
       POS_CHECKS.forEach(chk => {
         const pd = (d[sk]||{})[p] || {};
         commRows.push([ lbl, p, chk, pd[chk] ? "✓" : "✗" ]);
@@ -2092,7 +2093,7 @@ function buildActivity(){
   // Comm
   const commMap = { comm_pc4th:{pos:PC4TH_POSITIONS,lbl:'🎙 Comm PC 4th'}, comm_pc5th:{pos:PC5TH_POSITIONS,lbl:'🎙 Comm PC 5th'}, comm_sl:{pos:COMMSL_POSITIONS,lbl:'🎙 Comm SL'}, comm_sm:{pos:COMMSM_POSITIONS,lbl:'🎙 Comm SM'} };
   for(const [sk,{pos,lbl}] of Object.entries(commMap)){
-    pos.forEach(p=>{ POS_CHECKS.forEach(chk=>{ const pd=(d[sk]||{})[p]||{}; if(pd[chk]&&pd[chk+'_ts']) events.push({ts:pd[chk+'_ts'],user:pd[chk+'_user']||'—',label:chk,section:`${lbl} · ${p}`}); }); });
+    pos.forEach(posObj=>{ const p=typeof posObj==='object'?posObj.id:posObj; POS_CHECKS.forEach(chk=>{ const pd=(d[sk]||{})[p]||{}; if(pd[chk]&&pd[chk+'_ts']) events.push({ts:pd[chk+'_ts'],user:pd[chk+'_user']||'—',label:chk,section:`${lbl} · ${p}`}); }); });
   }
 
   // Gallery (alle 18 secties)
@@ -2191,7 +2192,8 @@ function buildPersons(){
 
   const commMap={comm_pc4th:{pos:PC4TH_POSITIONS,lbl:"PC 4TH"},comm_pc5th:{pos:PC5TH_POSITIONS,lbl:"PC 5TH"},comm_sl:{pos:COMMSL_POSITIONS,lbl:"SL"},comm_sm:{pos:COMMSM_POSITIONS,lbl:"SM"}};
   for(const [sk,{pos,lbl}] of Object.entries(commMap)){
-    pos.forEach(p=>{
+    pos.forEach(posObj=>{
+      const p=typeof posObj==='object'?posObj.id:posObj;
       POS_CHECKS.forEach(chk=>{
         const pd=(d[sk]||{})[p]||{};
         if(pd[chk]) addItem(pd[chk+"_user"], lbl+" "+p, chk, pd[chk+"_ts"]);
@@ -2295,7 +2297,8 @@ function buildProblems(){
 
   const commMap = {comm_pc4th:{pos:PC4TH_POSITIONS,lbl:"PC 4TH"}, comm_pc5th:{pos:PC5TH_POSITIONS,lbl:"PC 5TH"}, comm_sl:{pos:COMMSL_POSITIONS,lbl:"Comm SL"}, comm_sm:{pos:COMMSM_POSITIONS,lbl:"Comm SM"}};
   for(const [sk,{pos,lbl}] of Object.entries(commMap)){
-    pos.forEach(p=>{
+    pos.forEach(posObj=>{
+      const p=typeof posObj==='object'?posObj.id:posObj;
       POS_CHECKS.forEach(chk=>{
         const pd = (d[sk]||{})[p]||{};
         const note = pd[chk+"_note"]||"";
@@ -2410,7 +2413,8 @@ function _doExportExcel(){
   const commRows = [["Box","Positie","Check","Status","Door","Tijdstip","Notitie"]];
   const commMap = {comm_pc4th:{pos:PC4TH_POSITIONS,lbl:"PC 4TH"}, comm_pc5th:{pos:PC5TH_POSITIONS,lbl:"PC 5TH"}, comm_sl:{pos:COMMSL_POSITIONS,lbl:"SL"}, comm_sm:{pos:COMMSM_POSITIONS,lbl:"SM"}};
   for(const [sk,{pos,lbl}] of Object.entries(commMap)){
-    pos.forEach(p=>{
+    pos.forEach(posObj=>{
+      const p=typeof posObj==='object'?posObj.id:posObj;
       const pd = (d[sk]||{})[p]||{};
       POS_CHECKS.forEach(chk=>{
         commRows.push([lbl, p, chk, fmtStatus(pd[chk]), fmtUser(pd[chk+"_user"]), fmtTs(pd[chk+"_ts"]), pd[chk+"_note"]||""]);
