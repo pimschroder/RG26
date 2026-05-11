@@ -1738,18 +1738,20 @@ function getRows(sk, camNum){
 
 const SECTIONS = [
   { key:"courts", listId:"list-courts", cams:null,
-    total:()=>["pc","sl","sm","c14"].reduce((t,sk)=>t+(sk==="pc"?PC_CAMS:sk==="sl"?SL_CAMS:sk==="sm"?SM_CAMS:C14_CAMS).reduce((s,c)=>s+getRows(sk,c.num).length,0),0),
-    done:()=>camDone("pc",PC_CAMS)+camDone("sl",SL_CAMS)+camDone("sm",SM_CAMS)+camDone("c14",C14_CAMS) },
+    total:()=>["pc","sl","sm","c14"].reduce((t,sk)=>t+(sk==="pc"?PC_CAMS:sk==="sl"?SL_CAMS:sk==="sm"?SM_CAMS:C14_CAMS).reduce((s,c)=>s+getRows(sk,c.num).length,0),0)
+      +CAMCHECK_PC.reduce((s,c)=>s+c.checks.length,0)+CAMCHECK_SL.reduce((s,c)=>s+c.checks.length,0)+CAMCHECK_SM.reduce((s,c)=>s+c.checks.length,0)+CAMCHECK_CT14.reduce((s,c)=>s+c.checks.length,0),
+    done:()=>camDone("pc",PC_CAMS)+camDone("sl",SL_CAMS)+camDone("sm",SM_CAMS)+camDone("c14",C14_CAMS)
+      +camCheckDone("camck_pc",CAMCHECK_PC)+camCheckDone("camck_sl",CAMCHECK_SL)+camCheckDone("camck_sm",CAMCHECK_SM)+camCheckDone("camck_c14",CAMCHECK_CT14) },
   { key:"audio", listId:null, cams:null,
     total:()=>PC_MIC_ITEMS.length+SL_MIC_ITEMS.length+SM_MIC_ITEMS.length+C14_MIC_ITEMS.length+PC_SB_ITEMS.length+SL_SB_ITEMS.length+SM_SB_ITEMS.length+C14_SB_ITEMS.length,
     done:()=>simpleDone("audio_pc",PC_MIC_ITEMS.length)+simpleDone("audio_sl",SL_MIC_ITEMS.length)+simpleDone("audio_sm",SM_MIC_ITEMS.length)+simpleDone("audio_c14",C14_MIC_ITEMS.length)+simpleDone("sb_pc",PC_SB_ITEMS.length)+simpleDone("sb_sl",SL_SB_ITEMS.length)+simpleDone("sb_sm",SM_SB_ITEMS.length)+simpleDone("sb_c14",C14_SB_ITEMS.length) },
   { key:"comm",       listId:"list-comm",      cams:null,       total:()=>PC4TH_POSITIONS.length*POS_CHECKS.length+PC5TH_POSITIONS.length*POS_CHECKS.length+COMMSL_POSITIONS.length*POS_CHECKS.length+COMMSM_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc4th",PC4TH_POSITIONS)+posDone("comm_pc5th",PC5TH_POSITIONS)+posDone("comm_sl",COMMSL_POSITIONS)+posDone("comm_sm",COMMSM_POSITIONS) },
   { key:"gal",        listId:null,             cams:null,       total:()=>CCSR_ITEMS.length+CIR_ITEMS.length+MCR_ITEMS.length+INTERCOM_ITEMS.length+FFT_ITEMS.length+RF_CAMS_ITEMS.length+NOVA_105_ITEMS.length+SL_PRODUCTION_ITEMS.length+SL_AUDIO_ITEMS.length+SM_PRODUCTION_ITEMS.length+SM_AUDIO_ITEMS.length+EIC_AIC_ITEMS.length+EMG_OFFICE_ITEMS.length+EVS_SL_ITEMS.length+EVS_PC_ITEMS.length+QC_AUDIO_ITEMS.length+QC_PRODUCTION_ITEMS.length+GFX_ITEMS.length,
     done:()=>simpleDone("gal_CCSR",CCSR_ITEMS.length)+simpleDone("gal_CIR",CIR_ITEMS.length)+simpleDone("gal_MCR",MCR_ITEMS.length)+simpleDone("gal_INTERCOM",INTERCOM_ITEMS.length)+simpleDone("gal_FFT",FFT_ITEMS.length)+simpleDone("gal_RF_CAMS",RF_CAMS_ITEMS.length)+simpleDone("gal_NOVA_105",NOVA_105_ITEMS.length)+simpleDone("gal_SL_PRODUCTION",SL_PRODUCTION_ITEMS.length)+simpleDone("gal_SL_AUDIO",SL_AUDIO_ITEMS.length)+simpleDone("gal_SM_PRODUCTION",SM_PRODUCTION_ITEMS.length)+simpleDone("gal_SM_AUDIO",SM_AUDIO_ITEMS.length)+simpleDone("gal_EIC_AIC",EIC_AIC_ITEMS.length)+simpleDone("gal_EMG_OFFICE",EMG_OFFICE_ITEMS.length)+simpleDone("gal_EVS_SL",EVS_SL_ITEMS.length)+simpleDone("gal_EVS_PC",EVS_PC_ITEMS.length)+simpleDone("gal_QC_AUDIO",QC_AUDIO_ITEMS.length)+simpleDone("gal_QC_PRODUCTION",QC_PRODUCTION_ITEMS.length)+simpleDone("gal_GFX",GFX_ITEMS.length) },
-  { key:"c14",        listId:null,             cams:C14_CAMS,   total:()=>C14_CAMS.reduce((s,c)=>s+getRows("c14",c.num).length,0), done:()=>camDone("c14",C14_CAMS) },
-  { key:"pc", listId:null, cams:null, total:()=>PC_CAMS.reduce((s,c)=>s+getRows("pc",c.num).length,0), done:()=>camDone("pc",PC_CAMS) },
-  { key:"sl", listId:null, cams:null, total:()=>SL_CAMS.reduce((s,c)=>s+getRows("sl",c.num).length,0), done:()=>camDone("sl",SL_CAMS) },
-  { key:"sm", listId:null, cams:null, total:()=>SM_CAMS.reduce((s,c)=>s+getRows("sm",c.num).length,0), done:()=>camDone("sm",SM_CAMS) },
+  { key:"c14",        listId:null,             cams:C14_CAMS,   total:()=>C14_CAMS.reduce((s,c)=>s+getRows("c14",c.num).length,0)+CAMCHECK_CT14.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("c14",C14_CAMS)+camCheckDone("camck_c14",CAMCHECK_CT14) },
+  { key:"pc", listId:null, cams:null, total:()=>PC_CAMS.reduce((s,c)=>s+getRows("pc",c.num).length,0)+CAMCHECK_PC.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("pc",PC_CAMS)+camCheckDone("camck_pc",CAMCHECK_PC) },
+  { key:"sl", listId:null, cams:null, total:()=>SL_CAMS.reduce((s,c)=>s+getRows("sl",c.num).length,0)+CAMCHECK_SL.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("sl",SL_CAMS)+camCheckDone("camck_sl",CAMCHECK_SL) },
+  { key:"sm", listId:null, cams:null, total:()=>SM_CAMS.reduce((s,c)=>s+getRows("sm",c.num).length,0)+CAMCHECK_SM.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("sm",SM_CAMS)+camCheckDone("camck_sm",CAMCHECK_SM) },
   { key:"comm_pc4th", listId:null, cams:null, total:()=>PC4TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc4th",PC4TH_POSITIONS) },
   { key:"comm_pc5th", listId:null, cams:null, total:()=>PC5TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc5th",PC5TH_POSITIONS) },
   { key:"comm_sl",    listId:null, cams:null, total:()=>COMMSL_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sl",COMMSL_POSITIONS) },
