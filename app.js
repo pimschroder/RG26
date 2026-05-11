@@ -640,46 +640,92 @@ const CAM_CHECK_GROUPS = [
 ];
 const ALL_CAM_CHECKS = CAM_CHECK_GROUPS.flatMap(g=>g.checks); // 17 items
 
+// Check sets per camera type
+const CHK_ALL  = ALL_CAM_CHECKS;
+const CHK_15   = ['CAM','CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_RF8  = ['IRIS','UHD','HDR','SDR','RED','PROD','ENG','PGM'];
+const CHK_HH12 = ['IRIS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_PTZ4 = ['IRIS','UHD','HDR','SDR'];
+const CHK_SM_HH  = ['IRIS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_SM16   = ['CAM','CCU','IRIS','B-FOCUS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2'];
+const CHK_SM14   = ['CAM','CCU','IRIS','B-FOCUS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_SM_RF  = ['IRIS','HDR','SDR','RED','PROD','ENG','PGM'];
+const CHK_SM3    = ['IRIS','HDR','SDR'];
+const CHK_CT14HH = ['IRIS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2'];
+const CHK_CT14RF = ['IRIS','RED','PROD','ENG','PGM'];
+
 const CAMCHECK_PC = [
-  {id:'PC.01',mcs:'1', type:'3500'}, {id:'PC.02',mcs:'2', type:'3500'},
-  {id:'PC.03',mcs:'3', type:'3500'}, {id:'PC.04',mcs:'4', type:'3500'},
-  {id:'PC.05',mcs:'32',type:'SSM'},  {id:'PC.06',mcs:'37',type:'SSM'},
-  {id:'PC.07',mcs:'-', type:'RF'},   {id:'PC.08',mcs:'31',type:'UM'},
-  {id:'PC.09',mcs:'5', type:'3500'}, {id:'PC.10',mcs:'40',type:'HOTHEAD'},
-  {id:'PC.11',mcs:'',  type:'SPIDER'},{id:'PC.12',mcs:'', type:'PTZ'},
-  {id:'PC.13',mcs:'',  type:'PTZ'},  {id:'PC.14',mcs:'',  type:'PLAYERBOX'},
-  {id:'PC.15',mcs:'',  type:'PLAYERBOX'},{id:'PC.16',mcs:'',type:'NETCAM'},
-  {id:'PC.17',mcs:'',  type:'NETCAM'},{id:'PC.18',mcs:'', type:'PTZ'},
-  {id:'PC.19',mcs:'6', type:'3500'}, {id:'PC.20',mcs:'',  type:'RF'},
-  {id:'PC.21',mcs:'',  type:'PTZ'},  {id:'PC.22',mcs:'',  type:'PTZ'},
-  {id:'PC.23',mcs:'7', type:'3500'}, {id:'PC.24',mcs:'8', type:'3500'},
+  {id:'PC.01',mcs:'1', type:'3500',     checks:CHK_ALL},
+  {id:'PC.02',mcs:'2', type:'3500',     checks:CHK_15},
+  {id:'PC.03',mcs:'3', type:'3500',     checks:CHK_15},
+  {id:'PC.04',mcs:'4', type:'3500',     checks:CHK_15},
+  {id:'PC.05',mcs:'32',type:'SSM',      checks:CHK_15},
+  {id:'PC.06',mcs:'37',type:'SSM',      checks:CHK_15},
+  {id:'PC.07',mcs:'-', type:'RF',       checks:CHK_RF8},
+  {id:'PC.08',mcs:'31',type:'UM',       checks:CHK_15},
+  {id:'PC.09',mcs:'5', type:'3500',     checks:CHK_15},
+  {id:'PC.10',mcs:'40',type:'HOTHEAD',  checks:CHK_HH12},
+  {id:'PC.11',mcs:'',  type:'SPIDER',   checks:CHK_PTZ4},
+  {id:'PC.12',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'PC.13',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'PC.14',mcs:'',  type:'PLAYERBOX',checks:CHK_PTZ4},
+  {id:'PC.15',mcs:'',  type:'PLAYERBOX',checks:CHK_PTZ4},
+  {id:'PC.16',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
+  {id:'PC.17',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
+  {id:'PC.18',mcs:'',  type:'PTZ',      checks:CHK_HH12},
+  {id:'PC.19',mcs:'6', type:'3500',     checks:CHK_15},
+  {id:'PC.20',mcs:'',  type:'RF',       checks:CHK_RF8},
+  {id:'PC.21',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'PC.22',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'PC.23',mcs:'7', type:'3500',     checks:CHK_15},
+  {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_15},
 ];
 const CAMCHECK_SL = [
-  {id:'SL.01',mcs:'9', type:'3500'}, {id:'SL.02',mcs:'10',type:'3500'},
-  {id:'SL.03',mcs:'11',type:'3500'}, {id:'SL.04',mcs:'12',type:'3500'},
-  {id:'SL.05',mcs:'34',type:'SSM'},  {id:'SL.06',mcs:'38',type:'SSM'},
-  {id:'SL.07',mcs:'',  type:'RF'},   {id:'SL.08',mcs:'33',type:'UM'},
-  {id:'SL.09',mcs:'13',type:'3500'}, {id:'SL.10',mcs:'41',type:'HOTHEAD'},
-  {id:'SL.11',mcs:'',  type:'SPIDER'},{id:'SL.12',mcs:'', type:'PTZ'},
-  {id:'SL.13',mcs:'',  type:'PTZ'},  {id:'SL.14',mcs:'',  type:'PLAYERBOX'},
-  {id:'SL.15',mcs:'',  type:'PLAYERBOX'},{id:'SL.16',mcs:'',type:'NETCAM'},
-  {id:'SL.17',mcs:'',  type:'NETCAM'},{id:'SL.18',mcs:'', type:'PTZ'},
-  {id:'SL.19',mcs:'14',type:'3500'}, {id:'SL.20',mcs:'15',type:'3500'},
+  {id:'SL.01',mcs:'9', type:'3500',     checks:CHK_ALL},
+  {id:'SL.02',mcs:'10',type:'3500',     checks:CHK_15},
+  {id:'SL.03',mcs:'11',type:'3500',     checks:CHK_15},
+  {id:'SL.04',mcs:'12',type:'3500',     checks:CHK_15},
+  {id:'SL.05',mcs:'34',type:'SSM',      checks:CHK_15},
+  {id:'SL.06',mcs:'38',type:'SSM',      checks:CHK_15},
+  {id:'SL.07',mcs:'',  type:'RF',       checks:CHK_RF8},
+  {id:'SL.08',mcs:'33',type:'UM',       checks:CHK_15},
+  {id:'SL.09',mcs:'13',type:'3500',     checks:CHK_15},
+  {id:'SL.10',mcs:'41',type:'HOTHEAD',  checks:CHK_HH12},
+  {id:'SL.11',mcs:'',  type:'SPIDER',   checks:CHK_PTZ4},
+  {id:'SL.12',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'SL.13',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'SL.14',mcs:'',  type:'PLAYERBOX',checks:CHK_PTZ4},
+  {id:'SL.15',mcs:'',  type:'PLAYERBOX',checks:CHK_PTZ4},
+  {id:'SL.16',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
+  {id:'SL.17',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
+  {id:'SL.18',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
+  {id:'SL.19',mcs:'14',type:'3500',     checks:CHK_ALL},
+  {id:'SL.20',mcs:'15',type:'3500',     checks:CHK_15},
 ];
 const CAMCHECK_SM = [
-  {id:'SM.01',mcs:'42',type:'HOTHEAD'},{id:'SM.02',mcs:'16',type:'3500'},
-  {id:'SM.03',mcs:'17',type:'3500'},  {id:'SM.04',mcs:'18',type:'3500'},
-  {id:'SM.05',mcs:'35',type:'SSM'},   {id:'SM.06',mcs:'36',type:'UM'},
-  {id:'SM.07',mcs:'',  type:'RF'},    {id:'SM.08',mcs:'',  type:'PTZ'},
-  {id:'SM.09',mcs:'',  type:'PTZ'},   {id:'SM.10',mcs:'',  type:'NETCAM'},
-  {id:'SM.11',mcs:'',  type:'NETCAM'},{id:'SM.12',mcs:'19',type:'3500'},
-  {id:'SM.13',mcs:'20',type:'3500'},
+  {id:'SM.01',mcs:'42',type:'HOTHEAD',  checks:CHK_SM_HH},
+  {id:'SM.02',mcs:'16',type:'3500',     checks:CHK_SM16},
+  {id:'SM.03',mcs:'17',type:'3500',     checks:CHK_SM14},
+  {id:'SM.04',mcs:'18',type:'3500',     checks:CHK_SM14},
+  {id:'SM.05',mcs:'35',type:'SSM',      checks:CHK_SM14},
+  {id:'SM.06',mcs:'36',type:'UM',       checks:CHK_SM14},
+  {id:'SM.07',mcs:'',  type:'RF',       checks:CHK_SM_RF},
+  {id:'SM.08',mcs:'',  type:'PTZ',      checks:CHK_SM3},
+  {id:'SM.09',mcs:'',  type:'PTZ',      checks:CHK_SM3},
+  {id:'SM.10',mcs:'',  type:'NETCAM',   checks:CHK_SM3},
+  {id:'SM.11',mcs:'',  type:'NETCAM',   checks:CHK_SM3},
+  {id:'SM.12',mcs:'19',type:'3500',     checks:CHK_SM16},
+  {id:'SM.13',mcs:'20',type:'3500',     checks:CHK_SM14},
 ];
 const CAMCHECK_CT14 = [
-  {id:'CT14.01',mcs:'43',type:'HOTHEAD'},{id:'CT14.02',mcs:'21',type:'3500'},
-  {id:'CT14.03',mcs:'22',type:'3500'},  {id:'CT14.04',mcs:'23',type:'3500'},
-  {id:'CT14.05',mcs:'24',type:'3500'},  {id:'CT14.06',mcs:'39',type:'SSM'},
-  {id:'CT14.07',mcs:'',  type:'RF'},    {id:'CT14.08',mcs:'25',type:'3500'},
+  {id:'CT14.01',mcs:'43',type:'HOTHEAD',checks:CHK_CT14HH},
+  {id:'CT14.02',mcs:'21',type:'3500',   checks:CHK_SM16},
+  {id:'CT14.03',mcs:'22',type:'3500',   checks:CHK_SM16},
+  {id:'CT14.04',mcs:'23',type:'3500',   checks:CHK_SM16},
+  {id:'CT14.05',mcs:'24',type:'3500',   checks:CHK_SM16},
+  {id:'CT14.06',mcs:'39',type:'SSM',    checks:CHK_SM16},
+  {id:'CT14.07',mcs:'',  type:'RF',     checks:CHK_CT14RF},
+  {id:'CT14.08',mcs:'25',type:'3500',   checks:CHK_SM16},
 ];
 
 const SK = "rg2026_v1";
@@ -1308,7 +1354,13 @@ function camDone(sk, cams){
 // ── CAM Checklist (Excel matrix) ─────────────────────────────────
 function camCheckDone(sk, cams){
   const d=load(); if(!d[sk]) return 0;
-  let n=0; cams.forEach(cam=>{ ALL_CAM_CHECKS.forEach(c=>{ if(d[sk]?.[cam.id]?.[c]) n++; }); }); return n;
+  let n=0; cams.forEach(cam=>{ cam.checks.forEach(c=>{ if(d[sk]?.[cam.id]?.[c]) n++; }); }); return n;
+}
+
+function getCamChecks(sk, camId){
+  const map = {camck_pc:CAMCHECK_PC,camck_sl:CAMCHECK_SL,camck_sm:CAMCHECK_SM,camck_c14:CAMCHECK_CT14};
+  const cam = (map[sk]||[]).find(c=>c.id===camId);
+  return cam ? cam.checks : ALL_CAM_CHECKS;
 }
 
 function buildCamCheckPage(containerId, storageKey, cams){
@@ -1317,24 +1369,26 @@ function buildCamCheckPage(containerId, storageKey, cams){
   container.innerHTML = '';
   const d = load();
   if(!d[storageKey]) d[storageKey] = {};
-  const total = ALL_CAM_CHECKS.length;
 
   cams.forEach(cam => {
     const camData = d[storageKey][cam.id] || {};
-    const checkedN = ALL_CAM_CHECKS.filter(c => camData[c]).length;
+    const total = cam.checks.length;
+    const checkedN = cam.checks.filter(c => camData[c]).length;
     const allDone = checkedN === total;
     const safe = cam.id.replace(/\./g,'-');
     const subInfo = [cam.type, cam.mcs ? 'MCS '+cam.mcs : ''].filter(Boolean).join(' · ');
 
-    const groupsHTML = CAM_CHECK_GROUPS.map(g =>
-      `<div class="ccl-group"><span class="ccl-group-label">${g.label}</span><div class="ccl-chips">${
-        g.checks.map(c => {
+    const groupsHTML = CAM_CHECK_GROUPS.map(g => {
+      const applicable = g.checks.filter(c => cam.checks.includes(c));
+      if(!applicable.length) return '';
+      return `<div class="ccl-group"><span class="ccl-group-label">${g.label}</span><div class="ccl-chips">${
+        applicable.map(c => {
           const on = !!camData[c];
           const ck = c.replace(/'/g,"\\'");
           return `<button class="ccl-chip${on?' on':''}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${c}</button>`;
         }).join('')
-      }</div></div>`
-    ).join('');
+      }</div></div>`;
+    }).join('');
 
     const block = document.createElement('div');
     block.className = 'cam-block';
@@ -1362,8 +1416,9 @@ function camCheckToggle(sk, camId, checkKey, cid, el){
 
   const safe = camId.replace(/\./g,'-');
   const camData = d[sk][camId];
-  const checkedN = ALL_CAM_CHECKS.filter(c => camData[c]).length;
-  const total = ALL_CAM_CHECKS.length;
+  const checks = getCamChecks(sk, camId);
+  const checkedN = checks.filter(c => camData[c]).length;
+  const total = checks.length;
   const pctEl = document.getElementById(`${cid}-pct-${safe}`);
   if(pctEl) pctEl.textContent = `${checkedN}/${total}`;
   const block = document.getElementById(`${cid}-block-${safe}`);
@@ -1699,10 +1754,10 @@ const SECTIONS = [
   { key:"comm_pc5th", listId:null, cams:null, total:()=>PC5TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc5th",PC5TH_POSITIONS) },
   { key:"comm_sl",    listId:null, cams:null, total:()=>COMMSL_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sl",COMMSL_POSITIONS) },
   { key:"comm_sm",    listId:null, cams:null, total:()=>COMMSM_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sm",COMMSM_POSITIONS) },
-  { key:"camck_pc",   listId:null, cams:null, total:()=>CAMCHECK_PC.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_pc",CAMCHECK_PC)   },
-  { key:"camck_sl",   listId:null, cams:null, total:()=>CAMCHECK_SL.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_sl",CAMCHECK_SL)   },
-  { key:"camck_sm",   listId:null, cams:null, total:()=>CAMCHECK_SM.length*ALL_CAM_CHECKS.length,   done:()=>camCheckDone("camck_sm",CAMCHECK_SM)   },
-  { key:"camck_c14",  listId:null, cams:null, total:()=>CAMCHECK_CT14.length*ALL_CAM_CHECKS.length, done:()=>camCheckDone("camck_c14",CAMCHECK_CT14) },
+  { key:"camck_pc",   listId:null, cams:null, total:()=>CAMCHECK_PC.reduce((s,c)=>s+c.checks.length,0),   done:()=>camCheckDone("camck_pc",CAMCHECK_PC)   },
+  { key:"camck_sl",   listId:null, cams:null, total:()=>CAMCHECK_SL.reduce((s,c)=>s+c.checks.length,0),   done:()=>camCheckDone("camck_sl",CAMCHECK_SL)   },
+  { key:"camck_sm",   listId:null, cams:null, total:()=>CAMCHECK_SM.reduce((s,c)=>s+c.checks.length,0),   done:()=>camCheckDone("camck_sm",CAMCHECK_SM)   },
+  { key:"camck_c14",  listId:null, cams:null, total:()=>CAMCHECK_CT14.reduce((s,c)=>s+c.checks.length,0), done:()=>camCheckDone("camck_c14",CAMCHECK_CT14) },
 ];
 
 function pct(d,t){ return t?Math.round(d/t*100):0; }
