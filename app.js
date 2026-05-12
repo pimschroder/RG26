@@ -1345,9 +1345,11 @@ function camDone(sk, cams){
 }
 
 // ── CAM Checklist (Excel matrix) ─────────────────────────────────
+function isChecked(v){ return typeof v === 'object' ? !!v?.v : !!v; }
+
 function camCheckDone(sk, cams){
   const d=load(); if(!d[sk]) return 0;
-  let n=0; cams.forEach(cam=>{ cam.checks.forEach(c=>{ if(d[sk]?.[cam.id]?.[c]) n++; }); }); return n;
+  let n=0; cams.forEach(cam=>{ cam.checks.forEach(c=>{ if(isChecked(d[sk]?.[cam.id]?.[c])) n++; }); }); return n;
 }
 
 function getCamChecks(sk, camId){
@@ -1356,17 +1358,67 @@ function getCamChecks(sk, camId){
   return cam ? cam.checks : ALL_CAM_CHECKS;
 }
 
+function _updateChipUser(btn, user){
+  let badge = btn.querySelector('.ccl-user');
+  if(!user){ if(badge) badge.remove(); return; }
+  if(!badge){ badge = document.createElement('span'); badge.className='ccl-user'; btn.appendChild(badge); }
+  badge.textContent = user.substring(0,2).toUpperCase();
+}
+
+const _camckFilter = {};
+window.toggleCamFilter = function(cid){
+  _camckFilter[cid] = !_camckFilter[cid];
+  const container = document.getElementById(cid);
+  if(container) container.classList.toggle('ccl-filter-on', !!_camckFilter[cid]);
+  const btn = document.getElementById(cid+'-filter-btn');
+  if(btn) btn.classList.toggle('active', !!_camckFilter[cid]);
+};
+
 function buildCamCheckPage(containerId, storageKey, cams){
   const container = document.getElementById(containerId);
   if(!container) return;
-  container.innerHTML = '';
   const d = load();
   if(!d[storageKey]) d[storageKey] = {};
+
+  // ── Incremental update: sync changed chips without destroying DOM ──
+  if(container.querySelector('.cam-block')){
+    cams.forEach(cam => {
+      const safe = cam.id.replace(/\./g,'-');
+      const block = document.getElementById(`${containerId}-block-${safe}`);
+      if(!block) return;
+      const camData = d[storageKey][cam.id] || {};
+      const total = cam.checks.length;
+      const checkedN = cam.checks.filter(c => isChecked(camData[c])).length;
+      cam.checks.forEach(c => {
+        const btn = block.querySelector(`button[data-check="${c}"]`);
+        if(!btn) return;
+        const val = camData[c];
+        const on = isChecked(val);
+        btn.classList.toggle('on', on);
+        _updateChipUser(btn, on && val?.user ? val.user : null);
+      });
+      const pctEl = document.getElementById(`${containerId}-pct-${safe}`);
+      if(pctEl) pctEl.textContent = `${checkedN}/${total}`;
+      const isAllDone = checkedN === total;
+      block.querySelector('.cam-header')?.classList.toggle('cam-header-done', isAllDone);
+      block.dataset.done = isAllDone ? 'true' : 'false';
+    });
+    return;
+  }
+
+  // ── Full build ──
+  if(!document.getElementById(containerId+'-filter-btn')){
+    const bar = document.createElement('div');
+    bar.className = 'ccl-filter-bar';
+    bar.innerHTML = `<button id="${containerId}-filter-btn" class="ccl-filter-btn${_camckFilter[containerId]?' active':''}" onclick="toggleCamFilter('${containerId}')">Toon alleen onvolledig</button>`;
+    container.before(bar);
+  }
+  if(_camckFilter[containerId]) container.classList.add('ccl-filter-on');
 
   cams.forEach(cam => {
     const camData = d[storageKey][cam.id] || {};
     const total = cam.checks.length;
-    const checkedN = cam.checks.filter(c => camData[c]).length;
+    const checkedN = cam.checks.filter(c => isChecked(camData[c])).length;
     const allDone = checkedN === total;
     const safe = cam.id.replace(/\./g,'-');
     const subInfo = [cam.type, cam.mcs ? 'MCS '+cam.mcs : ''].filter(Boolean).join(' · ');
@@ -1376,9 +1428,11 @@ function buildCamCheckPage(containerId, storageKey, cams){
       if(!applicable.length) return '';
       return `<div class="ccl-group"><span class="ccl-group-label">${g.label}</span><div class="ccl-chips">${
         applicable.map(c => {
-          const on = !!camData[c];
+          const val = camData[c];
+          const on = isChecked(val);
+          const user = on && val?.user ? val.user.substring(0,2).toUpperCase() : '';
           const ck = c.replace(/'/g,"\\'");
-          return `<button class="ccl-chip${on?' on':''}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${c}</button>`;
+          return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${c}${user?`<span class="ccl-user">${user}</span>`:''}</button>`;
         }).join('')
       }</div></div>`;
     }).join('');
@@ -1386,6 +1440,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
     const block = document.createElement('div');
     block.className = 'cam-block';
     block.id = `${containerId}-block-${safe}`;
+    block.dataset.done = allDone ? 'true' : 'false';
     block.innerHTML = `
       <div class="cam-header${allDone?' cam-header-done':''}" onclick="camCheckCollapse('${containerId}','${safe}')" style="touch-action:manipulation;">
         <span class="cam-badge">${cam.id}</span>
@@ -1402,21 +1457,31 @@ function camCheckToggle(sk, camId, checkKey, cid, el){
   const d = load();
   if(!d[sk]) d[sk] = {};
   if(!d[sk][camId]) d[sk][camId] = {};
-  const isDone = !d[sk][camId][checkKey];
-  d[sk][camId][checkKey] = isDone;
+  const isDone = !isChecked(d[sk][camId][checkKey]);
+  const user = getCurrentUser();
+  d[sk][camId][checkKey] = isDone ? {v:true, user, ts:Date.now()} : false;
   save(d, sk);
   el.classList.toggle('on', isDone);
+  _updateChipUser(el, isDone ? user : null);
 
   const safe = camId.replace(/\./g,'-');
   const camData = d[sk][camId];
   const checks = getCamChecks(sk, camId);
-  const checkedN = checks.filter(c => camData[c]).length;
+  const checkedN = checks.filter(c => isChecked(camData[c])).length;
   const total = checks.length;
   const pctEl = document.getElementById(`${cid}-pct-${safe}`);
   if(pctEl) pctEl.textContent = `${checkedN}/${total}`;
   const block = document.getElementById(`${cid}-block-${safe}`);
   if(block){
-    block.querySelector('.cam-header')?.classList.toggle('cam-header-done', checkedN===total);
+    const hdr = block.querySelector('.cam-header');
+    const wasAllDone = hdr?.classList.contains('cam-header-done');
+    const isAllDone = checkedN === total;
+    hdr?.classList.toggle('cam-header-done', isAllDone);
+    if(isAllDone && !wasAllDone){
+      hdr?.classList.add('cam-done-pop');
+      setTimeout(()=>hdr?.classList.remove('cam-done-pop'), 700);
+    }
+    block.dataset.done = isAllDone ? 'true' : 'false';
   }
   el.classList.add('check-pop');
   setTimeout(()=>el.classList.remove('check-pop'),300);
@@ -2492,6 +2557,29 @@ function _doExportExcel(){
   const wsAudio = XLSX.utils.aoa_to_sheet(audioRows);
   wsAudio["!cols"] = [{wch:20},{wch:40},{wch:8},{wch:14},{wch:16},{wch:35}];
   XLSX.utils.book_append_sheet(wb, wsAudio, "Audio");
+
+  const camckMap = [
+    {sk:"camck_pc",  cams:CAMCHECK_PC,   label:"CAM Check PC"},
+    {sk:"camck_sl",  cams:CAMCHECK_SL,   label:"CAM Check SL"},
+    {sk:"camck_sm",  cams:CAMCHECK_SM,   label:"CAM Check SM"},
+    {sk:"camck_c14", cams:CAMCHECK_CT14, label:"CAM Check C14"},
+  ];
+  const camckRows = [["CAM","Type","MCS","Check","Status","Door","Tijdstip"]];
+  camckMap.forEach(({sk,cams})=>{
+    cams.forEach(cam=>{
+      const cd = (d[sk]||{})[cam.id]||{};
+      cam.checks.forEach(chk=>{
+        const val = cd[chk];
+        const checked = isChecked(val);
+        camckRows.push([cam.id, cam.type, cam.mcs||"", chk, fmtStatus(checked),
+          checked && val?.user ? fmtUser(val.user) : "",
+          checked && val?.ts ? fmtTs(val.ts) : ""]);
+      });
+    });
+  });
+  const wsCamck = XLSX.utils.aoa_to_sheet(camckRows);
+  wsCamck["!cols"] = [{wch:10},{wch:12},{wch:6},{wch:10},{wch:8},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsCamck, "CAM Checklist");
 
   const filename = `RG2026_Status_${nowStr.replace(/\//g,"-")}.xlsx`;
   XLSX.writeFile(wb, filename);
