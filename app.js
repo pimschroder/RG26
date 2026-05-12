@@ -1394,7 +1394,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
     block.className = 'cam-block';
     block.id = `${containerId}-block-${safe}`;
     block.innerHTML = `
-      <div class="cam-header${allDone?' cam-header-done':''}" onclick="camCheckCollapse('${containerId}','${safe}')">
+      <div class="cam-header${allDone?' cam-header-done':''}" onclick="camCheckCollapse('${containerId}','${safe}')" style="touch-action:manipulation;">
         <span class="cam-badge">${cam.id}</span>
         <span class="cam-name"><span class="cam-sub">${subInfo}</span></span>
         <span class="cam-pct" id="${containerId}-pct-${safe}">${checkedN}/${total}</span>
@@ -1424,9 +1424,6 @@ function camCheckToggle(sk, camId, checkKey, cid, el){
   const block = document.getElementById(`${cid}-block-${safe}`);
   if(block){
     block.querySelector('.cam-header')?.classList.toggle('cam-header-done', checkedN===total);
-    if(checkedN===total && !block.classList.contains('collapsed')){
-      setTimeout(()=>{ block.classList.add('collapsed'); block.querySelector('.cam-body').style.maxHeight='0'; },400);
-    }
   }
   el.classList.add('check-pop');
   setTimeout(()=>el.classList.remove('check-pop'),300);
@@ -3194,14 +3191,14 @@ window.addEventListener('popstate', e => {
     if(e.touches.length !== 1) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    tracking = startX < 30;
+    tracking = startX < 16; // stricter: was 30, cam-badge starts at ~29px
   }, { passive: true });
   document.addEventListener('touchend', e => {
     if(!tracking) return;
     tracking = false;
     const dx = e.changedTouches[0].clientX - startX;
     const dy = Math.abs(e.changedTouches[0].clientY - startY);
-    if(dx > 80 && dy < 60){
+    if(dx > 100 && dy < 50){ // stricter than before (was 80/60)
       const activePage = document.querySelector('.page.active');
       const backBtn = activePage && activePage.querySelector('.back-btn');
       if(backBtn) backBtn.click();
