@@ -1818,7 +1818,7 @@ const SECTIONS = [
 ];
 
 function pct(d,t){ return t?Math.round(d/t*100):0; }
-function bar(id,p){ const el=document.getElementById(id); if(el&&el.style.width!==p+"%") el.style.width=p+"%"; }
+function bar(id,p){ const el=document.getElementById(id); if(!el) return; if(el.style.width!==p+"%") el.style.width=p+"%"; el.classList.toggle('bar-full', p>=100); }
 function txt(id,v){ const el=document.getElementById(id); if(el&&el.textContent!==String(v)) el.textContent=v; }
 function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; const v=d+"/"+t; if(el.textContent!==v) el.textContent=v; el.classList.toggle('done', t>0&&d===t); }
 
