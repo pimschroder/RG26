@@ -745,13 +745,6 @@ function save(d, changedKey){
   updateLastUpdateLabel();
   if(window.pushToSupabase) window.pushToSupabase(d, changedKey);
 }
-function saveFast(d, changedKey){
-  d._lastUpdate = Date.now();
-  _localSaveRaw(d);
-  updateLastUpdateLabel();
-  if(window.pushToSupabase) window.pushToSupabase(d, changedKey);
-  refreshCounters(); refreshAudioCounters();
-}
 function getCurrentUser(){
   const u = localStorage.getItem("rg_user")||"";
   if(!u) return "";
@@ -1745,10 +1738,10 @@ const SECTIONS = [
   { key:"comm",       listId:"list-comm",      cams:null,       total:()=>PC4TH_POSITIONS.length*POS_CHECKS.length+PC5TH_POSITIONS.length*POS_CHECKS.length+COMMSL_POSITIONS.length*POS_CHECKS.length+COMMSM_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc4th",PC4TH_POSITIONS)+posDone("comm_pc5th",PC5TH_POSITIONS)+posDone("comm_sl",COMMSL_POSITIONS)+posDone("comm_sm",COMMSM_POSITIONS) },
   { key:"gal",        listId:null,             cams:null,       total:()=>CCSR_ITEMS.length+CIR_ITEMS.length+MCR_ITEMS.length+INTERCOM_ITEMS.length+FFT_ITEMS.length+RF_CAMS_ITEMS.length+NOVA_105_ITEMS.length+SL_PRODUCTION_ITEMS.length+SL_AUDIO_ITEMS.length+SM_PRODUCTION_ITEMS.length+SM_AUDIO_ITEMS.length+EIC_AIC_ITEMS.length+EMG_OFFICE_ITEMS.length+EVS_SL_ITEMS.length+EVS_PC_ITEMS.length+QC_AUDIO_ITEMS.length+QC_PRODUCTION_ITEMS.length+GFX_ITEMS.length,
     done:()=>simpleDone("gal_CCSR",CCSR_ITEMS.length)+simpleDone("gal_CIR",CIR_ITEMS.length)+simpleDone("gal_MCR",MCR_ITEMS.length)+simpleDone("gal_INTERCOM",INTERCOM_ITEMS.length)+simpleDone("gal_FFT",FFT_ITEMS.length)+simpleDone("gal_RF_CAMS",RF_CAMS_ITEMS.length)+simpleDone("gal_NOVA_105",NOVA_105_ITEMS.length)+simpleDone("gal_SL_PRODUCTION",SL_PRODUCTION_ITEMS.length)+simpleDone("gal_SL_AUDIO",SL_AUDIO_ITEMS.length)+simpleDone("gal_SM_PRODUCTION",SM_PRODUCTION_ITEMS.length)+simpleDone("gal_SM_AUDIO",SM_AUDIO_ITEMS.length)+simpleDone("gal_EIC_AIC",EIC_AIC_ITEMS.length)+simpleDone("gal_EMG_OFFICE",EMG_OFFICE_ITEMS.length)+simpleDone("gal_EVS_SL",EVS_SL_ITEMS.length)+simpleDone("gal_EVS_PC",EVS_PC_ITEMS.length)+simpleDone("gal_QC_AUDIO",QC_AUDIO_ITEMS.length)+simpleDone("gal_QC_PRODUCTION",QC_PRODUCTION_ITEMS.length)+simpleDone("gal_GFX",GFX_ITEMS.length) },
-  { key:"c14",        listId:null,             cams:C14_CAMS,   total:()=>C14_CAMS.reduce((s,c)=>s+getRows("c14",c.num).length,0)+CAMCHECK_CT14.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("c14",C14_CAMS)+camCheckDone("camck_c14",CAMCHECK_CT14) },
-  { key:"pc", listId:null, cams:null, total:()=>PC_CAMS.reduce((s,c)=>s+getRows("pc",c.num).length,0)+CAMCHECK_PC.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("pc",PC_CAMS)+camCheckDone("camck_pc",CAMCHECK_PC) },
-  { key:"sl", listId:null, cams:null, total:()=>SL_CAMS.reduce((s,c)=>s+getRows("sl",c.num).length,0)+CAMCHECK_SL.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("sl",SL_CAMS)+camCheckDone("camck_sl",CAMCHECK_SL) },
-  { key:"sm", listId:null, cams:null, total:()=>SM_CAMS.reduce((s,c)=>s+getRows("sm",c.num).length,0)+CAMCHECK_SM.reduce((s,c)=>s+c.checks.length,0), done:()=>camDone("sm",SM_CAMS)+camCheckDone("camck_sm",CAMCHECK_SM) },
+  { key:"c14", listId:null, cams:C14_CAMS, total:()=>C14_CAMS.reduce((s,c)=>s+getRows("c14",c.num).length,0), done:()=>camDone("c14",C14_CAMS) },
+  { key:"pc",  listId:null, cams:null,     total:()=>PC_CAMS.reduce((s,c)=>s+getRows("pc",c.num).length,0),   done:()=>camDone("pc",PC_CAMS) },
+  { key:"sl",  listId:null, cams:null,     total:()=>SL_CAMS.reduce((s,c)=>s+getRows("sl",c.num).length,0),   done:()=>camDone("sl",SL_CAMS) },
+  { key:"sm",  listId:null, cams:null,     total:()=>SM_CAMS.reduce((s,c)=>s+getRows("sm",c.num).length,0),   done:()=>camDone("sm",SM_CAMS) },
   { key:"comm_pc4th", listId:null, cams:null, total:()=>PC4TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc4th",PC4TH_POSITIONS) },
   { key:"comm_pc5th", listId:null, cams:null, total:()=>PC5TH_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_pc5th",PC5TH_POSITIONS) },
   { key:"comm_sl",    listId:null, cams:null, total:()=>COMMSL_POSITIONS.length*POS_CHECKS.length, done:()=>posDone("comm_sl",COMMSL_POSITIONS) },
@@ -1764,21 +1757,6 @@ function bar(id,p){ const el=document.getElementById(id); if(el&&el.style.width!
 function txt(id,v){ const el=document.getElementById(id); if(el&&el.textContent!==String(v)) el.textContent=v; }
 function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; const v=d+"/"+t; if(el.textContent!==v) el.textContent=v; el.classList.toggle('done', t>0&&d===t); }
 
-function refreshCounters(){
-  const totals={}, dones={};
-  SECTIONS.forEach(s=>{ totals[s.key]=s.total(); dones[s.key]=s.done(); });
-  const TOP_KEYS = ["courts","audio","comm","gal"];
-  const gT = TOP_KEYS.reduce((a,k)=>a+(totals[k]||0),0);
-  const gD = TOP_KEYS.reduce((a,k)=>a+(dones[k]||0),0);
-  bar("home-bar", pct(gD,gT)); txt("home-lbl",gD+" / "+gT);
-  txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",pct(gD,gT)+"%");
-  bar("pc-bar", pct(dones.pc,totals.pc)); txt("count-pc",dones.pc+"/"+totals.pc); txt("chip-pc",dones.pc+"/"+totals.pc);
-  bar("sl-bar", pct(dones.sl,totals.sl)); txt("count-sl",dones.sl+"/"+totals.sl); txt("chip-sl",dones.sl+"/"+totals.sl);
-  bar("sm-bar", pct(dones.sm,totals.sm)); txt("count-sm",dones.sm+"/"+totals.sm); txt("chip-sm",dones.sm+"/"+totals.sm);
-  bar("c14-bar",pct(dones.c14,totals.c14)); txt("count-c14",dones.c14+"/"+totals.c14); txt("chip-c14",dones.c14+"/"+totals.c14);
-  bar("comm-bar",pct(dones.comm,totals.comm)); txt("comm-count",dones.comm+"/"+totals.comm);
-  bar("gal-bar", pct(dones.gal,totals.gal)); txt("gal-count",dones.gal+"/"+totals.gal);
-}
 
 let _rafPending = false;
 function refreshAll(){
@@ -1829,9 +1807,6 @@ function _doRefresh(){
     chip(`chip-comm-${k}`,d,t);
     txt(`comm-${k}-note`,d+" van "+t+" voltooid");
   });
-
-  const pc4thD=dones["comm_pc4th"]||0, pc4thT=totals["comm_pc4th"]||0;
-  txt("comm-pc4th-note",pc4thD+" van "+pc4thT+" voltooid");
 
   buildDash(totals, dones);
 
