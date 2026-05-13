@@ -2134,6 +2134,7 @@ async function checkAdminPw(){
     loginSection.style.display = "none";
     panel.style.display = "block";
     err.style.display = "none";
+    window._adminMode = true;
   } else {
     err.style.display = "block";
     input.value = "";
@@ -2890,7 +2891,7 @@ window.renderOdLog = function renderOdLog(){
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
           ${e.todo?`<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>`:''}
         </div>
-        ${(e.user||e.name)===getCurrentUser() ? `
+        ${((e.user||e.name)===getCurrentUser() || window._adminMode) ? `
         <div class="od-item-actions">
           <button class="od-action-btn" onclick="openOdEdit(${e.id})" style="touch-action:manipulation;">✏️ Aanpassen</button>
           <button class="od-action-btn delete" onclick="deleteOverdracht(${e.id})" style="touch-action:manipulation;">🗑 Verwijderen</button>
