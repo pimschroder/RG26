@@ -630,15 +630,19 @@ const SM_CAMS = [
 
 // ── CAM Checklist (Excel matrix) ─────────────────────────────────
 const CAM_CHECK_GROUPS = [
-  {label:'FIBER',    checks:['CAM','CCU']},
-  {label:'CONTROL',  checks:['IRIS','B-FOCUS']},
+  {label:'FIBER',         checks:['CAM','CCU']},
+  {label:'FIBERS SONO',   checks:['SONO-CAM','SONO-CCU']},
+  {label:'FIBERS PERSCO', checks:['PERSCO-CAM','PERSCO-CCU']},
+  {label:'FIBERS COMM',   checks:['COMM-CAM','COMM-CCU']},
+  {label:'FIBERS FINALS', checks:['FINALS-CAM','FINALS-CCU']},
+  {label:'CONTROL',       checks:['IRIS','B-FOCUS']},
   {label:'VIDEO',    checks:['UHD','HDR','SDR']},
   {label:'RETURN',   checks:['RET 1','RET 2','RET 3']},
   {label:'TALLY',    checks:['RED','GREEN']},
   {label:'INTERCOM', checks:['PROD','ENG','PGM']},
   {label:'AUDIO',    checks:['IN 1','IN 2']},
 ];
-const ALL_CAM_CHECKS = CAM_CHECK_GROUPS.flatMap(g=>g.checks); // 17 items
+const ALL_CAM_CHECKS = ['CAM','CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2']; // 17 items
 
 // Check sets per camera type
 const CHK_ALL  = ALL_CAM_CHECKS;
@@ -677,7 +681,7 @@ const CAMCHECK_PC = [
   {id:'PC.20',mcs:'',  type:'RF',       checks:CHK_RF8},
   {id:'PC.21',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.22',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
-  {id:'PC.23',mcs:'7', type:'3500',     checks:CHK_15},
+  {id:'PC.23',mcs:'7', type:'3500',     checks:['SONO-CAM','SONO-CCU','PERSCO-CAM','PERSCO-CCU','COMM-CAM','COMM-CCU','FINALS-CAM','FINALS-CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM']},
   {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_15},
 ];
 const CAMCHECK_SL = [
