@@ -1363,10 +1363,10 @@ function getCamChecks(sk, camId){
 }
 
 function _updateChipUser(btn, user){
-  let badge = btn.querySelector('.ccl-user');
-  if(!user){ if(badge) badge.remove(); return; }
-  if(!badge){ badge = document.createElement('span'); badge.className='ccl-user'; btn.appendChild(badge); }
-  badge.textContent = user.substring(0,2).toUpperCase();
+  btn.querySelector('.ccl-user')?.remove();
+  btn.querySelector('.ccl-avatar')?.remove();
+  if(!user) return;
+  btn.insertAdjacentHTML('beforeend', userBadgeHTML(user));
 }
 
 const _camckFilter = {};
@@ -1434,10 +1434,10 @@ function buildCamCheckPage(containerId, storageKey, cams){
         applicable.map(c => {
           const val = camData[c];
           const on = isChecked(val);
-          const user = on && val?.user ? val.user.substring(0,2).toUpperCase() : '';
+          const user = on && val?.user ? val.user : '';
           const ck = c.replace(/'/g,"\\'");
           const lbl = c.includes('-') ? c.split('-').slice(1).join('-') : c;
-          return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${lbl}${user?`<span class="ccl-user">${user}</span>`:''}</button>`;
+          return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${lbl}${userBadgeHTML(user)}</button>`;
         }).join('')
       }</div></div>`;
     }).join('');
@@ -2026,6 +2026,19 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
 }
 
 const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
+
+// Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
+const USER_AVATARS = {
+  // "Jan": "images/avatars/jan.jpg",
+  // "Pim": "images/avatars/pim.jpg",
+};
+function getUserAvatar(name){ return name && USER_AVATARS[name] ? USER_AVATARS[name] : null; }
+function userBadgeHTML(user){
+  if(!user) return '';
+  const av = getUserAvatar(user);
+  return av ? `<img src="${av}" alt="${user}" title="${user}" class="ccl-avatar">`
+             : `<span class="ccl-user">${user.substring(0,2).toUpperCase()}</span>`;
+}
 
 // Zorg dat alle DEFAULT_USERS altijd in de opgeslagen lijst staan.
 // Wordt aangeroepen ná de eerste Supabase-sync zodat remote niet wint.
@@ -3062,11 +3075,17 @@ function buildUsers(){
     wrap.innerHTML = '<div class="users-empty">Geen gebruikers</div>';
     return;
   }
-  wrap.innerHTML = users.map(name=>`
-    <div class="user-row" data-name="${esc(name)}">
-      <span class="user-row-name">👤 ${esc(name)}</span>
+  wrap.innerHTML = users.map(name=>{
+    const av = getUserAvatar(name);
+    const avatarHtml = av
+      ? `<img src="${av}" class="user-row-avatar" alt="${esc(name)}">`
+      : `<span class="user-row-avatar user-row-initials">${name.substring(0,2).toUpperCase()}</span>`;
+    return `<div class="user-row" data-name="${esc(name)}">
+      ${avatarHtml}
+      <span class="user-row-name">${esc(name)}</span>
       <button class="user-row-del" onclick="removeUser('${esc(name)}')" ontouchend="event.preventDefault();removeUser('${esc(name)}');" style="touch-action:manipulation;">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function rebuildNameDropdown(){
