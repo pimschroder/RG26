@@ -1436,7 +1436,8 @@ function buildCamCheckPage(containerId, storageKey, cams){
           const on = isChecked(val);
           const user = on && val?.user ? val.user.substring(0,2).toUpperCase() : '';
           const ck = c.replace(/'/g,"\\'");
-          return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${c}${user?`<span class="ccl-user">${user}</span>`:''}</button>`;
+          const lbl = c.includes('-') ? c.split('-').slice(1).join('-') : c;
+          return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${lbl}${user?`<span class="ccl-user">${user}</span>`:''}</button>`;
         }).join('')
       }</div></div>`;
     }).join('');
