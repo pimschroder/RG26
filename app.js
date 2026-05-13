@@ -1009,6 +1009,11 @@ function initApp(){
   const saved = getCurrentUser();
   const userLbl = document.getElementById('logged-in-user');
   if(userLbl && saved) userLbl.textContent = '👤 ' + saved;
+  const avEl = document.getElementById('user-bar-avatar');
+  if(avEl && saved){
+    const av = getUserAvatar(saved);
+    avEl.innerHTML = av ? `<img src="${av}" class="userbar-avatar" alt="${saved}" title="${saved}">` : '';
+  }
   updateLastUpdateLabel();
 
   if(!navigator.onLine) showOfflineBanner();
@@ -1836,14 +1841,14 @@ function triggerAvatarCelebration(){
   document.body.appendChild(overlay);
 
   const users = getUsers();
-  const count = 48;
+  const count = 120;
   for(let i=0; i<count; i++){
     const name = users[Math.floor(Math.random()*users.length)];
     const av = getUserAvatar(name);
     const el = document.createElement('div');
     el.className = 'av-piece';
     el.style.left = (Math.random()*100)+'%';
-    el.style.animationDelay = (Math.random()*2.5)+'s';
+    el.style.animationDelay = (Math.random()*16)+'s';
     el.style.animationDuration = (2.5+Math.random()*2)+'s';
     el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(180+Math.random()*360)+'deg');
     if(av){
@@ -1857,7 +1862,7 @@ function triggerAvatarCelebration(){
     }
     overlay.appendChild(el);
   }
-  setTimeout(()=>overlay.remove(), 6000);
+  setTimeout(()=>overlay.remove(), 20000);
 }
 
 let _rafPending = false;
