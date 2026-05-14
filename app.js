@@ -722,14 +722,14 @@ const CAMCHECK_SM = [
   {id:'SM.13',mcs:'20',type:'3500',     checks:CHK_SM14},
 ];
 const CAMCHECK_CT14 = [
-  {id:'CT14.01',mcs:'43',type:'HOTHEAD',checks:CHK_CT14HH},
+  {id:'CT14.01',mcs:'43',type:'HOTHEAD',checks:CHK_SM_HH},
   {id:'CT14.02',mcs:'21',type:'3500',   checks:CHK_SM16},
-  {id:'CT14.03',mcs:'22',type:'3500',   checks:CHK_SM16},
-  {id:'CT14.04',mcs:'23',type:'3500',   checks:CHK_SM16},
-  {id:'CT14.05',mcs:'24',type:'3500',   checks:CHK_SM16},
-  {id:'CT14.06',mcs:'39',type:'SSM',    checks:CHK_SM16},
+  {id:'CT14.03',mcs:'22',type:'3500',   checks:CHK_SM14},
+  {id:'CT14.04',mcs:'23',type:'3500',   checks:CHK_SM14},
+  {id:'CT14.05',mcs:'24',type:'3500',   checks:CHK_SM14},
+  {id:'CT14.06',mcs:'39',type:'SSM',    checks:CHK_SM14},
   {id:'CT14.07',mcs:'',  type:'RF',     checks:CHK_CT14RF},
-  {id:'CT14.08',mcs:'25',type:'3500',   checks:CHK_SM16},
+  {id:'CT14.08',mcs:'25',type:'3500',   checks:CHK_SM14},
 ];
 
 const SK = "rg2026_v1";
