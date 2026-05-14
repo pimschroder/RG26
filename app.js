@@ -2081,14 +2081,11 @@ function userBadgeHTML(user){
              : `<span class="ccl-user">${user.substring(0,2).toUpperCase()}</span>`;
 }
 
-// Zorg dat alle DEFAULT_USERS altijd in de opgeslagen lijst staan.
-// Wordt aangeroepen ná de eerste Supabase-sync zodat remote niet wint.
+// Vul DEFAULT_USERS alleen in als er nog helemaal geen gebruikers zijn (eerste keer).
 function seedDefaultUsers(){
   try {
     const d = load();
-    const current = d._users && d._users.length ? d._users : [];
-    const missing = DEFAULT_USERS.filter(u => !current.map(x=>x.toLowerCase()).includes(u.toLowerCase()));
-    if(missing.length > 0) saveUsers([...current, ...missing]);
+    if(!d._users || d._users.length === 0) saveUsers(DEFAULT_USERS);
   } catch(e){}
 }
 
