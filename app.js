@@ -635,24 +635,24 @@ const CAM_CHECK_GROUPS = [
   {label:'FIBERS PERSCO', checks:['PERSCO-CAM','PERSCO-CCU']},
   {label:'FIBERS COMM',   checks:['COMM-CAM','COMM-CCU']},
   {label:'FIBERS FINALS', checks:['FINALS-CAM','FINALS-CCU']},
-  {label:'CONTROL',       checks:['IRIS','B-FOCUS']},
+  {label:'CONTROL',       checks:['IRIS','Back-focus']},
   {label:'VIDEO',    checks:['UHD','HDR','SDR']},
   {label:'RETURN',   checks:['RET 1','RET 2','RET 3']},
   {label:'TALLY',    checks:['RED','GREEN']},
   {label:'INTERCOM', checks:['PROD','ENG','PGM']},
   {label:'AUDIO',    checks:['IN 1','IN 2']},
 ];
-const ALL_CAM_CHECKS = ['CAM','CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2']; // 17 items
+const ALL_CAM_CHECKS = ['CAM','CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2']; // 17 items
 
 // Check sets per camera type
 const CHK_ALL  = ALL_CAM_CHECKS;
-const CHK_15   = ['CAM','CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_15   = ['CAM','CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
 const CHK_RF8  = ['IRIS','UHD','HDR','SDR','RED','PROD','ENG','PGM'];
 const CHK_HH12 = ['IRIS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
 const CHK_PTZ4 = ['IRIS','UHD','HDR','SDR'];
 const CHK_SM_HH  = ['IRIS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
-const CHK_SM16   = ['CAM','CCU','IRIS','B-FOCUS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2'];
-const CHK_SM14   = ['CAM','CCU','IRIS','B-FOCUS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
+const CHK_SM16   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2'];
+const CHK_SM14   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM'];
 const CHK_SM_RF  = ['IRIS','HDR','SDR','RED','PROD','ENG','PGM'];
 const CHK_SM3    = ['IRIS','HDR','SDR'];
 const CHK_CT14HH = ['IRIS','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM','IN 1','IN 2'];
@@ -681,7 +681,7 @@ const CAMCHECK_PC = [
   {id:'PC.20',mcs:'',  type:'RF',       checks:CHK_RF8},
   {id:'PC.21',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.22',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
-  {id:'PC.23',mcs:'7', type:'3500',     checks:['SONO-CAM','SONO-CCU','PERSCO-CAM','PERSCO-CCU','COMM-CAM','COMM-CCU','FINALS-CAM','FINALS-CCU','IRIS','B-FOCUS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM']},
+  {id:'PC.23',mcs:'7', type:'3500',     checks:['SONO-CAM','SONO-CCU','PERSCO-CAM','PERSCO-CCU','COMM-CAM','COMM-CCU','FINALS-CAM','FINALS-CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','GREEN','PROD','ENG','PGM']},
   {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_15},
 ];
 const CAMCHECK_SL = [
@@ -1445,7 +1445,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
           const on = isChecked(val);
           const user = on && val?.user ? val.user : '';
           const ck = c.replace(/'/g,"\\'");
-          const lbl = c.includes('-') ? c.split('-').slice(1).join('-') : c;
+          const lbl = /^[A-Z]+-(?:CAM|CCU)$/.test(c) ? c.split('-').slice(1).join('-') : c;
           return `<button class="ccl-chip${on?' on':''}" data-check="${c}" onclick="camCheckToggle('${storageKey}','${cam.id}','${ck}','${containerId}',this)">${lbl}${userBadgeHTML(user)}</button>`;
         }).join('')
       }</div></div>`;
