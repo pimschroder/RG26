@@ -2094,8 +2094,7 @@ function seedDefaultUsers(){
       // Eenmalige naamsmigraties
       const fixes = { "Anne-gert": "Anne-Gert" };
       let changed = false;
-      let updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
-      if(!updated.map(u=>u.toLowerCase()).includes("lucas")){ updated = [...updated, "Lucas"]; changed=true; }
+      const updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
       if(changed) saveUsers(updated);
     }
   } catch(e){}
