@@ -2064,7 +2064,7 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
   XLSX.writeFile(wb, filename);
 }
 
-const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
+const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
 
 // Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
 const USER_AVATARS = {
@@ -2085,7 +2085,15 @@ function userBadgeHTML(user){
 function seedDefaultUsers(){
   try {
     const d = load();
-    if(!d._users || d._users.length === 0) saveUsers(DEFAULT_USERS);
+    if(!d._users || d._users.length === 0){
+      saveUsers(DEFAULT_USERS);
+    } else {
+      // Eenmalige naamsmigraties
+      const fixes = { "Anne-gert": "Anne-Gert" };
+      let changed = false;
+      const updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
+      if(changed) saveUsers(updated);
+    }
   } catch(e){}
 }
 
