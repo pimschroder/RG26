@@ -2094,8 +2094,11 @@ function seedDefaultUsers(){
       // Eenmalige naamsmigraties
       const fixes = { "Anne-gert": "Anne-Gert" };
       let changed = false;
-      const updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
-      if(changed) saveUsers(updated);
+      const renamed = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
+      // Dedupliceer (case-insensitive) — keep first occurrence
+      const seen = new Set();
+      const deduped = renamed.filter(u => { const k=u.toLowerCase(); if(seen.has(k)){changed=true;return false;} seen.add(k); return true; });
+      if(changed) saveUsers(deduped);
     }
   } catch(e){}
 }
