@@ -3105,6 +3105,58 @@ function doRemoveUser(name){
   if(navigator.vibrate) navigator.vibrate(30);
 }
 
+function startRenameUser(name){
+  const wrap = document.getElementById('users-list');
+  const row = wrap?.querySelector(`.user-row[data-name="${name}"]`);
+  if(!row || row.querySelector('.user-rename-input')) return;
+  const nameEl = row.querySelector('.user-row-name');
+  const actionsEl = row.querySelector('.user-row-actions');
+  nameEl.style.display = 'none';
+  actionsEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'user-rename-form';
+  form.innerHTML = `
+    <input class="user-rename-input" value="${esc(name)}" autocomplete="off" autocorrect="off" autocapitalize="words" style="touch-action:manipulation;">
+    <button onclick="doRenameUser('${esc(name)}')" style="touch-action:manipulation;">✓</button>
+    <button onclick="cancelRenameUser('${esc(name)}')" style="touch-action:manipulation;">✕</button>`;
+  row.appendChild(form);
+  const input = form.querySelector('input');
+  input.focus();
+  input.select();
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter') doRenameUser(name);
+    if(e.key === 'Escape') cancelRenameUser(name);
+  });
+}
+
+function cancelRenameUser(name){
+  const wrap = document.getElementById('users-list');
+  const row = wrap?.querySelector(`.user-row[data-name="${name}"]`);
+  if(!row) return;
+  row.querySelector('.user-rename-form')?.remove();
+  row.querySelector('.user-row-name').style.display = '';
+  row.querySelector('.user-row-actions').style.display = '';
+}
+
+function doRenameUser(oldName){
+  const wrap = document.getElementById('users-list');
+  const row = wrap?.querySelector(`.user-row[data-name="${oldName}"]`);
+  const input = row?.querySelector('.user-rename-input');
+  if(!input) return;
+  const newName = input.value.trim();
+  if(!newName || newName === oldName){ cancelRenameUser(oldName); return; }
+  const users = getUsers();
+  if(users.map(u=>u.toLowerCase()).includes(newName.toLowerCase())){
+    input.style.borderColor = 'var(--clay)';
+    input.placeholder = 'Naam bestaat al';
+    setTimeout(()=>{ input.style.borderColor=''; }, 1500);
+    return;
+  }
+  saveUsers(users.map(u => u === oldName ? newName : u));
+  buildUsers();
+  if(navigator.vibrate) navigator.vibrate(20);
+}
+
 function buildUsers(){
   const wrap = document.getElementById('users-list');
   if(!wrap) return;
@@ -3121,7 +3173,10 @@ function buildUsers(){
     return `<div class="user-row" data-name="${esc(name)}">
       ${avatarHtml}
       <span class="user-row-name">${esc(name)}</span>
-      <button class="user-row-del" onclick="removeUser('${esc(name)}')" ontouchend="event.preventDefault();removeUser('${esc(name)}');" style="touch-action:manipulation;">✕</button>
+      <div class="user-row-actions">
+        <button class="user-row-edit" onclick="startRenameUser('${esc(name)}')" ontouchend="event.preventDefault();startRenameUser('${esc(name)}');" style="touch-action:manipulation;" title="Naam aanpassen">✏️</button>
+        <button class="user-row-del" onclick="removeUser('${esc(name)}')" ontouchend="event.preventDefault();removeUser('${esc(name)}');" style="touch-action:manipulation;">✕</button>
+      </div>
     </div>`;
   }).join('');
 }

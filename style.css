@@ -24,8 +24,14 @@
 .csb-sub{font-family:"DM Mono",monospace;font-size:11px;color:#aaa;letter-spacing:.06em;}
 .user-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;gap:12px}
 .user-row-name{font-size:14px;font-weight:500;color:var(--ink);flex:1}
-.user-row-del{background:none;border:1.5px solid rgba(193,68,14,.25);color:var(--clay);font-size:13px;width:36px;height:36px;border-radius:8px;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.user-row-actions{display:flex;gap:6px;flex-shrink:0;}
+.user-row-del,.user-row-edit{background:none;border:1.5px solid rgba(193,68,14,.25);color:var(--clay);font-size:13px;width:36px;height:36px;border-radius:8px;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
 .user-row-del:hover{background:rgba(193,68,14,.08);border-color:var(--clay)}
+.user-row-edit{color:#888;border-color:var(--border);}
+.user-row-edit:hover{background:rgba(0,0,0,.04);border-color:#aaa;}
+.user-rename-form{display:flex;align-items:center;gap:6px;flex:1;}
+.user-rename-input{flex:1;font-family:"DM Mono",monospace;font-size:13px;padding:7px 10px;border:2px solid var(--clay);border-radius:7px;background:var(--bg);color:var(--ink);outline:none;min-width:0;}
+.user-rename-form button{background:none;border:1.5px solid var(--border);color:var(--ink);font-size:13px;width:34px;height:34px;border-radius:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation;}
 .user-row-confirm{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
 .users-empty{text-align:center;padding:24px;color:#bbb;font-size:12px;letter-spacing:.06em}
 .user-add-row{display:flex;gap:8px;margin-top:14px;align-items:stretch}
