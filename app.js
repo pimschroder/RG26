@@ -3110,44 +3110,30 @@ function doRemoveUser(name){
 
 function startRenameUser(name){
   const wrap = document.getElementById('users-list');
-  const row = wrap?.querySelector(`.user-row[data-name="${name}"]`);
-  if(!row || row.querySelector('.user-rename-input')) return;
-  const nameEl = row.querySelector('.user-row-name');
-  const actionsEl = row.querySelector('.user-row-actions');
-  nameEl.style.display = 'none';
-  actionsEl.style.display = 'none';
-  const form = document.createElement('div');
-  form.className = 'user-rename-form';
-  form.innerHTML = `
+  const row = wrap?.querySelector(`.user-row[data-name="${CSS.escape(name)}"]`);
+  if(!row || row.classList.contains('editing')) return;
+  row.classList.add('editing');
+  row.innerHTML = `
     <input class="user-rename-input" value="${esc(name)}" autocomplete="off" autocorrect="off" autocapitalize="words" style="touch-action:manipulation;">
-    <button onclick="doRenameUser('${esc(name)}')" style="touch-action:manipulation;">✓</button>
-    <button onclick="cancelRenameUser('${esc(name)}')" style="touch-action:manipulation;">✕</button>`;
-  row.appendChild(form);
-  const input = form.querySelector('input');
-  input.focus();
-  input.select();
+    <div class="user-rename-btns">
+      <button class="user-rename-save" onclick="doRenameUser('${esc(name)}')" style="touch-action:manipulation;">Opslaan</button>
+      <button class="user-rename-cancel" onclick="buildUsers()" style="touch-action:manipulation;">Annuleer</button>
+    </div>`;
+  const input = row.querySelector('input');
+  input.focus(); input.select();
   input.addEventListener('keydown', e => {
     if(e.key === 'Enter') doRenameUser(name);
-    if(e.key === 'Escape') cancelRenameUser(name);
+    if(e.key === 'Escape') buildUsers();
   });
-}
-
-function cancelRenameUser(name){
-  const wrap = document.getElementById('users-list');
-  const row = wrap?.querySelector(`.user-row[data-name="${name}"]`);
-  if(!row) return;
-  row.querySelector('.user-rename-form')?.remove();
-  row.querySelector('.user-row-name').style.display = '';
-  row.querySelector('.user-row-actions').style.display = '';
 }
 
 function doRenameUser(oldName){
   const wrap = document.getElementById('users-list');
-  const row = wrap?.querySelector(`.user-row[data-name="${oldName}"]`);
+  const row = wrap?.querySelector('.user-row.editing');
   const input = row?.querySelector('.user-rename-input');
   if(!input) return;
   const newName = input.value.trim();
-  if(!newName || newName === oldName){ cancelRenameUser(oldName); return; }
+  if(!newName || newName === oldName){ buildUsers(); return; }
   const users = getUsers();
   if(users.map(u=>u.toLowerCase()).includes(newName.toLowerCase())){
     input.style.borderColor = 'var(--clay)';
@@ -3174,10 +3160,12 @@ function buildUsers(){
       ? `<img src="${av}" class="user-row-avatar" alt="${esc(name)}">`
       : `<span class="user-row-avatar user-row-initials">${name.substring(0,2).toUpperCase()}</span>`;
     return `<div class="user-row" data-name="${esc(name)}">
-      ${avatarHtml}
-      <span class="user-row-name">${esc(name)}</span>
-      <div class="user-row-actions">
-        <button class="user-row-edit" onclick="startRenameUser('${esc(name)}')" ontouchend="event.preventDefault();startRenameUser('${esc(name)}');" style="touch-action:manipulation;" title="Naam aanpassen">✏️</button>
+      <div class="user-row-main">
+        ${avatarHtml}
+        <span class="user-row-name">${esc(name)}</span>
+      </div>
+      <div class="user-row-btns">
+        <button class="user-row-edit" onclick="startRenameUser('${esc(name)}')" ontouchend="event.preventDefault();startRenameUser('${esc(name)}');" style="touch-action:manipulation;">Naam wijzigen</button>
         <button class="user-row-del" onclick="removeUser('${esc(name)}')" ontouchend="event.preventDefault();removeUser('${esc(name)}');" style="touch-action:manipulation;">✕</button>
       </div>
     </div>`;
