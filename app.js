@@ -2064,14 +2064,17 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
   XLSX.writeFile(wb, filename);
 }
 
-const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian"];
+const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian","Lucas"];
 
 // Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
 const USER_AVATARS = {
-  "Pim":   "images/avatars/Pim.png",
-  "Emil":  "images/avatars/Emil.png",
-  "Jules": "images/avatars/Jules.png",
-  "Rosan": "images/avatars/Rosan.png",
+  "Pim":    "images/avatars/Pim.png",
+  "Emil":   "images/avatars/Emil.png",
+  "Jules":  "images/avatars/Jules.png",
+  "Rosan":  "images/avatars/Rosan.png",
+  "Aaron":  "images/avatars/Aaron.png",
+  "Damian": "images/avatars/Damian.png",
+  "Lucas":  "images/avatars/Lucas.png",
 };
 function getUserAvatar(name){ return name && USER_AVATARS[name] ? USER_AVATARS[name] : null; }
 function userBadgeHTML(user){
@@ -2091,7 +2094,8 @@ function seedDefaultUsers(){
       // Eenmalige naamsmigraties
       const fixes = { "Anne-gert": "Anne-Gert" };
       let changed = false;
-      const updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
+      let updated = d._users.map(u => { if(fixes[u]){ changed=true; return fixes[u]; } return u; });
+      if(!updated.map(u=>u.toLowerCase()).includes("lucas")){ updated = [...updated, "Lucas"]; changed=true; }
       if(changed) saveUsers(updated);
     }
   } catch(e){}
