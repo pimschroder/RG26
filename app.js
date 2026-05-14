@@ -999,6 +999,9 @@ window.addEventListener('online',  ()=>{ document.getElementById('offline-banner
 window.addEventListener('offline', ()=>showOfflineBanner());
 
 function initApp(){
+  // Restore admin session across page reloads
+  try{ if(sessionStorage.getItem('rg_admin')==='1') window._adminMode = true; }catch(e){}
+
   // Apply saved theme immediately before anything renders
   const savedTheme = localStorage.getItem('rg_theme');
   if(savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1384,6 +1387,7 @@ window.toggleCamFilter = function(cid){
 };
 
 function buildCamCheckPage(containerId, storageKey, cams){
+  try{
   const container = document.getElementById(containerId);
   if(!container) return;
   const d = load();
@@ -1461,6 +1465,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
       <div class="cam-body" style="max-height:9999px">${groupsHTML}</div>`;
     container.appendChild(block);
   });
+  } catch(e){ console.error('buildCamCheckPage error', e); }
 }
 
 function camCheckToggle(sk, camId, checkKey, cid, el){
@@ -1873,6 +1878,7 @@ function refreshAll(){
 }
 window.refreshAll = refreshAll;
 function _doRefresh(){
+  try{
   refreshAudioCounters();
 
   const totals={}, dones={};
@@ -1927,6 +1933,7 @@ function _doRefresh(){
   if(gP>=100 && gT>0 && refreshAll._lastP!==100) triggerAvatarCelebration();
   refreshAll._lastP = gP;
   if(document.getElementById('page-problems')?.classList.contains('active')) buildProblems();
+  } catch(e){ console.error('_doRefresh error', e); }
 }
 
 const DASH_CARDS = [
@@ -2207,6 +2214,7 @@ async function checkAdminPw(){
     panel.style.display = "block";
     err.style.display = "none";
     window._adminMode = true;
+    try{ sessionStorage.setItem('rg_admin','1'); }catch(e){}
   } else {
     err.style.display = "block";
     input.value = "";
@@ -2716,6 +2724,11 @@ function saveBackup(data, label){
     localStorage.setItem(BACKUP_KEY, JSON.stringify(slots));
     _renderBackupSlots(slots);
   } catch(e){}
+  // Mirror to Supabase (best-effort, non-blocking)
+  try{
+    const sc = window._supaClient;
+    if(sc) sc.from('checklist_backups').insert({ label, ts: Date.now(), payload: data }).then(()=>{}).catch(()=>{});
+  } catch(e){}
 }
 
 function _renderBackupSlots(slots){
@@ -2799,6 +2812,7 @@ function closeLightbox(){
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeLightbox(); });
 
 function buildOverdracht(){
+  try{
   // Set default date to today
   const today = new Date().toISOString().split('T')[0];
   const dateEl = document.getElementById('od-date');
@@ -2837,6 +2851,7 @@ function buildOverdracht(){
   shiftEl  ?.addEventListener('change', saveConcept);
 
   renderOdLog();
+  } catch(e){ console.error('buildOverdracht error', e); }
 }
 
 function saveOverdracht(){
@@ -3229,6 +3244,7 @@ function switchCourtTab(tab){
 }
 
 function buildAudioLists(){
+  try{
   const allLists = [
     {key:'sb_pc',     items:PC_SB_ITEMS,   listId:'list-sb-pc'},
     {key:'sb_sl',     items:SL_SB_ITEMS,   listId:'list-sb-sl'},
@@ -3260,6 +3276,7 @@ function buildAudioLists(){
     }).join('');
   });
   refreshAudioCounters();
+  } catch(e){ console.error('buildAudioLists error', e); }
 }
 
 function audioToggle(key, i, listId){

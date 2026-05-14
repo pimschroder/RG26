@@ -1,4 +1,4 @@
-const CACHE = 'rg2026-v47';
+const CACHE = 'rg2026-v49';
 const STATIC = [
   './',
   './index.html',
@@ -6,6 +6,16 @@ const STATIC = [
   './style.css',
   './manifest.json',
   './icon.svg',
+  // Avatars — gegarandeerd offline beschikbaar na install
+  './images/avatars/Pim.png',
+  './images/avatars/Emil.png',
+  './images/avatars/Jules.png',
+  './images/avatars/Rosan.png',
+  './images/avatars/Aaron.png',
+  './images/avatars/Damian.png',
+  './images/avatars/Lucas.png',
+  './images/avatars/Anne-Gert.png',
+  './images/avatars/Jarno.png',
 ];
 
 // Install: cache de app shell
@@ -31,7 +41,7 @@ self.addEventListener('fetch', e => {
 
   // Supabase API + realtime: altijd via netwerk
   if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.io')) {
-    return; // browser handelt zelf af
+    return;
   }
 
   // Google Fonts: cache na eerste keer
@@ -67,12 +77,10 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       caches.open(CACHE).then(async c => {
         const cached = await c.match(e.request);
-        // Altijd achtergrond-update voor HTML/JS/CSS zodat nieuwe versies doorkomen
         const fetchPromise = fetch(e.request).then(fresh => {
           if (fresh.ok) c.put(e.request, fresh.clone());
           return fresh;
         }).catch(() => null);
-        // Geef gecachede versie direct terug als die er is (stale-while-revalidate)
         return cached || fetchPromise;
       })
     );
