@@ -2068,7 +2068,10 @@ const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-gert","Gaë
 
 // Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
 const USER_AVATARS = {
-  "Pim": "images/avatars/Pim.png",
+  "Pim":   "images/avatars/Pim.png",
+  "Emil":  "images/avatars/Emil.png",
+  "Jules": "images/avatars/Jules.png",
+  "Rosan": "images/avatars/Rosan.png",
 };
 function getUserAvatar(name){ return name && USER_AVATARS[name] ? USER_AVATARS[name] : null; }
 function userBadgeHTML(user){
