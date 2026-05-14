@@ -2178,12 +2178,17 @@ function openAdminModal(){
   const err = document.getElementById("admin-error");
   const input = document.getElementById("admin-pw-input");
 
-  if(loginSection) loginSection.style.display = "block";
-  if(panel) panel.style.display = "none";
-  if(err) err.style.display = "none";
-  if(input) { input.value = ""; }
+  if(window._adminMode){
+    if(loginSection) loginSection.style.display = "none";
+    if(panel) panel.style.display = "block";
+  } else {
+    if(loginSection) loginSection.style.display = "block";
+    if(panel) panel.style.display = "none";
+    if(err) err.style.display = "none";
+    if(input) input.value = "";
+    setTimeout(()=>{ if(input) input.focus(); }, 100);
+  }
   modal.classList.add("open");
-  setTimeout(()=>{ if(input) input.focus(); }, 100);
 
   if(!presenceChannel) initPresence();
   setTimeout(updateOnlineList, 300);
