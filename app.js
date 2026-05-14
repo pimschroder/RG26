@@ -3108,30 +3108,34 @@ function doRemoveUser(name){
   if(navigator.vibrate) navigator.vibrate(30);
 }
 
+let _renameTarget = null;
+
 function startRenameUser(name){
   const wrap = document.getElementById('users-list');
-  const row = wrap?.querySelector(`.user-row[data-name="${CSS.escape(name)}"]`);
+  if(!wrap) return;
+  const row = Array.from(wrap.querySelectorAll('.user-row')).find(r => r.dataset.name === name);
   if(!row || row.classList.contains('editing')) return;
+  _renameTarget = name;
   row.classList.add('editing');
   row.innerHTML = `
     <input class="user-rename-input" value="${esc(name)}" autocomplete="off" autocorrect="off" autocapitalize="words" style="touch-action:manipulation;">
     <div class="user-rename-btns">
-      <button class="user-rename-save" onclick="doRenameUser('${esc(name)}')" style="touch-action:manipulation;">Opslaan</button>
+      <button class="user-rename-save" onclick="doRenameUser()" style="touch-action:manipulation;">Opslaan</button>
       <button class="user-rename-cancel" onclick="buildUsers()" style="touch-action:manipulation;">Annuleer</button>
     </div>`;
   const input = row.querySelector('input');
   input.focus(); input.select();
   input.addEventListener('keydown', e => {
-    if(e.key === 'Enter') doRenameUser(name);
+    if(e.key === 'Enter') doRenameUser();
     if(e.key === 'Escape') buildUsers();
   });
 }
 
-function doRenameUser(oldName){
+function doRenameUser(){
   const wrap = document.getElementById('users-list');
-  const row = wrap?.querySelector('.user-row.editing');
-  const input = row?.querySelector('.user-rename-input');
-  if(!input) return;
+  const input = wrap?.querySelector('.user-rename-input');
+  if(!input || !_renameTarget) return;
+  const oldName = _renameTarget;
   const newName = input.value.trim();
   if(!newName || newName === oldName){ buildUsers(); return; }
   const users = getUsers();
@@ -3141,6 +3145,7 @@ function doRenameUser(oldName){
     setTimeout(()=>{ input.style.borderColor=''; }, 1500);
     return;
   }
+  _renameTarget = null;
   saveUsers(users.map(u => u === oldName ? newName : u));
   buildUsers();
   if(navigator.vibrate) navigator.vibrate(20);
