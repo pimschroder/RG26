@@ -2106,7 +2106,7 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
   XLSX.writeFile(wb, filename);
 }
 
-const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","OPL","Pim","Remco","Peter","Emil","Damian","Lucas"];
+const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","Pim","Remco","Peter","Emil","Damian","Lucas"];
 
 // Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
 const USER_AVATARS = {
@@ -2853,6 +2853,82 @@ function closeLightbox(){
 }
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeLightbox(); });
 
+function _makeTodoInputRow(val, urgent){
+  const row = document.createElement('div');
+  row.className = 'od-todo-row';
+  row.dataset.urgent = urgent ? '1' : '0';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'od-todo-input';
+  input.placeholder = 'To do punt…';
+  input.maxLength = 200;
+  input.value = val || '';
+  input.addEventListener('input', ()=>{ if(window._odConceptSave) window._odConceptSave(); });
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addOdTodoInput(false); } });
+  const urgBtn = document.createElement('button');
+  urgBtn.className = 'od-todo-urg' + (urgent ? ' on' : '');
+  urgBtn.type = 'button';
+  urgBtn.title = 'Markeer als urgent';
+  urgBtn.textContent = '!!';
+  urgBtn.setAttribute('style','touch-action:manipulation');
+  urgBtn.onclick = ()=>{
+    const on = row.dataset.urgent === '1';
+    row.dataset.urgent = on ? '0' : '1';
+    urgBtn.classList.toggle('on', !on);
+    if(window._odConceptSave) window._odConceptSave();
+  };
+  const del = document.createElement('button');
+  del.className = 'od-todo-del';
+  del.type = 'button';
+  del.textContent = '✕';
+  del.setAttribute('style','touch-action:manipulation');
+  del.onclick = ()=>{ row.remove(); if(window._odConceptSave) window._odConceptSave(); };
+  row.appendChild(input);
+  row.appendChild(urgBtn);
+  row.appendChild(del);
+  return row;
+}
+
+function addOdTodoInput(isEdit){
+  const builder = document.getElementById(isEdit ? 'od-edit-todo-builder' : 'od-todo-builder');
+  if(!builder) return;
+  const row = _makeTodoInputRow('');
+  builder.appendChild(row);
+  row.querySelector('input')?.focus();
+}
+
+function _getOdTodoItems(builderId){
+  const builder = document.getElementById(builderId);
+  if(!builder) return [];
+  return Array.from(builder.querySelectorAll('.od-todo-row'))
+    .map(row => {
+      const text = row.querySelector('input.od-todo-input')?.value.trim() || '';
+      const urgent = row.dataset.urgent === '1';
+      return text ? {text, done: false, urgent} : null;
+    }).filter(Boolean);
+}
+
+function toggleOdTodo(entryId, idx){
+  const d = load();
+  const entry = (d._overdrachten||[]).find(e=>e.id===entryId);
+  if(!entry || !Array.isArray(entry.todo) || !entry.todo[idx]) return;
+  const item = entry.todo[idx];
+  item.done = !item.done;
+  if(item.done){ item.doneBy = getCurrentUser(); item.doneTs = Date.now(); }
+  else { delete item.doneBy; delete item.doneTs; }
+  entry.editedTs = Date.now();
+  save(d);
+  if(window.pushToSupabase) window.pushToSupabase(d);
+  const row = document.getElementById(`od-td-${entryId}-${idx}`);
+  if(row){
+    row.classList.toggle('od-todo-done', item.done);
+    row.querySelector('.od-todo-check-box')?.classList.toggle('on', item.done);
+    const meta = row.querySelector('.od-todo-check-meta');
+    if(meta) meta.textContent = item.done ? `${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}` : '';
+  }
+  if(navigator.vibrate) navigator.vibrate(15);
+}
+
 function buildOverdracht(){
   try{
   // Set default date to today
@@ -2871,26 +2947,34 @@ function buildOverdracht(){
   // Restore concept from localStorage
   const concept = JSON.parse(localStorage.getItem('rg_od_concept')||'{}');
   const verslagEl = document.getElementById('od-verslag');
-  const todoEl    = document.getElementById('od-todo');
   if(verslagEl && concept.verslag) verslagEl.value = concept.verslag;
-  if(todoEl    && concept.todo)    todoEl.value    = concept.todo;
-  if(dateEl    && concept.date)    dateEl.value    = concept.date;
+  if(dateEl && concept.date) dateEl.value = concept.date;
   const shiftEl = document.getElementById('od-shift');
   if(shiftEl && concept.shift) shiftEl.value = concept.shift;
 
+  // Build todo list from concept
+  const builder = document.getElementById('od-todo-builder');
+  if(builder){
+    builder.innerHTML = '';
+    const items = Array.isArray(concept.todo) ? concept.todo : [];
+    items.forEach(item => builder.appendChild(_makeTodoInputRow(item.text || item, item.urgent)));
+    if(items.length === 0) builder.appendChild(_makeTodoInputRow(''));
+  }
+
   // Auto-save concept on input
-  const saveConcept = () => {
-    localStorage.setItem('rg_od_concept', JSON.stringify({
-      verslag: verslagEl?.value || '',
-      todo:    todoEl?.value    || '',
-      date:    dateEl?.value    || '',
-      shift:   shiftEl?.value   || '',
-    }));
+  window._odConceptSave = () => {
+    try{
+      localStorage.setItem('rg_od_concept', JSON.stringify({
+        verslag: verslagEl?.value || '',
+        todo:    _getOdTodoItems('od-todo-builder'),
+        date:    dateEl?.value    || '',
+        shift:   shiftEl?.value   || '',
+      }));
+    } catch(e){}
   };
-  verslagEl?.addEventListener('input', saveConcept);
-  todoEl   ?.addEventListener('input', saveConcept);
-  dateEl   ?.addEventListener('change', saveConcept);
-  shiftEl  ?.addEventListener('change', saveConcept);
+  verslagEl?.addEventListener('input', window._odConceptSave);
+  dateEl   ?.addEventListener('change', window._odConceptSave);
+  shiftEl  ?.addEventListener('change', window._odConceptSave);
 
   renderOdLog();
   } catch(e){ console.error('buildOverdracht error', e); }
@@ -2901,8 +2985,8 @@ function saveOverdracht(){
   const date    = document.getElementById('od-date')?.value;
   const shift   = document.getElementById('od-shift')?.value;
   const verslag = document.getElementById('od-verslag')?.value.trim();
-  const todo    = document.getElementById('od-todo')?.value.trim();
-  if(!verslag && !todo){ showOdToast('Vul minimaal één veld in', 'error'); return; }
+  const todo    = _getOdTodoItems('od-todo-builder');
+  if(!verslag && todo.length === 0){ showOdToast('Vul minimaal één veld in', 'error'); return; }
   if(!date){ showOdToast('Vul een datum in', 'error'); return; }
   if(!shift){ showOdToast('Kies een shift (Ochtend of Avond)', 'error'); return; }
 
@@ -2914,9 +2998,9 @@ function saveOverdracht(){
 
   // Clear form + concept
   document.getElementById('od-verslag').value = '';
-  document.getElementById('od-todo').value = '';
   odWordCount('od-verslag','od-verslag-wc');
-  odWordCount('od-todo','od-todo-wc');
+  const builder = document.getElementById('od-todo-builder');
+  if(builder){ builder.innerHTML = ''; builder.appendChild(_makeTodoInputRow('')); }
   localStorage.removeItem('rg_od_concept');
 
   if(navigator.vibrate) navigator.vibrate([20, 30, 20]);
@@ -3018,7 +3102,13 @@ window.renderOdLog = function renderOdLog(){
         </div>
         <div class="od-sections-grid">
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
-          ${e.todo?`<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>`:''}
+          ${(()=>{
+            if(!e.todo) return '';
+            if(typeof e.todo === 'string') return e.todo ? `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>` : '';
+            if(!e.todo.length) return '';
+            const checks = e.todo.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span>${item.done&&item.doneTs?`<span class="od-todo-check-meta">${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}</span>`:''}</div></div>`).join('');
+            return `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-todo-checks">${checks}</div></div>`;
+          })()}
         </div>
         ${((e.user||e.name)===getCurrentUser() || window._adminMode) ? `
         <div class="od-item-actions">
@@ -3055,9 +3145,15 @@ function openOdEdit(id){
   if(!entry) return;
   _odEditId = id;
   document.getElementById('od-edit-verslag').value = entry.verslag || '';
-  document.getElementById('od-edit-todo').value = entry.todo || '';
   odWordCount('od-edit-verslag','od-edit-verslag-wc');
-  odWordCount('od-edit-todo','od-edit-todo-wc');
+  const editBuilder = document.getElementById('od-edit-todo-builder');
+  if(editBuilder){
+    editBuilder.innerHTML = '';
+    const items = Array.isArray(entry.todo) ? entry.todo
+                : (entry.todo ? [{text: entry.todo, done: false}] : []);
+    items.forEach(item => editBuilder.appendChild(_makeTodoInputRow(item.text || item, item.urgent)));
+    if(items.length === 0) editBuilder.appendChild(_makeTodoInputRow(''));
+  }
   const modal = document.getElementById('od-edit-modal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -3077,7 +3173,14 @@ function confirmOdEdit(){
   const idx = arr.findIndex(e=>e.id===_odEditId);
   if(idx === -1) return;
   arr[idx].verslag = document.getElementById('od-edit-verslag').value.trim();
-  arr[idx].todo    = document.getElementById('od-edit-todo').value.trim();
+  const oldTodo = Array.isArray(arr[idx].todo) ? arr[idx].todo : [];
+  arr[idx].todo = _getOdTodoItems('od-edit-todo-builder').map((item, i) => ({
+    text:   item.text,
+    urgent: item.urgent || false,
+    done:   oldTodo[i]?.done   || false,
+    doneBy: oldTodo[i]?.doneBy || undefined,
+    doneTs: oldTodo[i]?.doneTs || undefined,
+  }));
   arr[idx].editedTs = Date.now();
   d._overdrachten = arr;
   save(d);
@@ -3404,7 +3507,7 @@ function odWordCount(taId, countId){
 }
 // Reset counters when overdracht form opens
 window._resetOdWordCounts = function(){
-  ['od-verslag','od-todo','od-edit-verslag','od-edit-todo'].forEach(id=>{
+  ['od-verslag','od-edit-verslag'].forEach(id=>{
     const wc = document.getElementById(id+'-wc');
     if(wc) wc.textContent = '0 woorden';
   });

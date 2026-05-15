@@ -201,6 +201,31 @@
 
 /* ── Overdracht word counter ─────────────────────────────────── */
 .od-wc{font-size:10px;color:#aaa;letter-spacing:.05em;text-align:right;margin-top:-6px;margin-bottom:8px;font-family:"DM Mono",monospace;}
+.od-todo-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:6px;font-family:"DM Mono",monospace;}
+.od-todo-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.od-todo-input{flex:1;padding:9px 11px;font-family:"DM Mono",monospace;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);outline:none;}
+.od-todo-input:focus{border-color:var(--green);}
+.od-todo-del{background:none;border:none;color:#bbb;cursor:pointer;font-size:15px;padding:4px 6px;touch-action:manipulation;line-height:1;flex-shrink:0;}
+.od-todo-del:active{color:var(--clay);}
+.od-todo-urg{background:none;border:1.5px solid var(--border);border-radius:5px;color:#bbb;cursor:pointer;font-family:"DM Mono",monospace;font-size:10px;font-weight:700;padding:3px 7px;touch-action:manipulation;flex-shrink:0;line-height:1.4;letter-spacing:.04em;}
+.od-todo-urg.on{background:rgba(193,68,14,.12);border-color:var(--clay);color:var(--clay-dark);}
+.od-add-todo-btn{background:none;border:1.5px dashed var(--border);border-radius:8px;padding:9px 14px;font-family:"DM Mono",monospace;font-size:11px;color:#888;cursor:pointer;width:100%;touch-action:manipulation;margin-top:2px;margin-bottom:10px;}
+.od-add-todo-btn:active{border-color:var(--green);color:var(--green);}
+.od-todo-checks{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.od-todo-check{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.03);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .1s;}
+.od-todo-check:active{background:rgba(0,0,0,.07);}
+.od-todo-check.od-todo-urgent:not(.od-todo-done){background:rgba(193,68,14,.07);}
+.od-todo-urgent-badge{font-size:10px;font-weight:700;color:var(--clay-dark);margin-right:4px;font-family:"DM Mono",monospace;letter-spacing:.04em;}
+.od-todo-check.od-todo-done .od-todo-check-text{text-decoration:line-through;opacity:.45;}
+.od-todo-check-right{display:flex;flex-direction:column;flex:1;gap:2px;min-width:0;}
+.od-todo-check-meta{font-size:10px;color:#aaa;font-family:"DM Mono",monospace;letter-spacing:.03em;}
+.od-todo-check-box{width:20px;height:20px;min-width:20px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;margin-top:1px;}
+.od-todo-check-box.on{background:var(--green);border-color:var(--green);}
+.od-todo-check-box .ck{color:#fff;font-size:11px;opacity:0;transition:opacity .1s;}
+.od-todo-check-box.on .ck{opacity:1;}
+.od-todo-check-text{font-size:12px;line-height:1.5;color:var(--ink);}
+@media(min-width:600px){.od-todo-check-text{font-size:13px;}}
+.od-todo-check.od-todo-done .od-todo-check-right{opacity:.7;}
 
 /* ── Touch targets 44px (werkhandschoenen) ───────────────────── */
 .cam-check-box,.simple-check,.pos-check-box{position:relative;}
