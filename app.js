@@ -1839,34 +1839,69 @@ function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; con
 
 
 function triggerAvatarCelebration(){
-  const existing = document.getElementById('av-celebration');
-  if(existing) return;
+  if(document.getElementById('av-celebration')) return;
   const overlay = document.createElement('div');
   overlay.id = 'av-celebration';
   document.body.appendChild(overlay);
 
   const users = getUsers();
-  const count = 120;
-  for(let i=0; i<count; i++){
-    const name = users[Math.floor(Math.random()*users.length)];
+
+  function makeAvatarEl(name, cls){
     const av = getUserAvatar(name);
     const el = document.createElement('div');
-    el.className = 'av-piece';
-    el.style.left = (Math.random()*100)+'%';
-    el.style.animationDelay = (Math.random()*16)+'s';
-    el.style.animationDuration = (2.5+Math.random()*2)+'s';
-    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(180+Math.random()*360)+'deg');
+    el.className = cls;
     if(av){
       const img = document.createElement('img');
       img.src = av; img.alt = name;
       el.appendChild(img);
     } else {
       el.classList.add('av-initials');
-      el.style.background = `hsl(${(name.charCodeAt(0)*47)%360},55%,50%)`;
+      el.style.background = `hsl(${(name.charCodeAt(0)*47)%360},60%,48%)`;
       el.textContent = name.substring(0,2).toUpperCase();
     }
+    return el;
+  }
+
+  // ── Banner ──────────────────────────────────────────────────
+  const banner = document.createElement('div');
+  banner.id = 'av-banner';
+  banner.innerHTML = '<div class="av-banner-text">100%</div><div class="av-banner-sub">Alles afgevinkt!</div>';
+  document.body.appendChild(banner);
+  setTimeout(()=>{ banner.style.animation='avBannerFade .8s ease forwards'; setTimeout(()=>banner.remove(),800); }, 3500);
+
+  // ── Burst: 24 avatars fly outward from center ───────────────
+  for(let i=0; i<24; i++){
+    const angle = (i/24)*360 + Math.random()*12;
+    const dist  = 140 + Math.random()*180;
+    const size  = 62 + Math.floor(Math.random()*30);
+    const name  = users[Math.floor(Math.random()*users.length)];
+    const el    = makeAvatarEl(name, 'av-burst');
+    el.style.cssText += `width:${size}px;height:${size}px;font-size:${Math.floor(size*.3)}px;left:50%;top:45%;`;
+    el.style.setProperty('--bx', (Math.cos(angle*Math.PI/180)*dist)+'px');
+    el.style.setProperty('--by', (Math.sin(angle*Math.PI/180)*dist)+'px');
+    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(180+Math.random()*360)+'deg');
+    el.style.animationDelay = (Math.random()*0.25)+'s';
+    el.style.animationDuration = (0.9+Math.random()*0.5)+'s';
     overlay.appendChild(el);
   }
+
+  // ── Rain: 220 avatars falling from top with horizontal drift ─
+  for(let i=0; i<220; i++){
+    const size  = 52 + Math.floor(Math.random()*52); // 52–104px
+    const name  = users[Math.floor(Math.random()*users.length)];
+    const el    = makeAvatarEl(name, 'av-piece');
+    el.style.width  = size+'px';
+    el.style.height = size+'px';
+    el.style.fontSize = Math.floor(size*.3)+'px';
+    el.style.left = (Math.random()*105-2.5)+'%';
+    el.style.top  = '-110px';
+    el.style.animationDelay    = (Math.random()*16)+'s';
+    el.style.animationDuration = (2.8+Math.random()*2.4)+'s';
+    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(120+Math.random()*400)+'deg');
+    el.style.setProperty('--dx',   (Math.random()*160-80)+'px');
+    overlay.appendChild(el);
+  }
+
   setTimeout(()=>overlay.remove(), 20000);
 }
 
