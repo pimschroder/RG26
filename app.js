@@ -2084,6 +2084,8 @@ const USER_AVATARS = {
   "Lucas":    "images/avatars/Lucas.png",
   "Anne-Gert": "images/avatars/Anne-Gert.png",
   "Jarno":     "images/avatars/Jarno.png",
+  "Peter":     "images/avatars/Peter.png",
+  "Remco":     "images/avatars/Remco.png",
 };
 function getUserAvatar(name){ return name && USER_AVATARS[name] ? USER_AVATARS[name] : null; }
 function userBadgeHTML(user){

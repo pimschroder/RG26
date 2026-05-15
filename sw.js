@@ -1,4 +1,4 @@
-const CACHE = 'rg2026-v49';
+const CACHE = 'rg2026-v50';
 const STATIC = [
   './',
   './index.html',
@@ -16,6 +16,8 @@ const STATIC = [
   './images/avatars/Lucas.png',
   './images/avatars/Anne-Gert.png',
   './images/avatars/Jarno.png',
+  './images/avatars/Peter.png',
+  './images/avatars/Remco.png',
 ];
 
 // Install: cache de app shell
