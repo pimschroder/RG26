@@ -2358,7 +2358,11 @@ const USER_AVATARS = {
   "Peter":     "images/avatars/Peter.png",
   "Remco":     "images/avatars/Remco.png",
 };
-function getUserAvatar(name){ return name && USER_AVATARS[name] ? USER_AVATARS[name] : null; }
+function getUserAvatar(name){
+  if(!name) return null;
+  try{ const d=load(); if(d._avatars?.[name]) return d._avatars[name]; }catch(e){}
+  return USER_AVATARS[name] || null;
+}
 function userBadgeHTML(user){
   if(!user) return '';
   const av = getUserAvatar(user);
@@ -2503,6 +2507,75 @@ async function checkAdminPw(){
     input.style.borderColor = "var(--clay)";
     setTimeout(()=>{ input.style.borderColor = ""; }, 1000);
   }
+}
+
+async function changeAdminPassword(){
+  const cur  = document.getElementById('admin-pw-cur')?.value || '';
+  const nw   = document.getElementById('admin-pw-new')?.value || '';
+  const nw2  = document.getElementById('admin-pw-new2')?.value || '';
+  if(!cur || !nw || !nw2){ showToast('⚠️ Vul alle velden in'); return; }
+  if(nw !== nw2){ showToast('⚠️ Wachtwoorden komen niet overeen'); return; }
+  if(nw.length < 6){ showToast('⚠️ Minimaal 6 tekens'); return; }
+  if(!window._SUPABASE_URL){ showToast('⚠️ Geen verbinding'); return; }
+  try{
+    const tmp = supabase.createClient(window._SUPABASE_URL, window._SUPABASE_KEY);
+    const { error: loginErr } = await tmp.auth.signInWithPassword({ email: ADMIN_AUTH_EMAIL, password: cur });
+    if(loginErr){ showToast('⚠️ Huidig wachtwoord onjuist'); return; }
+    const { error: updateErr } = await tmp.auth.updateUser({ password: nw });
+    if(updateErr){ showToast('⚠️ Opslaan mislukt: ' + updateErr.message); return; }
+    ['admin-pw-cur','admin-pw-new','admin-pw-new2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    showToast('✓ Wachtwoord gewijzigd');
+  } catch(e){ showToast('⚠️ Fout: ' + e.message); }
+}
+
+// Wijs alle items zonder gebruiker toe aan een naam
+function _reassignAllUnknown(newUser){
+  if(!newUser) return 0;
+  const d = load();
+  let count = 0;
+  // Cam rows
+  ['pc','sl','sm','c14'].forEach(sk=>{
+    if(!d[sk]) return;
+    Object.values(d[sk]).forEach(camObj=>{
+      Object.values(camObj).forEach(item=>{
+        if(item && typeof item === 'object' && item.checked && !item.user){ item.user = newUser; count++; }
+      });
+    });
+  });
+  // Cam check chips
+  ['camck_pc','camck_sl','camck_sm','camck_c14'].forEach(sk=>{
+    if(!d[sk]) return;
+    Object.values(d[sk]).forEach(camObj=>{
+      if(typeof camObj !== 'object') return;
+      Object.keys(camObj).forEach(chk=>{
+        const v = camObj[chk];
+        if(v && typeof v === 'object' && v.v && !v.user){ v.user = newUser; count++; }
+      });
+    });
+  });
+  // Comm positions
+  ['comm_pc4th','comm_pc5th','comm_sl','comm_sm'].forEach(sk=>{
+    if(!d[sk]) return;
+    Object.values(d[sk]).forEach(posObj=>{
+      if(typeof posObj !== 'object') return;
+      POS_CHECKS.forEach(chk=>{
+        if(posObj[chk] && !posObj[chk+'_user']){ posObj[chk+'_user'] = newUser; count++; }
+      });
+    });
+  });
+  // Simple items (gallery + audio)
+  const simpleKeys = ['gal_CCSR','gal_CIR','gal_MCR','gal_INTERCOM','gal_FFT','gal_RF_CAMS','gal_NOVA_105','gal_SL_PRODUCTION','gal_SL_AUDIO','gal_SM_PRODUCTION','gal_SM_AUDIO','gal_EIC_AIC','gal_EMG_OFFICE','gal_EVS_SL','gal_EVS_PC','gal_QC_AUDIO','gal_QC_PRODUCTION','gal_GFX','audio_pc','audio_sl','audio_sm','audio_c14','sb_pc','sb_sl','sb_sm','sb_c14'];
+  simpleKeys.forEach(sk=>{
+    if(!d[sk]) return;
+    Object.values(d[sk]).forEach(item=>{
+      if(item && typeof item === 'object' && item.checked && !item.user){ item.user = newUser; count++; }
+    });
+  });
+  if(count > 0){
+    if(window._localSaveRaw) window._localSaveRaw(d);
+    if(window.pushToSupabase) window.pushToSupabase(d);
+  }
+  return count;
 }
 
 function buildActivity(){
@@ -2724,9 +2797,19 @@ function buildPersons(){
   const sorted = Object.entries(persons).sort((a,b)=>b[1].length-a[1].length);
   const total = sorted.reduce((s,[,items])=>s+items.length,0);
 
+  const allUsers = getUsers();
   wrap.innerHTML = sorted.map(([name, items])=>{
     const pct = Math.round(items.length/total*100);
     const recentItems = [...items].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,5);
+    const isUnknown = name === 'Onbekend';
+    const assignUI = (isUnknown && window._adminMode) ? `
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:10px;color:var(--clay);font-weight:600;">Toewijzen aan:</span>
+        <select id="reassign-select" style="font-family:'DM Mono',monospace;font-size:11px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);flex:1;">
+          ${allUsers.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('')}
+        </select>
+        <button onclick="(function(){const u=document.getElementById('reassign-select')?.value;if(!u)return;const n=_reassignAllUnknown(u);buildPersons();showToast('✓ '+n+' items toegewezen aan '+u);})()" style="background:var(--green);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;touch-action:manipulation;">Wijs toe</button>
+      </div>` : '';
     return `<div class="person-card">
       <div class="person-name">
         👤 ${esc(name)}
@@ -2737,6 +2820,7 @@ function buildPersons(){
         ${recentItems.map(it=>`<div class="person-item-row"><span>${esc(it.section)} — ${esc(it.label)}</span><span style="color:#bbb;margin-left:auto;font-size:10px">${fmtTime(it.ts)}</span></div>`).join('')}
         ${items.length>5?`<div style="color:#bbb;font-size:10px;padding-top:4px">+ ${items.length-5} meer items…</div>`:''}
       </div>
+      ${assignUI}
     </div>`;
   }).join('');
 }
@@ -3598,6 +3682,37 @@ function doRenameUser(){
   if(navigator.vibrate) navigator.vibrate(20);
 }
 
+function _uploadAvatar(name){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = ()=>{
+    const file = inp.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = ()=>{
+        const SIZE = 120;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE; canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        const s = Math.min(img.width, img.height);
+        ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, SIZE, SIZE);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        const d = load();
+        if(!d._avatars) d._avatars = {};
+        d._avatars[name] = dataUrl;
+        if(window._localSaveRaw) window._localSaveRaw(d);
+        if(window.pushToSupabase) window.pushToSupabase(d);
+        buildUsers();
+        showToast(`✓ Foto opgeslagen voor ${name}`);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
 function buildUsers(){
   const wrap = document.getElementById('users-list');
   if(!wrap) return;
@@ -3612,7 +3727,7 @@ function buildUsers(){
       ? `<img src="${av}" class="user-row-avatar" alt="${esc(name)}">`
       : `<span class="user-row-avatar user-row-initials">${name.substring(0,2).toUpperCase()}</span>`;
     return `<div class="user-row" data-name="${esc(name)}">
-      <div class="user-row-main">
+      <div class="user-row-main" onclick="_uploadAvatar('${esc(name)}')" style="cursor:pointer;touch-action:manipulation;" title="Foto uploaden">
         ${avatarHtml}
         <span class="user-row-name">${esc(name)}</span>
       </div>

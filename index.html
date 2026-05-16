@@ -1150,6 +1150,15 @@ window._loadXLSX = function(cb){
         <button class="admin-action-btn" onclick="exportToExcel()" style="touch-action:manipulation;">📊 Exporteren naar Excel</button>
         <button class="admin-action-btn" onclick="backupToJSON()" style="touch-action:manipulation;">💾 Backup downloaden</button>
       </div>
+      <div style="margin-top:14px;border-top:1.5px solid var(--border);padding-top:12px;">
+        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:8px;text-align:center;font-weight:700;">🔑 Wachtwoord wijzigen</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <input id="admin-pw-cur"  type="password" placeholder="Huidig wachtwoord"   class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="current-password">
+          <input id="admin-pw-new"  type="password" placeholder="Nieuw wachtwoord"    class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="new-password">
+          <input id="admin-pw-new2" type="password" placeholder="Bevestig wachtwoord" class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="new-password">
+          <button onclick="changeAdminPassword()" class="admin-action-btn" style="touch-action:manipulation;">Wachtwoord opslaan</button>
+        </div>
+      </div>
       <div style="margin-top:16px;border-top:2px solid var(--clay);padding-top:14px;background:rgba(193,68,14,.04);border-radius:0 0 10px 10px;margin-left:-2px;margin-right:-2px;padding-left:14px;padding-right:14px;">
         <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:10px;text-align:center;font-weight:700;">⚠️ Destructieve acties — Reset per court</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
