@@ -796,7 +796,11 @@ const FILTER_PAGES = new Set([
 
 function _updateFilterBtn(pageId){
   let btn = document.getElementById('filter-btn');
-  if(FILTER_PAGES.has(pageId) || (pageId && pageId.startsWith('page-gal-'))){
+  let colBtn = document.getElementById('collapse-all-btn');
+  const isCamCheck = pageId && pageId.startsWith('page-camcheck-');
+  const isFilter = FILTER_PAGES.has(pageId) || (pageId && pageId.startsWith('page-gal-'));
+
+  if(isFilter){
     if(!btn){
       btn = document.createElement('button');
       btn.id = 'filter-btn';
@@ -807,7 +811,6 @@ function _updateFilterBtn(pageId){
         active.classList.toggle('show-open-only');
         btn.classList.toggle('active', active.classList.contains('show-open-only'));
       };
-      // Inject after back-btn inside the active sub-header
       const subHeader = document.querySelector('.page.active .sub-header-inner');
       if(subHeader) subHeader.appendChild(btn);
     }
@@ -815,6 +818,32 @@ function _updateFilterBtn(pageId){
     document.querySelector('.page.active')?.classList.remove('show-open-only');
   } else {
     if(btn) btn.remove();
+  }
+
+  if(isCamCheck){
+    if(!colBtn){
+      colBtn = document.createElement('button');
+      colBtn.id = 'collapse-all-btn';
+      colBtn.textContent = '⊟';
+      colBtn.title = 'Alles inklappen';
+      colBtn.onclick = () => {
+        const active = document.querySelector('.page.active');
+        if(!active) return;
+        const blocks = active.querySelectorAll('.cam-block');
+        const anyOpen = Array.from(blocks).some(b => !b.classList.contains('collapsed'));
+        blocks.forEach(b => {
+          const body = b.querySelector('.cam-body');
+          if(anyOpen){ b.classList.add('collapsed'); if(body) body.style.maxHeight='0'; }
+          else { b.classList.remove('collapsed'); if(body) body.style.maxHeight='1200px'; }
+        });
+        colBtn.textContent = anyOpen ? '⊞' : '⊟';
+        colBtn.title = anyOpen ? 'Alles uitklappen' : 'Alles inklappen';
+      };
+      const subHeader = document.querySelector('.page.active .sub-header-inner');
+      if(subHeader) subHeader.appendChild(colBtn);
+    }
+  } else {
+    if(colBtn) colBtn.remove();
   }
 }
 
@@ -1200,7 +1229,7 @@ function buildCamPage(containerId, storageKey, cams){
         <span class="cam-pct" id="${containerId}-pct-${cam.num}">${checkedN}/${rows.length}</span>
         <span class="cam-arrow">&#9660;</span>
       </div>
-      <div class="cam-body" style="max-height:${collapsed?'0':'9999px'}">
+      <div class="cam-body" style="max-height:${collapsed?'0':'1200px'}">
         ${rowsHTML}
         <div class="cam-pills" id="${containerId}-pills-${cam.num}">${pillsHTML}</div>
       </div>`;
@@ -1285,7 +1314,7 @@ function camCollapse(cid, camNum){
   const block=document.getElementById(`${cid}-block-${camNum}`);
   const body=block.querySelector(".cam-body");
   const now=block.classList.toggle("collapsed");
-  body.style.maxHeight=now?"0":"9999px";
+  body.style.maxHeight=now?"0":"1200px";
   const d=load(); const sk=cid.replace(/^list-/,"").replace(/-/g,"_");
   if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
   d[sk][`cam${camNum}`].collapsed=now; save(d);
@@ -1463,7 +1492,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
         <span class="cam-pct" id="${containerId}-pct-${safe}">${checkedN}/${total}</span>
         <span class="cam-arrow">&#9660;</span>
       </div>
-      <div class="cam-body" style="max-height:9999px">${groupsHTML}</div>`;
+      <div class="cam-body" style="max-height:1200px">${groupsHTML}</div>`;
     container.appendChild(block);
   });
   } catch(e){ console.error('buildCamCheckPage error', e); }
@@ -1516,7 +1545,7 @@ function camCheckCollapse(cid, safe){
   if(!block) return;
   const body = block.querySelector('.cam-body');
   const collapsed = block.classList.toggle('collapsed');
-  body.style.maxHeight = collapsed ? '0' : '9999px';
+  body.style.maxHeight = collapsed ? '0' : '1200px';
 }
 
 const POS_CHECKS = ["Monitors","Tablet","Audio","Netjes"];
@@ -1565,7 +1594,7 @@ function buildPosList(containerId, storageKey, positions){
         <span class="pos-pct" id="${containerId}-pospct-${pos}">${doneN}/${POS_CHECKS.length}</span>
         <span class="pos-arrow">&#9660;</span>
       </div>
-      <div class="pos-body" style="max-height:${collapsed ? "0" : "9999px"}">
+      <div class="pos-body" style="max-height:${collapsed ? "0" : "1200px"}">
         ${rowsHTML}
       </div>`;
     container.appendChild(section);
@@ -1643,7 +1672,7 @@ function posCollapse(cid, pos){
   const block = document.getElementById(`${cid}-pos-${pos}`);
   const body = block.querySelector(".pos-body");
   const now = block.classList.toggle("collapsed");
-  body.style.maxHeight = now ? "0" : "9999px";
+  body.style.maxHeight = now ? "0" : "1200px";
   const sk = cid.replace(/^list-/, "").replace(/-/g, "_");
   const d = load(); if(!d[sk]) d[sk]={}; if(!d[sk][pos]) d[sk][pos]={};
   d[sk][pos].collapsed = now; save(d);

@@ -177,12 +177,12 @@
 .cam-header.cam-done-pop{animation:camDonePop .65s ease-out;}
 
 /* ── Sync-status dot ─────────────────────────────────────────── */
-#sync-status{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:5px;}
-#sync-status::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;}
-#sync-status.live{color:var(--green);}
-#sync-status.offline{color:#888;}
-#sync-status.error{color:var(--clay);}
-#sync-status.saving{color:var(--gold);}
+#sync-status{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.25);}
+#sync-status::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;}
+#sync-status.live{color:#7ed957;}
+#sync-status.offline{color:rgba(255,255,255,.45);}
+#sync-status.error{color:#ff7a5a;}
+#sync-status.saving{color:#f5c842;}
 @keyframes syncPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 #sync-status.live::before{animation:syncPulse 2.5s ease-in-out infinite;}
 
@@ -246,3 +246,5 @@
 #filter-btn{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:6px;border:none;cursor:pointer;touch-action:manipulation;transition:all .2s;background:rgba(193,68,14,.1);color:var(--clay-dark);}
 #filter-btn.active{background:var(--green);color:#fff;}
 #filter-btn:active{transform:scale(.95);}
+#collapse-all-btn{font-family:"DM Mono",monospace;font-size:14px;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;touch-action:manipulation;transition:all .2s;background:rgba(193,68,14,.1);color:var(--clay-dark);line-height:1;}
+#collapse-all-btn:active{transform:scale(.95);}
