@@ -2341,7 +2341,7 @@ function _doExportToExcel(){  // bewaard als alias; verwijderd in volgende oprui
   XLSX.writeFile(wb, filename);
 }
 
-const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","Pim","Remco","Peter","Emil","Damian","Lucas"];
+const DEFAULT_USERS = ["Jules","Robin","Aaron","Jarno","Rosan","Anne-Gert","Gaëlle","Pim","Remco","Peter","Emil","Damian","Lucas","Michiel"];
 
 // Avatar-foto's per gebruiker — voeg hier namen + bestandsnamen toe
 const USER_AVATARS = {
@@ -2379,6 +2379,9 @@ function seedDefaultUsers(){
       // Dedupliceer (case-insensitive) — keep first occurrence
       const seen = new Set();
       const deduped = renamed.filter(u => { const k=u.toLowerCase(); if(seen.has(k)){changed=true;return false;} seen.add(k); return true; });
+      // Voeg nieuwe standaardgebruikers toe die nog ontbreken
+      const newUsers = ["Michiel"];
+      newUsers.forEach(u => { if(!deduped.some(x=>x.toLowerCase()===u.toLowerCase())){ deduped.push(u); changed=true; } });
       if(changed) saveUsers(deduped);
     }
   } catch(e){}
