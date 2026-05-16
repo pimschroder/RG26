@@ -1435,8 +1435,15 @@ function camStatus(sk, camNum, row, j, cid, sel){
 
   const boxEl=document.querySelector(`#${cid}-row-${camNum}-${j} .cam-check-box`);
   const rowEl=document.getElementById(`${cid}-row-${camNum}-${j}`);
-  if(val==="OK"){ d[sk][`cam${camNum}`][row].checked=true; if(boxEl) boxEl.classList.add("on"); if(rowEl) rowEl.classList.add("row-done"); }
-  else          { d[sk][`cam${camNum}`][row].checked=false; if(boxEl) boxEl.classList.remove("on"); if(rowEl) rowEl.classList.remove("row-done"); }
+  if(val==="OK"){
+    d[sk][`cam${camNum}`][row].checked=true;
+    if(!d[sk][`cam${camNum}`][row].ts){ d[sk][`cam${camNum}`][row].ts=Date.now(); d[sk][`cam${camNum}`][row].user=getCurrentUser(); }
+    if(boxEl) boxEl.classList.add("on"); if(rowEl) rowEl.classList.add("row-done");
+  } else {
+    d[sk][`cam${camNum}`][row].checked=false;
+    d[sk][`cam${camNum}`][row].ts=null; d[sk][`cam${camNum}`][row].user=null;
+    if(boxEl) boxEl.classList.remove("on"); if(rowEl) rowEl.classList.remove("row-done");
+  }
   save(d, sk);
   const cd=d[sk][`cam${camNum}`]||{};
   const _rows2=getRows(sk,camNum);
