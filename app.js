@@ -2676,6 +2676,21 @@ function buildPersons(){
     });
   });
 
+  const camckMap=[
+    {sk:'camck_pc',  cams:CAMCHECK_PC,   lbl:'Cam Check PC'},
+    {sk:'camck_sl',  cams:CAMCHECK_SL,   lbl:'Cam Check SL'},
+    {sk:'camck_sm',  cams:CAMCHECK_SM,   lbl:'Cam Check SM'},
+    {sk:'camck_c14', cams:CAMCHECK_CT14, lbl:'Cam Check C14'},
+  ];
+  camckMap.forEach(({sk,cams,lbl})=>{
+    cams.forEach(cam=>{
+      cam.checks.forEach(chk=>{
+        const e=(d[sk]||{})[cam.id]?.[chk];
+        if(e && isChecked(e)) addItem(e.user, lbl+' '+cam.id, chk, e.ts);
+      });
+    });
+  });
+
   if(Object.keys(persons).length===0){
     wrap.innerHTML='<p style="color:#aaa;font-size:12px;padding:20px 0;text-align:center;">Nog geen afgevinkte items gevonden.</p>';
     return;
