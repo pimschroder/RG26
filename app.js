@@ -1092,6 +1092,7 @@ function initApp(){
   if(d.loggedIn && !sessionExpired){
     goTo('page-home');
     setTimeout(initPresence, 1000);
+    setTimeout(_showMiniGameBtn, 800);
   } else {
     if(sessionExpired) logout();
     goTo('page-login');
@@ -1907,6 +1908,7 @@ function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; con
 function triggerAvatarCelebration(){
   if(document.getElementById('av-celebration')) return;
   try{ sessionStorage.setItem('rg_seen_celebration','1'); }catch(e){}
+  unlockMiniGame();
 
   const overlay = document.createElement('div');
   overlay.id = 'av-celebration';
@@ -3787,3 +3789,239 @@ function _updateCourtDots(pageId){
     if(next) goTo(next);
   }, { passive: true });
 })();
+
+// ══════════════════════════════════════════════════════════════
+// 🎾  GEHEIME MINI GAME — vrijgespeeld na 100%
+// ══════════════════════════════════════════════════════════════
+function unlockMiniGame(){
+  try{ sessionStorage.setItem('rg_game_unlocked','1'); }catch(e){}
+  setTimeout(_showMiniGameBtn, 3000); // verschijnt na de celebration
+}
+
+function _showMiniGameBtn(){
+  try{ if(sessionStorage.getItem('rg_game_unlocked')!=='1') return; }catch(e){ return; }
+  if(document.getElementById('minigame-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'minigame-btn';
+  btn.title = '🎾 Geheime mini game';
+  btn.textContent = '🎾';
+  btn.style.display = 'flex';
+  btn.onclick = openMiniGame;
+  document.body.appendChild(btn);
+}
+
+function openMiniGame(){
+  if(document.getElementById('mg-overlay')) return;
+  const best = localStorage.getItem('rg_game_best') || '0';
+  const overlay = document.createElement('div');
+  overlay.id = 'mg-overlay';
+  overlay.innerHTML = `
+    <div id="mg-box">
+      <div id="mg-hdr">
+        <span id="mg-title">🎾 Roland Garros</span>
+        <div id="mg-scores"><span id="mg-score">0</span><span id="mg-best-lbl">Best: ${best}</span></div>
+        <button id="mg-close-btn" onclick="closeMiniGame()">✕</button>
+      </div>
+      <canvas id="mg-canvas"></canvas>
+      <div id="mg-gameover">
+        <div id="mg-over-label">GAME OVER</div>
+        <div id="mg-over-score">0</div>
+        <div id="mg-over-best"></div>
+        <button class="mg-action-btn" onclick="startMiniGame()">Nog een keer 🎾</button>
+        <button class="mg-quit-btn" onclick="closeMiniGame()">Sluiten</button>
+      </div>
+      <div id="mg-start" style="display:flex;">
+        <div style="font-size:48px;">🎾</div>
+        <div id="mg-start-hint">Beweeg je vinger of muis<br>om de bal te raken.<br><br>De racket wordt kleiner<br>naarmate je beter wordt!</div>
+        <button class="mg-action-btn" onclick="startMiniGame()">Spelen!</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const canvas = document.getElementById('mg-canvas');
+  const box    = document.getElementById('mg-box');
+  const hdr    = document.getElementById('mg-hdr');
+  function resizeCanvas(){
+    canvas.width  = box.clientWidth;
+    canvas.height = box.clientHeight - hdr.offsetHeight;
+  }
+  resizeCanvas();
+  overlay._resize = resizeCanvas;
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function closeMiniGame(){
+  const o = document.getElementById('mg-overlay');
+  if(!o) return;
+  if(o._resize) window.removeEventListener('resize', o._resize);
+  if(window._mgAnim){ cancelAnimationFrame(window._mgAnim); window._mgAnim = null; }
+  window._mgCleanup?.();
+  o.remove();
+}
+
+function startMiniGame(){
+  const canvas = document.getElementById('mg-canvas');
+  if(!canvas) return;
+
+  document.getElementById('mg-start').style.display    = 'none';
+  document.getElementById('mg-gameover').style.display = 'none';
+
+  if(window._mgAnim){ cancelAnimationFrame(window._mgAnim); window._mgAnim = null; }
+  window._mgCleanup?.();
+
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width, H = canvas.height;
+
+  const BALL_R      = Math.max(9,  Math.round(W * 0.026));
+  const RACKET_H    = Math.max(10, Math.round(H * 0.022));
+  const RACKET_W0   = Math.round(W * 0.24);
+  const RACKET_Y    = H - RACKET_H - Math.round(H * 0.055);
+  const BASE_SPD    = 3.8;
+
+  let ball   = { x: W/2, y: H*0.28, vx: (Math.random()>0.5?1:-1)*2.6, vy: BASE_SPD };
+  let racket = { x: W/2, w: RACKET_W0 };
+  let targetX = W/2;
+  let score = 0, speed = 1, running = true;
+
+  function onMouseMove(e){
+    const r = canvas.getBoundingClientRect();
+    targetX = e.clientX - r.left;
+  }
+  function onTouch(e){
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    targetX = e.touches[0].clientX - r.left;
+  }
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('touchmove', onTouch, {passive:false});
+  window._mgCleanup = ()=>{
+    canvas.removeEventListener('mousemove', onMouseMove);
+    canvas.removeEventListener('touchmove', onTouch);
+  };
+
+  function flashLevel(txt){
+    document.getElementById('mg-level-flash')?.remove();
+    const el = document.createElement('div');
+    el.id = 'mg-level-flash';
+    el.textContent = txt;
+    document.getElementById('mg-box').appendChild(el);
+    setTimeout(()=>el.remove(), 800);
+  }
+
+  function drawScene(){
+    W = canvas.width; H = canvas.height;
+
+    // Clay court
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#A83208'); g.addColorStop(1,'#C1440E');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+    // Court lines
+    ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=2;
+    const ml=W*.07, mr=W*.93, mt=H*.1, mb=H*.87, mid=H*.48;
+    [[ml,mt,mr,mt],[ml,mb,mr,mb],[ml,mt,ml,mb],[mr,mt,mr,mb],
+     [ml,mid,mr,mid],[W/2,mt,W/2,mid]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+
+    // Ball shadow
+    ctx.save(); ctx.globalAlpha=.25;
+    ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(ball.x,RACKET_Y+RACKET_H,BALL_R*.9,BALL_R*.25,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // Ball
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    // Felt seam
+    ctx.strokeStyle='rgba(160,210,160,.55)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(ball.x,ball.y,BALL_R*.62, .35, Math.PI-.35); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ball.x,ball.y,BALL_R*.62, Math.PI+.35, 2*Math.PI-.35); ctx.stroke();
+    ctx.restore();
+
+    // Racket
+    const rx = racket.x - racket.w/2;
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8;
+    ctx.fillStyle='#C9A84C';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(rx, RACKET_Y, racket.w, RACKET_H, RACKET_H/2);
+    else ctx.rect(rx, RACKET_Y, racket.w, RACKET_H);
+    ctx.fill();
+    ctx.shadowBlur=0;
+    // Strings
+    ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1;
+    const sn=5, sw=racket.w/sn;
+    for(let i=1;i<sn;i++){
+      ctx.beginPath(); ctx.moveTo(rx+sw*i,RACKET_Y+2); ctx.lineTo(rx+sw*i,RACKET_Y+RACKET_H-2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function endGame(){
+    running = false;
+    window._mgCleanup?.();
+    window._mgAnim = null;
+
+    const prev = parseInt(localStorage.getItem('rg_game_best')||'0');
+    const best = Math.max(score, prev);
+    if(best > prev) localStorage.setItem('rg_game_best', best);
+    document.getElementById('mg-best-lbl').textContent = 'Best: '+best;
+    document.getElementById('mg-over-score').textContent = score;
+    document.getElementById('mg-over-best').textContent =
+      best > prev ? '🏆 Nieuw record!' : 'Beste: '+best;
+    document.getElementById('mg-gameover').style.display = 'flex';
+  }
+
+  function loop(){
+    if(!running) return;
+
+    // Smooth racket follow
+    racket.x += (targetX - racket.x) * 0.18;
+    racket.x = Math.max(racket.w/2, Math.min(W - racket.w/2, racket.x));
+
+    // Move ball
+    ball.x += ball.vx * speed;
+    ball.y += ball.vy * speed;
+
+    // Wall bounces
+    if(ball.x - BALL_R < 0){ ball.x = BALL_R; ball.vx = Math.abs(ball.vx); }
+    if(ball.x + BALL_R > W){ ball.x = W-BALL_R; ball.vx = -Math.abs(ball.vx); }
+    if(ball.y - BALL_R < 0){ ball.y = BALL_R; ball.vy = Math.abs(ball.vy); }
+
+    // Racket hit
+    const rx = racket.x - racket.w/2;
+    const ballBottom = ball.y + BALL_R;
+    if(ball.vy > 0 && ballBottom >= RACKET_Y && ballBottom <= RACKET_Y + RACKET_H + speed*3 &&
+       ball.x >= rx - BALL_R*.5 && ball.x <= rx + racket.w + BALL_R*.5){
+      ball.y = RACKET_Y - BALL_R;
+      ball.vy = -Math.abs(ball.vy);
+      const offset = (ball.x - racket.x) / (racket.w/2);
+      ball.vx = offset * 7;
+      ball.vx = Math.max(-8, Math.min(8, ball.vx));
+      score++;
+      document.getElementById('mg-score').textContent = score;
+      // Speed up every 5 hits
+      if(score % 5 === 0){
+        speed = Math.min(3.2, speed + 0.12);
+        flashLevel('⚡ +'+(Math.round(speed*10)/10)+'x');
+      }
+      // Narrow racket every 8 hits
+      if(score % 8 === 0){
+        racket.w = Math.max(RACKET_W0 * 0.35, racket.w - RACKET_W0 * 0.07);
+        flashLevel('🎾 Smaller!');
+      }
+    }
+
+    // Ball out of bounds → game over
+    if(ball.y - BALL_R > H){ drawScene(); endGame(); return; }
+
+    drawScene();
+    window._mgAnim = requestAnimationFrame(loop);
+  }
+
+  loop();
+}
