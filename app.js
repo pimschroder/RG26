@@ -684,6 +684,7 @@ const CAMCHECK_PC = [
   {id:'PC.22',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.23',mcs:'7', type:'3500',     checks:['SONO-CAM','SONO-CCU','PERSCO-CAM','PERSCO-CCU','COMM-CAM','COMM-CCU','FINALS-CAM','FINALS-CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM']},
   {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_14},
+  {id:'PC.26',mcs:'45',type:'3500',     checks:CHK_14},
 ];
 const CAMCHECK_SL = [
   {id:'SL.01',mcs:'9', type:'3500',     checks:CHK_ALL},
