@@ -28,10 +28,31 @@
     el.onclick = s === 'error' ? () => window._retrySync && window._retrySync() : null;
   }
 
-  window.initSupabase = function initSupabase(url, key){
+  window.initSupabase = async function initSupabase(url, key){
     try{
       supaClient = supabase.createClient(url || SUPABASE_URL, key || SUPABASE_KEY);
       window._supaClient = supaClient;
+
+      // Verify the Supabase session is real — blocks console localStorage bypass.
+      // getSession() reads the cached JWT without needing network, so works offline too.
+      try{
+        const { data } = await supaClient.auth.getSession();
+        if(!data?.session){
+          // No valid session → clear loggedIn flag and force login screen
+          const _load  = window._localLoad  || (()=>{ try{ return JSON.parse(localStorage.getItem('rg2026_v1'))||{}; }catch{ return {}; } });
+          const _save  = window._localSaveRaw || ((d)=>{ try{ localStorage.setItem('rg2026_v1',JSON.stringify(d)); }catch{} });
+          const d = _load();
+          if(d.loggedIn){
+            delete d.loggedIn;
+            _save(d);
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            const lp = document.getElementById('page-login');
+            if(lp) lp.classList.add('active');
+            try{ sessionStorage.removeItem('rg_admin'); }catch{}
+          }
+        }
+      }catch(e){}
+
       startSync();
     } catch(e){
       console.warn("Supabase init failed:", e);
