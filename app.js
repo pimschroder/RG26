@@ -3065,9 +3065,12 @@ function toggleOdTodo(entryId, idx){
   const row = document.getElementById(`od-td-${entryId}-${idx}`);
   if(row){
     row.classList.toggle('od-todo-done', item.done);
+    row.classList.toggle('od-todo-urgent', item.urgent && !item.done);
     row.querySelector('.od-todo-check-box')?.classList.toggle('on', item.done);
+    const badge = row.querySelector('.od-todo-urgent-badge');
+    if(badge) badge.style.display = item.urgent && !item.done ? '' : 'none';
     const meta = row.querySelector('.od-todo-check-meta');
-    if(meta) meta.textContent = item.done ? `${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}` : '';
+    if(meta) meta.textContent = item.done ? `${item.doneBy||''}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}` : '';
   }
   if(navigator.vibrate) navigator.vibrate(15);
 }
@@ -3249,7 +3252,7 @@ window.renderOdLog = function renderOdLog(){
             if(!e.todo) return '';
             if(typeof e.todo === 'string') return e.todo ? `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>` : '';
             if(!e.todo.length) return '';
-            const checks = e.todo.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span>${item.done&&item.doneTs?`<span class="od-todo-check-meta">${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}</span>`:''}</div></div>`).join('');
+            const checks = e.todo.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span><span class="od-todo-check-meta">${item.done&&item.doneTs?`${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}`:''}</span></div></div>`).join('');
             return `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-todo-checks">${checks}</div></div>`;
           })()}
         </div>
