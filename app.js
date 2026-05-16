@@ -646,14 +646,14 @@ const ALL_CAM_CHECKS = ['CAM','CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1
 
 // Check sets per camera type
 const CHK_ALL  = ALL_CAM_CHECKS;
-const CHK_15   = ['CAM','CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
+const CHK_14   = ['CAM','CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
 const CHK_RF8  = ['IRIS','UHD','HDR','SDR','RED','PROD','ENG','PGM'];
-const CHK_HH12 = ['IRIS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
+const CHK_HH11 = ['IRIS','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
 const CHK_HH   = ['IRIS','UHD','HDR','SDR','RED','PROD','ENG','PGM'];
 const CHK_PTZ4 = ['IRIS','UHD','HDR','SDR'];
 const CHK_SM_HH  = ['IRIS','HDR','SDR','RED','PROD','ENG','PGM'];
-const CHK_SM16   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM','IN 1','IN 2'];
-const CHK_SM14   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
+const CHK_SM15   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM','IN 1','IN 2'];
+const CHK_SM13   = ['CAM','CCU','IRIS','Back-focus','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM'];
 const CHK_SM_RF  = ['IRIS','HDR','SDR','RED','PROD','ENG','PGM'];
 const CHK_SM3    = ['IRIS','HDR','SDR'];
 const CHK_CT14HH = ['IRIS','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM','IN 1','IN 2'];
@@ -661,14 +661,14 @@ const CHK_CT14RF = ['IRIS','RED','PROD','ENG','PGM'];
 
 const CAMCHECK_PC = [
   {id:'PC.01',mcs:'1', type:'3500',     checks:CHK_ALL},
-  {id:'PC.02',mcs:'2', type:'3500',     checks:CHK_15},
-  {id:'PC.03',mcs:'3', type:'3500',     checks:CHK_15},
-  {id:'PC.04',mcs:'4', type:'3500',     checks:CHK_15},
-  {id:'PC.05',mcs:'32',type:'SSM',      checks:CHK_15},
-  {id:'PC.06',mcs:'37',type:'SSM',      checks:CHK_15},
+  {id:'PC.02',mcs:'2', type:'3500',     checks:CHK_14},
+  {id:'PC.03',mcs:'3', type:'3500',     checks:CHK_14},
+  {id:'PC.04',mcs:'4', type:'3500',     checks:CHK_14},
+  {id:'PC.05',mcs:'32',type:'SSM',      checks:CHK_14},
+  {id:'PC.06',mcs:'37',type:'SSM',      checks:CHK_14},
   {id:'PC.07',mcs:'-', type:'RF',       checks:CHK_RF8},
-  {id:'PC.08',mcs:'31',type:'UM',       checks:CHK_15},
-  {id:'PC.09',mcs:'5', type:'3500',     checks:CHK_15},
+  {id:'PC.08',mcs:'31',type:'UM',       checks:CHK_14},
+  {id:'PC.09',mcs:'5', type:'3500',     checks:CHK_14},
   {id:'PC.10',mcs:'40',type:'HOTHEAD',  checks:CHK_HH},
   {id:'PC.11',mcs:'',  type:'SPIDER',   checks:CHK_PTZ4},
   {id:'PC.12',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
@@ -678,23 +678,23 @@ const CAMCHECK_PC = [
   {id:'PC.16',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
   {id:'PC.17',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
   {id:'PC.18',mcs:'',  type:'PTZ',      checks:CHK_HH},
-  {id:'PC.19',mcs:'6', type:'3500',     checks:CHK_15},
+  {id:'PC.19',mcs:'6', type:'3500',     checks:CHK_14},
   {id:'PC.20',mcs:'',  type:'RF',       checks:CHK_RF8},
   {id:'PC.21',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.22',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.23',mcs:'7', type:'3500',     checks:['SONO-CAM','SONO-CCU','PERSCO-CAM','PERSCO-CCU','COMM-CAM','COMM-CCU','FINALS-CAM','FINALS-CCU','IRIS','Back-focus','UHD','HDR','SDR','RET 1','RET 2','RET 3','RED','PROD','ENG','PGM']},
-  {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_15},
+  {id:'PC.24',mcs:'8', type:'3500',     checks:CHK_14},
 ];
 const CAMCHECK_SL = [
   {id:'SL.01',mcs:'9', type:'3500',     checks:CHK_ALL},
-  {id:'SL.02',mcs:'10',type:'3500',     checks:CHK_15},
-  {id:'SL.03',mcs:'11',type:'3500',     checks:CHK_15},
-  {id:'SL.04',mcs:'12',type:'3500',     checks:CHK_15},
-  {id:'SL.05',mcs:'34',type:'SSM',      checks:CHK_15},
-  {id:'SL.06',mcs:'38',type:'SSM',      checks:CHK_15},
+  {id:'SL.02',mcs:'10',type:'3500',     checks:CHK_14},
+  {id:'SL.03',mcs:'11',type:'3500',     checks:CHK_14},
+  {id:'SL.04',mcs:'12',type:'3500',     checks:CHK_14},
+  {id:'SL.05',mcs:'34',type:'SSM',      checks:CHK_14},
+  {id:'SL.06',mcs:'38',type:'SSM',      checks:CHK_14},
   {id:'SL.07',mcs:'',  type:'RF',       checks:CHK_RF8},
-  {id:'SL.08',mcs:'33',type:'UM',       checks:CHK_15},
-  {id:'SL.09',mcs:'13',type:'3500',     checks:CHK_15},
+  {id:'SL.08',mcs:'33',type:'UM',       checks:CHK_14},
+  {id:'SL.09',mcs:'13',type:'3500',     checks:CHK_14},
   {id:'SL.10',mcs:'41',type:'HOTHEAD',  checks:CHK_HH},
   {id:'SL.11',mcs:'',  type:'SPIDER',   checks:CHK_PTZ4},
   {id:'SL.12',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
@@ -705,32 +705,32 @@ const CAMCHECK_SL = [
   {id:'SL.17',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
   {id:'SL.18',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'SL.19',mcs:'14',type:'3500',     checks:CHK_ALL},
-  {id:'SL.20',mcs:'15',type:'3500',     checks:CHK_15},
+  {id:'SL.20',mcs:'15',type:'3500',     checks:CHK_14},
 ];
 const CAMCHECK_SM = [
   {id:'SM.01',mcs:'42',type:'HOTHEAD',  checks:CHK_SM_HH},
-  {id:'SM.02',mcs:'16',type:'3500',     checks:CHK_SM16},
-  {id:'SM.03',mcs:'17',type:'3500',     checks:CHK_SM14},
-  {id:'SM.04',mcs:'18',type:'3500',     checks:CHK_SM14},
-  {id:'SM.05',mcs:'35',type:'SSM',      checks:CHK_SM14},
-  {id:'SM.06',mcs:'36',type:'UM',       checks:CHK_SM14},
+  {id:'SM.02',mcs:'16',type:'3500',     checks:CHK_SM15},
+  {id:'SM.03',mcs:'17',type:'3500',     checks:CHK_SM13},
+  {id:'SM.04',mcs:'18',type:'3500',     checks:CHK_SM13},
+  {id:'SM.05',mcs:'35',type:'SSM',      checks:CHK_SM13},
+  {id:'SM.06',mcs:'36',type:'UM',       checks:CHK_SM13},
   {id:'SM.07',mcs:'',  type:'RF',       checks:CHK_SM_RF},
   {id:'SM.08',mcs:'',  type:'PTZ',      checks:CHK_SM3},
   {id:'SM.09',mcs:'',  type:'PTZ',      checks:CHK_SM3},
   {id:'SM.10',mcs:'',  type:'NETCAM',   checks:CHK_SM3},
   {id:'SM.11',mcs:'',  type:'NETCAM',   checks:CHK_SM3},
-  {id:'SM.12',mcs:'19',type:'3500',     checks:CHK_SM16},
-  {id:'SM.13',mcs:'20',type:'3500',     checks:CHK_SM14},
+  {id:'SM.12',mcs:'19',type:'3500',     checks:CHK_SM15},
+  {id:'SM.13',mcs:'20',type:'3500',     checks:CHK_SM13},
 ];
 const CAMCHECK_CT14 = [
   {id:'CT14.01',mcs:'43',type:'HOTHEAD',checks:CHK_SM_HH},
-  {id:'CT14.02',mcs:'21',type:'3500',   checks:CHK_SM16},
-  {id:'CT14.03',mcs:'22',type:'3500',   checks:CHK_SM14},
-  {id:'CT14.04',mcs:'23',type:'3500',   checks:CHK_SM14},
-  {id:'CT14.05',mcs:'24',type:'3500',   checks:CHK_SM14},
-  {id:'CT14.06',mcs:'39',type:'SSM',    checks:CHK_SM14},
+  {id:'CT14.02',mcs:'21',type:'3500',   checks:CHK_SM15},
+  {id:'CT14.03',mcs:'22',type:'3500',   checks:CHK_SM13},
+  {id:'CT14.04',mcs:'23',type:'3500',   checks:CHK_SM13},
+  {id:'CT14.05',mcs:'24',type:'3500',   checks:CHK_SM13},
+  {id:'CT14.06',mcs:'39',type:'SSM',    checks:CHK_SM13},
   {id:'CT14.07',mcs:'',  type:'RF',     checks:CHK_CT14RF},
-  {id:'CT14.08',mcs:'25',type:'3500',   checks:CHK_SM14},
+  {id:'CT14.08',mcs:'25',type:'3500',   checks:CHK_SM13},
 ];
 
 const SK = "rg2026_v1";
