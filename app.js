@@ -1443,8 +1443,15 @@ function buildCamCheckPage(containerId, storageKey, cams){
       const pctEl = document.getElementById(`${containerId}-pct-${safe}`);
       if(pctEl) pctEl.textContent = `${checkedN}/${total}`;
       const isAllDone = checkedN === total;
-      block.querySelector('.cam-header')?.classList.toggle('cam-header-done', isAllDone);
+      const hdr = block.querySelector('.cam-header');
+      const wasAllDone = hdr?.classList.contains('cam-header-done');
+      hdr?.classList.toggle('cam-header-done', isAllDone);
       block.dataset.done = isAllDone ? 'true' : 'false';
+      if(isAllDone && !wasAllDone && !block.classList.contains('collapsed')){
+        block.classList.add('collapsed');
+        const body = block.querySelector('.cam-body');
+        if(body) body.style.maxHeight = '0';
+      }
     });
     return;
   }
@@ -1482,7 +1489,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
     }).join('');
 
     const block = document.createElement('div');
-    block.className = 'cam-block';
+    block.className = 'cam-block' + (allDone ? ' collapsed' : '');
     block.id = `${containerId}-block-${safe}`;
     block.dataset.done = allDone ? 'true' : 'false';
     block.innerHTML = `
@@ -1492,7 +1499,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
         <span class="cam-pct" id="${containerId}-pct-${safe}">${checkedN}/${total}</span>
         <span class="cam-arrow">&#9660;</span>
       </div>
-      <div class="cam-body" style="max-height:1200px">${groupsHTML}</div>`;
+      <div class="cam-body" style="max-height:${allDone?'0':'1200px'}">${groupsHTML}</div>`;
     container.appendChild(block);
   });
   } catch(e){ console.error('buildCamCheckPage error', e); }
