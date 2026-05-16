@@ -273,15 +273,23 @@
     }, 200);
   };
 
-  // Flush queue when coming back online
-  window.addEventListener("online", ()=>{
+  // Flush queue when coming back online — merge with remote first to avoid overwriting concurrent changes
+  window.addEventListener("online", async ()=>{
     setSyncStatus("connected");
-    if(offlineQueue){
-      window.pushToSupabase(offlineQueue);
-    } else if(localStorage.getItem('rg_pending_sync')){
-      // App was gesloten terwijl offline — push huidige lokale data
-      const current = window._localLoad ? window._localLoad() : {};
-      window.pushToSupabase(current);
+    const localData = offlineQueue || (localStorage.getItem('rg_pending_sync') ? (window._localLoad ? window._localLoad() : {}) : null);
+    if(!localData) return;
+    try{
+      const { data: row } = await supaClient.from("checklist_state").select("data").eq("id",1).single();
+      if(row?.data){
+        const merged = deepMerge(localData, row.data);
+        if(window._localSaveRaw) window._localSaveRaw(merged);
+        window.pushToSupabase(merged);
+      } else {
+        window.pushToSupabase(localData);
+      }
+    } catch(e){
+      // Fetch failed — push local as fallback (original behaviour)
+      window.pushToSupabase(localData);
     }
   });
   window.addEventListener("offline", ()=>{ setSyncStatus("offline"); });
@@ -763,7 +771,21 @@ function load(){
   try{ _dataCache = JSON.parse(localStorage.getItem(SK))||{}; }catch{ _dataCache = {}; }
   return _dataCache;
 }
-function _localSaveRaw(d){ _dataCache = d; try{ localStorage.setItem(SK,JSON.stringify(d)); }catch{} }
+function _localSaveRaw(d){
+  _dataCache = d;
+  try{
+    localStorage.setItem(SK, JSON.stringify(d));
+  } catch(e){
+    if(e?.name==='QuotaExceededError' || e?.code===22 || e?.code===1014){
+      // Show persistent warning — do NOT silently swallow
+      const el = document.getElementById('sync-toast') || document.createElement('div');
+      el.id = 'sync-toast';
+      el.style.cssText = 'position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#C1440E;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3);text-align:center;max-width:90vw;';
+      el.textContent = '⚠️ Opslag vol — wijzigingen staan wel in Supabase maar niet lokaal.';
+      if(!el.parentNode) document.body.appendChild(el);
+    }
+  }
+}
 window._localLoad = load;
 window._localSaveRaw = _localSaveRaw;
 
@@ -945,6 +967,7 @@ async function doLogin(){
 }
 
 function logout(){
+  if(_sessionCheckInterval){ clearInterval(_sessionCheckInterval); _sessionCheckInterval = null; }
   releaseWakeLock();
   try {
     // Fire a final sync if there are pending changes before we navigate away
@@ -1107,15 +1130,20 @@ document.addEventListener('click',      touchActivity, { passive: true });
 document.addEventListener('touchstart', touchActivity, { passive: true });
 
 // Controleer sessie elk uur — alleen uitloggen bij inactiviteit
-setInterval(()=>{
-  const d = load();
-  if(!d.loggedIn) return;
-  const lastActivity = parseInt(localStorage.getItem('rg_last_activity') || '0') || (d.loginTs || 0);
-  if(Date.now() - lastActivity > 12 * 60 * 60 * 1000){
-    logout();
-    goTo('page-login');
-  }
-}, 60 * 60 * 1000);
+let _sessionCheckInterval = null;
+function _startSessionCheck(){
+  if(_sessionCheckInterval) return;
+  _sessionCheckInterval = setInterval(()=>{
+    const d = load();
+    if(!d.loggedIn) return;
+    const lastActivity = parseInt(localStorage.getItem('rg_last_activity') || '0') || (d.loginTs || 0);
+    if(Date.now() - lastActivity > 12 * 60 * 60 * 1000){
+      logout();
+      goTo('page-login');
+    }
+  }, 60 * 60 * 1000);
+}
+_startSessionCheck();
 
 // Legacy toggle()/restoreChecks() verwijderd — vervangen door camToggle/simpleToggle/posToggle.
 // Eenmalige migratie: verwijder verouderd d.checks object uit localStorage.
