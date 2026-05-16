@@ -3837,15 +3837,18 @@ function openMiniGame(){
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden'; // prevent background scroll
 
   const canvas = document.getElementById('mg-canvas');
   const box    = document.getElementById('mg-box');
   const hdr    = document.getElementById('mg-hdr');
   function resizeCanvas(){
-    canvas.width  = box.clientWidth;
-    canvas.height = box.clientHeight - hdr.offsetHeight;
+    const w = box.clientWidth;
+    const h = box.clientHeight - hdr.offsetHeight;
+    if(w > 0 && h > 0){ canvas.width = w; canvas.height = h; }
   }
-  resizeCanvas();
+  // Double rAF: first paints the DOM, second measures actual dimensions
+  requestAnimationFrame(()=>requestAnimationFrame(resizeCanvas));
   overlay._resize = resizeCanvas;
   window.addEventListener('resize', resizeCanvas);
 }
@@ -3856,6 +3859,7 @@ function closeMiniGame(){
   if(o._resize) window.removeEventListener('resize', o._resize);
   if(window._mgAnim){ cancelAnimationFrame(window._mgAnim); window._mgAnim = null; }
   window._mgCleanup?.();
+  document.body.style.overflow = '';
   o.remove();
 }
 
@@ -3893,10 +3897,12 @@ function startMiniGame(){
     targetX = e.touches[0].clientX - r.left;
   }
   canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('touchmove', onTouch, {passive:false});
+  canvas.addEventListener('touchstart', onTouch, {passive:false});
+  canvas.addEventListener('touchmove',  onTouch, {passive:false});
   window._mgCleanup = ()=>{
     canvas.removeEventListener('mousemove', onMouseMove);
-    canvas.removeEventListener('touchmove', onTouch);
+    canvas.removeEventListener('touchstart', onTouch);
+    canvas.removeEventListener('touchmove',  onTouch);
   };
 
   function flashLevel(txt){

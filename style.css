@@ -186,8 +186,8 @@
 /* ── Mini game ───────────────────────────────────────────────── */
 #minigame-btn{position:fixed;bottom:76px;right:14px;width:46px;height:46px;border-radius:50%;border:none;background:var(--green);font-size:24px;cursor:pointer;z-index:8000;box-shadow:0 4px 18px rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;animation:mgBounce 1.8s ease-in-out infinite;touch-action:manipulation;}
 @keyframes mgBounce{0%,100%{transform:translateY(0) rotate(0deg);}40%{transform:translateY(-8px) rotate(-8deg);}60%{transform:translateY(-4px) rotate(4deg);}}
-#mg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9500;display:flex;align-items:center;justify-content:center;padding:12px;}
-#mg-box{width:min(420px,100%);height:min(640px,92vh);background:#B8380A;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.6);}
+#mg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9500;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden;touch-action:none;}
+#mg-box{width:min(420px,100%);height:min(640px,90dvh);background:#B8380A;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.6);}
 #mg-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(0,0,0,.28);color:#fff;font-family:"DM Mono",monospace;flex-shrink:0;}
 #mg-title{font-size:13px;font-weight:700;letter-spacing:.05em;}
 #mg-scores{display:flex;flex-direction:column;align-items:flex-end;gap:1px;margin-left:auto;}
