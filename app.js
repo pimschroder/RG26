@@ -1561,7 +1561,6 @@ function buildPosList(containerId, storageKey, positions){
         <span class="pos-badge">${pos}</span>
         <span class="pos-title-wrap">
           <span class="pos-title">${posName}</span>
-          <input class="pos-subtitle" type="text" placeholder="Extra info…" value="${pd.subtitle||''}" onclick="event.stopPropagation()" oninput="posSubtitle('${storageKey}','${pos}',this)">
         </span>
         <span class="pos-pct" id="${containerId}-pospct-${pos}">${doneN}/${POS_CHECKS.length}</span>
         <span class="pos-arrow">&#9660;</span>
