@@ -3827,12 +3827,14 @@ function openMiniGame(){
         <div id="mg-over-label">GAME OVER</div>
         <div id="mg-over-score">0</div>
         <div id="mg-over-best"></div>
+        <div id="mg-lb-over" class="mg-leaderboard"></div>
         <button class="mg-action-btn" onclick="startMiniGame()">Nog een keer 🎾</button>
         <button class="mg-quit-btn" onclick="closeMiniGame()">Sluiten</button>
       </div>
       <div id="mg-start" style="display:flex;">
-        <div style="font-size:48px;">🎾</div>
-        <div id="mg-start-hint">Beweeg je vinger of muis<br>om de bal te raken.<br><br>De racket wordt kleiner<br>naarmate je beter wordt!</div>
+        <div style="font-size:44px;">🎾</div>
+        <div id="mg-lb-start" class="mg-leaderboard"><span class="mg-lb-loading">Laden…</span></div>
+        <div id="mg-start-hint">Beweeg je vinger of muis<br>om de bal te raken</div>
         <button class="mg-action-btn" onclick="startMiniGame()">Spelen!</button>
       </div>
     </div>`;
@@ -3848,7 +3850,13 @@ function openMiniGame(){
     if(w > 0 && h > 0){ canvas.width = w; canvas.height = h; }
   }
   // Double rAF: first paints the DOM, second measures actual dimensions
-  requestAnimationFrame(()=>requestAnimationFrame(resizeCanvas));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    resizeCanvas();
+    _mgFetchLeaderboard().then(entries=>{
+      const el = document.getElementById('mg-lb-start');
+      if(el) el.innerHTML = _mgRenderLeaderboard(entries, getCurrentUser(), -1);
+    });
+  }));
   overlay._resize = resizeCanvas;
   window.addEventListener('resize', resizeCanvas);
 }
@@ -3967,7 +3975,7 @@ function startMiniGame(){
     ctx.restore();
   }
 
-  function endGame(){
+  async function endGame(){
     running = false;
     window._mgCleanup?.();
     window._mgAnim = null;
@@ -3980,6 +3988,13 @@ function startMiniGame(){
     document.getElementById('mg-over-best').textContent =
       best > prev ? '🏆 Nieuw record!' : 'Beste: '+best;
     document.getElementById('mg-gameover').style.display = 'flex';
+
+    const player = getCurrentUser() || 'Anoniem';
+    const lbEl = document.getElementById('mg-lb-over');
+    if(lbEl) lbEl.innerHTML = '<span class="mg-lb-loading">Opslaan…</span>';
+    await _mgSubmitScore(score, player);
+    const entries = await _mgFetchLeaderboard();
+    if(lbEl) lbEl.innerHTML = _mgRenderLeaderboard(entries, player, score);
   }
 
   function loop(){
@@ -4030,4 +4045,44 @@ function startMiniGame(){
   }
 
   loop();
+}
+
+async function _mgFetchLeaderboard(){
+  const sc = window._supaClient;
+  if(!sc) return [];
+  try{
+    const { data, error } = await sc
+      .from('game_scores')
+      .select('player, score')
+      .order('score', { ascending: false })
+      .limit(300);
+    if(error || !data) return [];
+    const bests = {};
+    data.forEach(r => { if(!bests[r.player] || r.score > bests[r.player]) bests[r.player] = r.score; });
+    return Object.entries(bests)
+      .map(([player, score]) => ({ player, score }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+  } catch(e){ return []; }
+}
+
+async function _mgSubmitScore(score, player){
+  const sc = window._supaClient;
+  if(!sc || !score) return;
+  try{ await sc.from('game_scores').insert({ player: player || 'Anoniem', score, ts: Date.now() }); }
+  catch(e){}
+}
+
+function _mgRenderLeaderboard(entries, currentPlayer, currentScore){
+  if(!entries.length) return '<span class="mg-lb-loading">Nog geen scores</span>';
+  const medals = ['🥇','🥈','🥉'];
+  const rows = entries.map((e, i) => {
+    const isMe = e.player === currentPlayer && e.score >= currentScore;
+    return `<div class="mg-lb-row${isMe?' mg-lb-me':''}">
+      <span class="mg-lb-rank">${medals[i] || (i+1)+'.'}</span>
+      <span class="mg-lb-player">${esc(e.player)}</span>
+      <span class="mg-lb-score">${e.score}</span>
+    </div>`;
+  }).join('');
+  return `<div class="mg-lb-title">🏆 Top scores</div>${rows}`;
 }

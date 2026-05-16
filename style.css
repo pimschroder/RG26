@@ -202,6 +202,14 @@
 #mg-start-hint{font-size:13px;opacity:.75;line-height:1.5;}
 .mg-action-btn{background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px 36px;font-family:"DM Mono",monospace;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);touch-action:manipulation;}
 .mg-quit-btn{background:none;color:rgba(255,255,255,.55);border:none;font-family:"DM Mono",monospace;font-size:12px;cursor:pointer;text-decoration:underline;touch-action:manipulation;}
+.mg-leaderboard{width:100%;max-width:260px;display:flex;flex-direction:column;gap:0;}
+.mg-lb-title{font-family:"DM Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.55);text-align:center;margin-bottom:6px;}
+.mg-lb-row{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.08);font-family:"DM Mono",monospace;font-size:13px;color:#fff;}
+.mg-lb-row.mg-lb-me{background:rgba(201,168,76,.15);border-radius:4px;padding-left:6px;padding-right:6px;}
+.mg-lb-rank{width:24px;text-align:center;font-size:14px;flex-shrink:0;}
+.mg-lb-player{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mg-lb-score{color:#C9A84C;font-weight:900;font-size:14px;flex-shrink:0;}
+.mg-lb-loading{font-family:"DM Mono",monospace;font-size:11px;color:rgba(255,255,255,.4);text-align:center;display:block;padding:8px 0;}
 #mg-level-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:"DM Mono",monospace;font-size:28px;font-weight:900;color:#C9A84C;pointer-events:none;animation:mgLvlFlash .7s ease-out forwards;}
 @keyframes mgLvlFlash{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-60%) scale(1.4);}}
 
