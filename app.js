@@ -1496,6 +1496,13 @@ function camCheckToggle(sk, camId, checkKey, cid, el){
     if(isAllDone && !wasAllDone){
       hdr?.classList.add('cam-done-pop');
       setTimeout(()=>hdr?.classList.remove('cam-done-pop'), 700);
+      setTimeout(()=>{
+        if(!block.classList.contains('collapsed')){
+          block.classList.add('collapsed');
+          const body = block.querySelector('.cam-body');
+          if(body) body.style.maxHeight = '0';
+        }
+      }, 800);
     }
     block.dataset.done = isAllDone ? 'true' : 'false';
   }
