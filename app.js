@@ -317,8 +317,10 @@
             // Reconnect na onderbreking: pull meest recente DB-state om
             // gemiste broadcast-berichten te compenseren
             _wasDisconnected = false;
-            supaClient.from("checklist_state").select("data").eq("id",1).single()
-              .then(({data: row})=>{ if(row?.data && !suppressRemote) applyRemote(row.data); });
+            const _rc = new AbortController();
+            setTimeout(()=>_rc.abort(), 8000);
+            supaClient.from("checklist_state").select("data").eq("id",1).single().abortSignal(_rc.signal)
+              .then(({data: row})=>{ if(row?.data && !suppressRemote) applyRemote(row.data); }).catch(()=>{});
           }
         }
         if(status === "CLOSED" || status === "CHANNEL_ERROR"){
@@ -328,21 +330,32 @@
       });
 
     // ── Pull latest state on first connect ────────────────────
-    supaClient.from("checklist_state")
-      .select("data").eq("id",1).single()
-      .then(({data: row, error})=>{
-        if(error){ setSyncStatus("error"); showToast("Kon data niet ophalen van server."); return; }
+    (async ()=>{
+      const ctrl = new AbortController();
+      const to = setTimeout(()=>ctrl.abort(), 8000);
+      try{
+        const { data: row, error } = await supaClient.from("checklist_state")
+          .select("data").eq("id",1).single().abortSignal(ctrl.signal);
+        clearTimeout(to);
+        if(error) throw error;
         if(row?.data) applyRemote(row.data);
-        // Seed default users AFTER first remote sync so we don't get overwritten
         seedDefaultUsers();
-        // Als er ongesyncte lokale wijzigingen zijn, push de gemerge data terug
         if(localStorage.getItem('rg_pending_sync')){
           const current = window._localLoad ? window._localLoad() : {};
           window.pushToSupabase(current);
           showToast("Offline wijzigingen gesynchroniseerd.");
         }
         setSyncStatus("synced");
-      });
+        window._dataReady = true;
+        if(window.refreshAll) window.refreshAll();
+      } catch(e){
+        clearTimeout(to);
+        setSyncStatus("error");
+        showToast("Server niet bereikbaar — lokale data wordt gebruikt.");
+        window._dataReady = true;
+        if(window.refreshAll) window.refreshAll();
+      }
+    })();
   }
 
   let pushFailCount = 0;
@@ -797,9 +810,9 @@ function save(d, changedKey){
 }
 function getCurrentUser(){
   const u = localStorage.getItem("rg_user")||"";
-  if(!u) return "";
+  if(!u) return null;
   const users = getUsers();
-  return users.length === 0 || users.includes(u) ? u : "";
+  return users.length === 0 || users.includes(u) ? u : null;
 }
 function setCurrentUser(n){ localStorage.setItem("rg_user",n); }
 function fmtTime(ts){
@@ -893,6 +906,7 @@ function _updateFilterBtn(pageId){
 }
 
 function goTo(id){
+  closeLightbox();
   const d = load();
   if(id !== 'page-login' && !d.loggedIn){
     id = 'page-login';
@@ -2150,8 +2164,12 @@ function _doRefresh(){
   const gT = TOP_KEYS.reduce((a,k)=>a+(totals[k]||0),0);
   const gD = TOP_KEYS.reduce((a,k)=>a+(dones[k]||0),0);
   const gP = pct(gD,gT);
-  bar("home-bar",gP); txt("home-lbl",gD+" / "+gT);
-  txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",gP+"%");
+  if(!window._dataReady && gT===0){
+    bar("home-bar",0); txt("home-lbl",""); txt("home-done",""); txt("home-left",""); txt("home-pct","");
+  } else {
+    bar("home-bar",gP); txt("home-lbl",gD+" / "+gT);
+    txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",gP+"%");
+  }
   const hMsg=document.getElementById("home-done-msg"); if(hMsg) gD===gT&&gT>0?hMsg.classList.add("visible"):hMsg.classList.remove("visible");
   if(gP>=100 && gT>0 && refreshAll._lastP!==100){
     let _seenCel = false;
@@ -2957,10 +2975,17 @@ function saveBackup(data, label){
   try{
     const raw = localStorage.getItem(BACKUP_KEY);
     const slots = raw ? JSON.parse(raw) : [];
+    let overwriteMsg = null;
+    if(slots.length >= BACKUP_MAX){
+      const oldest = slots[slots.length - 1];
+      overwriteMsg = `Oudste backup overschreven (${esc(oldest.label)} · ${fmtTime(oldest.ts)})`;
+    }
     slots.unshift({ data, label, ts: Date.now() });
     if(slots.length > BACKUP_MAX) slots.length = BACKUP_MAX;
     localStorage.setItem(BACKUP_KEY, JSON.stringify(slots));
     _renderBackupSlots(slots);
+    if(overwriteMsg) showToast('⚠️ ' + overwriteMsg);
+    else showToast(`Backup opgeslagen (${slots.length}/${BACKUP_MAX})`);
   } catch(e){}
   // Mirror to Supabase (best-effort, non-blocking)
   try{
@@ -2974,12 +2999,18 @@ function _renderBackupSlots(slots){
   if(!wrap) return;
   if(!slots || slots.length === 0){ wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  wrap.innerHTML = slots.map((s, i) =>
-    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:${i<slots.length-1?'6px':'0'}">
-      <span style="flex:1;font-size:10px;color:var(--green);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(s.label)} · ${fmtTime(s.ts)}</span>
-      <button onclick="adminRestoreBackup(${i})" style="background:var(--green);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;">↩ Herstel</button>
-    </div>`
-  ).join('');
+  const nextWillOverwrite = slots.length >= BACKUP_MAX;
+  wrap.innerHTML =
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.05em;opacity:.6;">BACKUPS</span>
+      <span style="font-size:10px;color:${nextWillOverwrite?'var(--clay)':'var(--green)'};">${slots.length}/${BACKUP_MAX}${nextWillOverwrite?' · volgende overschrijft oudste':''}</span>
+    </div>` +
+    slots.map((s, i) =>
+      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:${i<slots.length-1?'6px':'0'}">
+        <span style="flex:1;font-size:10px;color:var(--green);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(s.label)} · ${fmtTime(s.ts)}</span>
+        <button onclick="adminRestoreBackup(${i})" style="background:var(--green);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation;white-space:nowrap;">↩ Herstel</button>
+      </div>`
+    ).join('');
 }
 
 function _showExistingBackup_slots(){
