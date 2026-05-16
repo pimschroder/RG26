@@ -179,6 +179,7 @@
     const _ap = document.querySelector('.page.active');
     if(_ap && window.rebuildPage) window.rebuildPage(_ap.id);
     if(window.refreshAll) window.refreshAll();
+    if(window.rebuildNameDropdown) window.rebuildNameDropdown();
     if(window.renderOdLog) window.renderOdLog();
     if(flashSet.size > 0) flashRemoteItems(flashSet, merged);
     setSyncStatus("synced");
@@ -1068,7 +1069,7 @@ window.rebuildPage = function rebuildPage(id){
     case 'page-comm-sm':     buildPosList("list-comm-sm","comm_sm",COMMSM_POSITIONS); break;
     case 'page-galleries':   buildGallery(); break;
     case 'page-overdracht':  buildOverdracht(); break;
-    case 'page-users':       buildUsers(); break;
+    case 'page-users':       if(!window._adminMode){ goTo('page-home'); return; } buildUsers(); break;
     case 'page-problems':    buildProblems(); break;
     case 'page-persons':     buildPersons(); break;
     case 'page-activity':    buildActivity(); break;
@@ -3517,14 +3518,15 @@ function addUser(){
   if(!name) return;
   const users = getUsers();
   if(users.map(u=>u.toLowerCase()).includes(name.toLowerCase())){
-    input.value = '';
-    input.placeholder = 'Naam bestaat al…';
-    setTimeout(()=>{ input.placeholder = 'Nieuwe naam toevoegen…'; }, 2000);
+    showToast(`⚠️ ${name} bestaat al`);
+    input.select();
     return;
   }
   saveUsers([...users, name]);
   input.value = '';
+  input.focus();
   buildUsers();
+  showToast(`✓ ${name} toegevoegd`);
   if(navigator.vibrate) navigator.vibrate(20);
 }
 
@@ -3548,6 +3550,7 @@ function removeUser(name){
 function doRemoveUser(name){
   saveUsers(getUsers().filter(u=>u!==name));
   buildUsers();
+  showToast(`${name} verwijderd`);
   if(navigator.vibrate) navigator.vibrate(30);
 }
 
@@ -3591,6 +3594,7 @@ function doRenameUser(){
   _renameTarget = null;
   saveUsers(users.map(u => u === oldName ? newName : u));
   buildUsers();
+  showToast(`✓ ${oldName} → ${newName}`);
   if(navigator.vibrate) navigator.vibrate(20);
 }
 
