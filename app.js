@@ -589,6 +589,7 @@ const PC_CAMS = [
   {num:22,type:"PTZ · xWA",pos:"Interior - Downstairs Hall"},
   {num:23,type:"Handheld · xWA",pos:"Unmanned post-match IV's"},
   {num:24,type:"Fixed · xWA",pos:"Beauty shot of court"},
+  {num:26,type:"Handheld · xWA",pos:"Persco interview"},
 ];
 const SL_CAMS = [
   {num:1,type:"Tripod · x22",pos:"Main - High centred"},
