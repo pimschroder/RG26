@@ -167,11 +167,15 @@
 .av-initials{display:flex;align-items:center;justify-content:center;color:#fff;font-family:"DM Mono",monospace;font-weight:700;border:3px solid #fff;box-shadow:0 4px 18px rgba(0,0,0,.45);}
 .av-burst{position:absolute;border-radius:50%;animation:avBurst ease-out forwards;}
 .av-burst img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 18px rgba(0,0,0,.45);}
-#av-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;pointer-events:none;text-align:center;animation:avBannerPop .5s cubic-bezier(.175,.885,.32,1.275) forwards;}
-#av-banner .av-banner-text{font-family:"DM Mono",monospace;font-size:clamp(52px,12vw,96px);font-weight:900;color:#fff;text-shadow:0 4px 32px rgba(0,0,0,.5);line-height:1;letter-spacing:-.02em;}
-#av-banner .av-banner-sub{font-family:"DM Mono",monospace;font-size:clamp(16px,4vw,28px);color:rgba(255,255,255,.9);margin-top:8px;text-shadow:0 2px 12px rgba(0,0,0,.4);}
-@keyframes avBannerPop{0%{transform:translate(-50%,-50%) scale(0);opacity:0;}70%{transform:translate(-50%,-50%) scale(1.08);opacity:1;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
-@keyframes avBannerFade{0%{opacity:1;}100%{opacity:0;}}
+.av-confetti{position:absolute;border-radius:3px;animation:avFall cubic-bezier(.4,0,.6,1) forwards;}
+.av-flash{position:fixed;inset:0;pointer-events:none;z-index:9998;animation:avFlash 1.8s ease-out forwards;}
+#av-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;pointer-events:none;text-align:center;animation:avBannerPop .55s cubic-bezier(.175,.885,.32,1.275) forwards;}
+#av-banner .av-banner-emoji{font-size:clamp(36px,8vw,64px);line-height:1;margin-bottom:6px;}
+#av-banner .av-banner-text{font-family:"DM Mono",monospace;font-size:clamp(64px,15vw,120px);font-weight:900;color:#fff;text-shadow:0 0 40px rgba(255,255,255,.6),0 4px 32px rgba(0,0,0,.6);line-height:1;letter-spacing:-.02em;}
+#av-banner .av-banner-sub{font-family:"DM Mono",monospace;font-size:clamp(18px,4.5vw,32px);color:rgba(255,255,255,.95);margin-top:10px;text-shadow:0 2px 16px rgba(0,0,0,.5);letter-spacing:.04em;}
+@keyframes avFlash{0%{background:rgba(45,90,27,0);}8%{background:rgba(45,90,27,.55);}30%{background:rgba(201,168,76,.3);}100%{background:rgba(45,90,27,0);}}
+@keyframes avBannerPop{0%{transform:translate(-50%,-50%) scale(0) rotate(-8deg);opacity:0;}65%{transform:translate(-50%,-50%) scale(1.12) rotate(2deg);opacity:1;}80%{transform:translate(-50%,-50%) scale(.97) rotate(-1deg);}100%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1;}}
+@keyframes avBannerFade{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(.9);}}
 @keyframes avFall{0%{transform:translateY(0) translateX(0) rotate(0deg) scale(.9);opacity:0;}6%{opacity:1;}85%{opacity:1;}100%{transform:translateY(115vh) translateX(var(--dx,0px)) rotate(var(--spin,360deg)) scale(.8);opacity:0;}}
 @keyframes avBurst{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:1;}70%{opacity:1;}100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,0px))) scale(.6) rotate(var(--spin,360deg));opacity:0;}}
 .cam-header.cam-done-pop{animation:camDonePop .65s ease-out;}

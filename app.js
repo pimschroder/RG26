@@ -1876,11 +1876,20 @@ function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; con
 
 function triggerAvatarCelebration(){
   if(document.getElementById('av-celebration')) return;
+  try{ sessionStorage.setItem('rg_seen_celebration','1'); }catch(e){}
+
   const overlay = document.createElement('div');
   overlay.id = 'av-celebration';
   document.body.appendChild(overlay);
 
+  // ── Flash ────────────────────────────────────────────────────
+  const flash = document.createElement('div');
+  flash.className = 'av-flash';
+  document.body.appendChild(flash);
+  setTimeout(()=>flash.remove(), 1900);
+
   const users = getUsers();
+  const CONFETTI_COLORS = ['#C9A84C','#2D5A1B','#fff','#e84040','#4fc3f7','#ff9800','#ab47bc','#66bb6a'];
 
   function makeAvatarEl(name, cls){
     const av = getUserAvatar(name);
@@ -1898,47 +1907,72 @@ function triggerAvatarCelebration(){
     return el;
   }
 
+  function makeBurst(count, delay, distMin, distMax, sizeMin, sizeMax){
+    for(let i=0; i<count; i++){
+      const angle = (i/count)*360 + Math.random()*10;
+      const dist  = distMin + Math.random()*(distMax-distMin);
+      const size  = sizeMin + Math.floor(Math.random()*(sizeMax-sizeMin));
+      const name  = users[Math.floor(Math.random()*users.length)];
+      const el    = makeAvatarEl(name, 'av-burst');
+      el.style.cssText += `width:${size}px;height:${size}px;font-size:${Math.floor(size*.3)}px;left:50%;top:45%;`;
+      el.style.setProperty('--bx', (Math.cos(angle*Math.PI/180)*dist)+'px');
+      el.style.setProperty('--by', (Math.sin(angle*Math.PI/180)*dist)+'px');
+      el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(180+Math.random()*360)+'deg');
+      el.style.animationDelay = delay + (Math.random()*0.2)+'s';
+      el.style.animationDuration = (0.85+Math.random()*0.5)+'s';
+      overlay.appendChild(el);
+    }
+  }
+
   // ── Banner ──────────────────────────────────────────────────
   const banner = document.createElement('div');
   banner.id = 'av-banner';
-  banner.innerHTML = '<div class="av-banner-text">100%</div><div class="av-banner-sub">Alles afgevinkt!</div>';
+  banner.innerHTML = '<div class="av-banner-emoji">🎉</div><div class="av-banner-text">100%</div><div class="av-banner-sub">Alles afgevinkt!</div>';
   document.body.appendChild(banner);
-  setTimeout(()=>{ banner.style.animation='avBannerFade .8s ease forwards'; setTimeout(()=>banner.remove(),800); }, 3500);
+  setTimeout(()=>{ banner.style.animation='avBannerFade .8s ease forwards'; setTimeout(()=>banner.remove(),800); }, 5000);
 
-  // ── Burst: 24 avatars fly outward from center ───────────────
-  for(let i=0; i<24; i++){
-    const angle = (i/24)*360 + Math.random()*12;
-    const dist  = 140 + Math.random()*180;
-    const size  = 62 + Math.floor(Math.random()*30);
-    const name  = users[Math.floor(Math.random()*users.length)];
-    const el    = makeAvatarEl(name, 'av-burst');
-    el.style.cssText += `width:${size}px;height:${size}px;font-size:${Math.floor(size*.3)}px;left:50%;top:45%;`;
-    el.style.setProperty('--bx', (Math.cos(angle*Math.PI/180)*dist)+'px');
-    el.style.setProperty('--by', (Math.sin(angle*Math.PI/180)*dist)+'px');
-    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(180+Math.random()*360)+'deg');
-    el.style.animationDelay = (Math.random()*0.25)+'s';
-    el.style.animationDuration = (0.9+Math.random()*0.5)+'s';
+  // ── Burst wave 1: 48 avatars ────────────────────────────────
+  makeBurst(48, 0, 130, 300, 56, 88);
+
+  // ── Burst wave 2: 32 avatars, slightly delayed, wider ───────
+  setTimeout(()=>makeBurst(32, 0, 200, 380, 44, 72), 600);
+
+  // ── Confetti ribbons ─────────────────────────────────────────
+  for(let i=0; i<180; i++){
+    const el = document.createElement('div');
+    el.className = 'av-confetti';
+    const w = 7 + Math.floor(Math.random()*10);
+    const h = 14 + Math.floor(Math.random()*16);
+    el.style.width  = w+'px';
+    el.style.height = h+'px';
+    el.style.background = CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)];
+    el.style.left = (Math.random()*105-2.5)+'%';
+    el.style.top  = '-20px';
+    el.style.animationDelay    = (Math.random()*14)+'s';
+    el.style.animationDuration = (2.2+Math.random()*2)+'s';
+    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(200+Math.random()*500)+'deg');
+    el.style.setProperty('--dx',   (Math.random()*200-100)+'px');
     overlay.appendChild(el);
   }
 
-  // ── Rain: 220 avatars falling from top with horizontal drift ─
-  for(let i=0; i<220; i++){
-    const size  = 52 + Math.floor(Math.random()*52); // 52–104px
+  // ── Rain: 300 avatars falling from top ───────────────────────
+  for(let i=0; i<300; i++){
+    const size  = 48 + Math.floor(Math.random()*60); // 48–108px
     const name  = users[Math.floor(Math.random()*users.length)];
     const el    = makeAvatarEl(name, 'av-piece');
     el.style.width  = size+'px';
     el.style.height = size+'px';
     el.style.fontSize = Math.floor(size*.3)+'px';
-    el.style.left = (Math.random()*105-2.5)+'%';
-    el.style.top  = '-110px';
-    el.style.animationDelay    = (Math.random()*16)+'s';
-    el.style.animationDuration = (2.8+Math.random()*2.4)+'s';
-    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(120+Math.random()*400)+'deg');
-    el.style.setProperty('--dx',   (Math.random()*160-80)+'px');
+    el.style.left = (Math.random()*108-4)+'%';
+    el.style.top  = '-120px';
+    el.style.animationDelay    = (Math.random()*18)+'s';
+    el.style.animationDuration = (2.6+Math.random()*2.6)+'s';
+    el.style.setProperty('--spin', (Math.random()>0.5?1:-1)*(120+Math.random()*440)+'deg');
+    el.style.setProperty('--dx',   (Math.random()*200-100)+'px');
     overlay.appendChild(el);
   }
 
-  setTimeout(()=>overlay.remove(), 20000);
+  setTimeout(()=>overlay.remove(), 24000);
 }
 
 let _rafPending = false;
@@ -2001,7 +2035,15 @@ function _doRefresh(){
   bar("home-bar",gP); txt("home-lbl",gD+" / "+gT);
   txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",gP+"%");
   const hMsg=document.getElementById("home-done-msg"); if(hMsg) gD===gT&&gT>0?hMsg.classList.add("visible"):hMsg.classList.remove("visible");
-  if(gP>=100 && gT>0 && refreshAll._lastP!==100) triggerAvatarCelebration();
+  if(gP>=100 && gT>0 && refreshAll._lastP!==100){
+    let _seenCel = false;
+    try{ _seenCel = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
+    if(!_seenCel){
+      // Fresh load: delay 2s so user sees the app before the party starts
+      const _wasUndef = refreshAll._lastP === undefined;
+      setTimeout(triggerAvatarCelebration, _wasUndef ? 2000 : 0);
+    }
+  }
   refreshAll._lastP = gP;
   if(document.getElementById('page-problems')?.classList.contains('active')) buildProblems();
   } catch(e){ console.error('_doRefresh error', e); }
