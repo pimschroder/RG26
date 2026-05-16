@@ -720,7 +720,7 @@ const CAMCHECK_PC = [
   {id:'PC.15',mcs:'',  type:'PLAYERBOX',checks:CHK_PTZ4},
   {id:'PC.16',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
   {id:'PC.17',mcs:'',  type:'NETCAM',   checks:CHK_PTZ4},
-  {id:'PC.18',mcs:'',  type:'PTZ',      checks:CHK_HH},
+  {id:'PC.18',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
   {id:'PC.19',mcs:'6', type:'3500',     checks:CHK_14},
   {id:'PC.20',mcs:'',  type:'RF',       checks:CHK_RF8},
   {id:'PC.21',mcs:'',  type:'PTZ',      checks:CHK_PTZ4},
