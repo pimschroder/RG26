@@ -3794,12 +3794,12 @@ function _updateCourtDots(pageId){
 // 🎾  GEHEIME MINI GAME — vrijgespeeld na 100%
 // ══════════════════════════════════════════════════════════════
 function unlockMiniGame(){
-  try{ sessionStorage.setItem('rg_game_unlocked','1'); }catch(e){}
+  try{ localStorage.setItem('rg_game_unlocked','1'); }catch(e){}
   setTimeout(_showMiniGameBtn, 3000); // verschijnt na de celebration
 }
 
 function _showMiniGameBtn(){
-  try{ if(sessionStorage.getItem('rg_game_unlocked')!=='1') return; }catch(e){ return; }
+  try{ if(localStorage.getItem('rg_game_unlocked')!=='1') return; }catch(e){ return; }
   if(document.getElementById('minigame-btn')) return;
   const btn = document.createElement('button');
   btn.id = 'minigame-btn';
