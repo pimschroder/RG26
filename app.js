@@ -815,6 +815,11 @@ function getCurrentUser(){
   return users.length === 0 || users.includes(u) ? u : null;
 }
 function setCurrentUser(n){ localStorage.setItem("rg_user",n); }
+function _requireLogin(){
+  if(getCurrentUser()) return true;
+  showToast('⚠️ Log eerst in voordat je items afvinkt');
+  return false;
+}
 function fmtTime(ts){
   if(!ts) return "—";
   const d=new Date(ts);
@@ -1387,6 +1392,7 @@ function camCollapse(cid, camNum){
 }
 
 function camToggle(sk, camNum, row, j, cid, boxEl){
+  if(!_requireLogin()) return;
   boxEl.classList.toggle("on");
   const isDone=boxEl.classList.contains("on");
   if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); if(window.playCheckTick) playCheckTick(); }
@@ -1427,6 +1433,11 @@ function camToggle(sk, camNum, row, j, cid, boxEl){
 }
 
 function camStatus(sk, camNum, row, j, cid, sel){
+  if(!_requireLogin()){
+    const d=load(); const prev=(d[sk]||{})[`cam${camNum}`]?.[row]?.status||'';
+    sel.value=prev; sel.className="cam-status-sel"+(prev==="OK"?" s-ok":prev==="NOK"?" s-nok":prev==="PENDING"?" s-pend":"");
+    return;
+  }
   const val=sel.value;
   sel.className="cam-status-sel"+(val==="OK"?" s-ok":val==="NOK"?" s-nok":val==="PENDING"?" s-pend":"");
   const d=load(); if(!d[sk]) d[sk]={}; if(!d[sk][`cam${camNum}`]) d[sk][`cam${camNum}`]={};
@@ -1579,6 +1590,7 @@ function buildCamCheckPage(containerId, storageKey, cams){
 }
 
 function camCheckToggle(sk, camId, checkKey, cid, el){
+  if(!_requireLogin()) return;
   const d = load();
   if(!d[sk]) d[sk] = {};
   if(!d[sk][camId]) d[sk][camId] = {};
@@ -1682,6 +1694,7 @@ function buildPosList(containerId, storageKey, positions){
 }
 
 function posToggle(sk, pos, j, cid, rowEl){
+  if(!_requireLogin()) return;
   const boxEl = rowEl.querySelector(".pos-check-box");
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
@@ -1812,6 +1825,7 @@ function buildSimpleList(containerId, storageKey, items){
 }
 
 function simpleToggle(sk, i, cid, boxEl){
+  if(!_requireLogin()) return;
   boxEl.classList.toggle("on");
   const isDone = boxEl.classList.contains("on");
   if(isDone){ boxEl.classList.add('check-pop'); setTimeout(()=>boxEl.classList.remove('check-pop'),300); if(window.playCheckTick) playCheckTick(); }
@@ -3158,6 +3172,7 @@ function _getOdTodoItems(builderId){
 }
 
 function toggleOdTodo(entryId, idx){
+  if(!_requireLogin()) return;
   const d = load();
   const entry = (d._overdrachten||[]).find(e=>e.id===entryId);
   if(!entry || !Array.isArray(entry.todo) || !entry.todo[idx]) return;
