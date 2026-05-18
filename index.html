@@ -64,7 +64,7 @@ window._loadXLSX = function(cb){
         <h1>Opbouw<br><em>Checklist</em></h1>
         <div class="header-sub">Courts · Commentaar · Gallery's</div>
       </div>
-      <div class="header-stamp" id="admin-secret-tap" style="touch-action:manipulation;user-select:none;"><span class="yr">2026</span><span class="lbl">Édition</span></div>
+      <div class="header-stamp"><span class="yr">2026</span><span class="lbl">Édition</span></div>
     </div>
   </header>
   <div class="user-bar">
@@ -72,6 +72,7 @@ window._loadXLSX = function(cb){
     <span id="sync-status" class="offline">Offline</span>
     <span class="user-bar-label" id="logged-in-user"></span>
     <span id="user-bar-avatar"></span>
+    <button id="admin-btn" class="admin-btn" onclick="openAdminModal()" style="display:none;touch-action:manipulation;">🔒</button>
     <button class="dark-toggle" onclick="toggleDark()" title="Donkere modus" style="touch-action:manipulation;">🌙</button>
     <button class="userbar-logout-btn" onclick="logout()" ontouchend="event.preventDefault();logout();" title="Uitloggen" style="touch-action:manipulation;min-width:44px;min-height:44px;">↩</button>
   </div>

@@ -937,6 +937,7 @@ function goTo(id){
 // Maak deze gebruikers aan in Supabase Dashboard → Authentication → Users.
 const TEAM_AUTH_EMAIL  = "team@rg2026.app";
 const ADMIN_AUTH_EMAIL = "admin@rg2026.app";
+const ADMIN_USERS = ["Pim"];
 
 async function doLogin(){
   const name = document.getElementById('login-name').value.trim();
@@ -1098,18 +1099,6 @@ function initApp(){
   // Restore admin session across page reloads
   try{ if(sessionStorage.getItem('rg_admin')==='1') window._adminMode = true; }catch(e){}
 
-  // Geheime 5× tap op "2026" opent admin modal
-  (function(){
-    let taps = 0, timer = null;
-    const el = document.getElementById('admin-secret-tap');
-    if(!el) return;
-    el.addEventListener('click', ()=>{
-      taps++;
-      clearTimeout(timer);
-      if(taps >= 5){ taps = 0; openAdminModal(); return; }
-      timer = setTimeout(()=>{ taps = 0; }, 1500);
-    });
-  })();
 
   // Apply saved theme immediately before anything renders
   const savedTheme = localStorage.getItem('rg_theme');
@@ -1126,6 +1115,8 @@ function initApp(){
     const av = getUserAvatar(saved);
     avEl.innerHTML = av ? `<img src="${av}" class="userbar-avatar" alt="${saved}" title="${saved}">` : '';
   }
+  const adminBtn = document.getElementById('admin-btn');
+  if(adminBtn) adminBtn.style.display = (saved && ADMIN_USERS.includes(saved)) ? '' : 'none';
   updateLastUpdateLabel();
 
   if(!navigator.onLine) showOfflineBanner();
@@ -2465,6 +2456,7 @@ function saveFirebaseConfig(){
 
 
 function openAdminModal(){
+  if(!ADMIN_USERS.includes(getCurrentUser())) return;
   const modal = document.getElementById("admin-modal");
   const loginSection = document.getElementById("admin-login-section");
   const panel = document.getElementById("admin-panel");
