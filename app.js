@@ -4,8 +4,8 @@
   let broadcastChannel = null;
   let pushDebounceTimer = null;
   let suppressRemote = false;
-  const SUPABASE_URL = window._SUPABASE_URL || "";
-  const SUPABASE_KEY = window._SUPABASE_KEY || "";
+  const SUPABASE_URL = window._SUPABASE_URL || "https://owjccmlgfhbusncvmbac.supabase.co";
+  const SUPABASE_KEY = window._SUPABASE_KEY || "sb_publishable_m5WPUe6APhOqHUQZOpj0-g_XZxzTVB5";
 
   function setSyncStatus(s){
     const el = document.getElementById("sync-status");
