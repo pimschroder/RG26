@@ -938,6 +938,10 @@ function goTo(id){
 const TEAM_AUTH_EMAIL  = "team@rg2026.app";
 const ADMIN_AUTH_EMAIL = "admin@rg2026.app";
 const ADMIN_USERS = ["Pim"];
+function _updateAdminBtn(){
+  const btn = document.getElementById('admin-btn');
+  if(btn) btn.style.display = ADMIN_USERS.includes(getCurrentUser()) ? '' : 'none';
+}
 const VAPID_PUBLIC_KEY = 'VPwCZa_ig9uZ9bEPhnuhndWyNvoYwj-VfbY8hjp77qx-EtBRi-vN_wPzKhjqjwbDxRef2NwjoRaLEYzGOFf1Gw';
 
 async function _subscribePush(userName){
@@ -1015,6 +1019,7 @@ async function doLogin(){
     if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
     acquireWakeLock();
     goTo('page-home');
+    _updateAdminBtn();
     setTimeout(initPresence, 800);
     if(name) setTimeout(()=> _subscribePush(name), 2000);
   } else {
@@ -1039,6 +1044,7 @@ function logout(){
     localStorage.setItem(SK, JSON.stringify(d));
   } catch(e){}
   if(navigator.vibrate) navigator.vibrate(20);
+  _updateAdminBtn();
   // Navigate first, always
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const loginPage = document.getElementById('page-login');
@@ -1159,8 +1165,7 @@ function initApp(){
     const av = getUserAvatar(saved);
     avEl.innerHTML = av ? `<img src="${av}" class="userbar-avatar" alt="${saved}" title="${saved}">` : '';
   }
-  const adminBtn = document.getElementById('admin-btn');
-  if(adminBtn) adminBtn.style.display = (saved && ADMIN_USERS.includes(saved)) ? '' : 'none';
+  _updateAdminBtn();
   updateLastUpdateLabel();
 
   if(!navigator.onLine) showOfflineBanner();
