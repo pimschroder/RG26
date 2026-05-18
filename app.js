@@ -1098,6 +1098,19 @@ function initApp(){
   // Restore admin session across page reloads
   try{ if(sessionStorage.getItem('rg_admin')==='1') window._adminMode = true; }catch(e){}
 
+  // Geheime 5× tap op "2026" opent admin modal
+  (function(){
+    let taps = 0, timer = null;
+    const el = document.getElementById('admin-secret-tap');
+    if(!el) return;
+    el.addEventListener('click', ()=>{
+      taps++;
+      clearTimeout(timer);
+      if(taps >= 5){ taps = 0; openAdminModal(); return; }
+      timer = setTimeout(()=>{ taps = 0; }, 1500);
+    });
+  })();
+
   // Apply saved theme immediately before anything renders
   const savedTheme = localStorage.getItem('rg_theme');
   if(savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
