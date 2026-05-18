@@ -1,7 +1,8 @@
-const CACHE = 'rg2026-v74';
+const CACHE = 'rg2026-v75';
 const STATIC = [
   './',
   './index.html',
+  './config.js',
   './app.js',
   './style.css',
   './manifest.json',

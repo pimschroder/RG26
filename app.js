@@ -4,10 +4,8 @@
   let broadcastChannel = null;
   let pushDebounceTimer = null;
   let suppressRemote = false;
-  const SUPABASE_URL = "https://owjccmlgfhbusncvmbac.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_m5WPUe6APhOqHUQZOpj0-g_XZxzTVB5";
-  window._SUPABASE_URL = SUPABASE_URL;
-  window._SUPABASE_KEY = SUPABASE_KEY;
+  const SUPABASE_URL = window._SUPABASE_URL || "";
+  const SUPABASE_KEY = window._SUPABASE_KEY || "";
 
   function setSyncStatus(s){
     const el = document.getElementById("sync-status");
@@ -942,6 +940,7 @@ function _updateAdminBtn(){
   const btn = document.getElementById('admin-btn');
   if(btn) btn.style.display = ADMIN_USERS.includes(getCurrentUser()) ? '' : 'none';
 }
+function _isAdmin(){ return window._adminMode && ADMIN_USERS.includes(getCurrentUser()); }
 const VAPID_PUBLIC_KEY = 'VPwCZa_ig9uZ9bEPhnuhndWyNvoYwj-VfbY8hjp77qx-EtBRi-vN_wPzKhjqjwbDxRef2NwjoRaLEYzGOFf1Gw';
 
 async function _subscribePush(userName){
@@ -2564,6 +2563,7 @@ async function checkAdminPw(){
 }
 
 async function changeAdminPassword(){
+  if(!_isAdmin()) return;
   const cur  = document.getElementById('admin-pw-cur')?.value || '';
   const nw   = document.getElementById('admin-pw-new')?.value || '';
   const nw2  = document.getElementById('admin-pw-new2')?.value || '';
@@ -2584,6 +2584,7 @@ async function changeAdminPassword(){
 
 // Wijs alle items zonder gebruiker toe aan een naam
 function _reassignAllUnknown(newUser){
+  if(!_isAdmin()) return 0;
   if(!newUser) return 0;
   const d = load();
   let count = 0;
@@ -3122,6 +3123,7 @@ function resetConfirm(){
 
 let _adminResetKeys = [];
 function adminResetCourt(keys, label){
+  if(!_isAdmin()) return;
   _adminResetKeys = keys;
   document.getElementById('admin-reset-label').textContent = label;
   document.getElementById('admin-reset-confirm').style.display = 'block';
@@ -3132,6 +3134,7 @@ function adminResetCancel(){
   document.getElementById('admin-reset-confirm').style.display = 'none';
 }
 function adminResetConfirm(){
+  if(!_isAdmin()) return;
   const d = load();
   // Backup opslaan vóór reset
   saveBackup(d, 'Reset: ' + document.getElementById('admin-reset-label').textContent);
@@ -3150,6 +3153,7 @@ const BACKUP_KEY = 'rg_backups';
 const BACKUP_MAX = 3;
 
 function saveBackup(data, label){
+  if(!_isAdmin()) return;
   try{
     const raw = localStorage.getItem(BACKUP_KEY);
     const slots = raw ? JSON.parse(raw) : [];
@@ -3200,6 +3204,7 @@ function _showExistingBackup_slots(){
 }
 
 function adminRestoreBackup(idx){
+  if(!_isAdmin()) return;
   try{
     idx = idx || 0;
     const raw = localStorage.getItem(BACKUP_KEY);
@@ -3687,6 +3692,7 @@ function removeUser(name){
   });
 }
 function doRemoveUser(name){
+  if(!_isAdmin()) return;
   saveUsers(getUsers().filter(u=>u!==name));
   buildUsers();
   showToast(`${name} verwijderd`);
@@ -3717,6 +3723,7 @@ function startRenameUser(name){
 }
 
 function doRenameUser(){
+  if(!_isAdmin()) return;
   const wrap = document.getElementById('users-list');
   const input = wrap?.querySelector('.user-rename-input');
   if(!input || !_renameTarget) return;
@@ -3738,6 +3745,7 @@ function doRenameUser(){
 }
 
 function _uploadAvatar(name){
+  if(!_isAdmin()) return;
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = ()=>{

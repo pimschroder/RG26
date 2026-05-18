@@ -3,3 +3,4 @@
 .vscode/
 *.code-workspace
 Main.html
+config.js
