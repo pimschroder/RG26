@@ -3340,6 +3340,7 @@ function toggleOdTodo(entryId, idx){
     const meta = row.querySelector('.od-todo-check-meta');
     if(meta) meta.textContent = item.done ? `${item.doneBy||''}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}` : '';
   }
+  _checkOdTodosCollapse(entryId);
   renderOdOpenItems();
   if(navigator.vibrate) navigator.vibrate(15);
 }
@@ -3510,30 +3511,39 @@ window.renderOdLog = function renderOdLog(){
     const dateLabel = d2.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
     const col = OD_COLORS[idx % OD_COLORS.length];
 
-    const itemsHtml = items.map(e => `
-      <div class="od-item">
+    const itemsHtml = items.map(e => {
+      const todoItems  = Array.isArray(e.todo) ? e.todo : [];
+      const urgentOpen = todoItems.filter(t => t.urgent && !t.done).length;
+      const openCount  = todoItems.filter(t => !t.done).length;
+      const allDone    = todoItems.length > 0 && todoItems.every(t => t.done);
+      const todoHtml = (()=>{
+        if(!e.todo) return '';
+        if(typeof e.todo === 'string') return e.todo ? `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>` : '';
+        if(!todoItems.length) return '';
+        const checks = todoItems.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span><span class="od-todo-check-meta">${item.done&&item.doneTs?`${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}`:''}</span></div></div>`).join('');
+        if(allDone) return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label od-todos-done-label" onclick="odExpandTodos(${e.id})" style="cursor:pointer;display:flex;align-items:center;gap:6px;"><span style="color:var(--green);">✓</span> ${todoItems.length} actie${todoItems.length>1?'s':''} afgerond <span id="od-todos-chev-${e.id}" style="font-size:9px;color:#aaa;margin-left:auto;">▸</span></div><div id="od-todos-${e.id}" style="display:none;"><div class="od-todo-checks" style="margin-top:6px;">${checks}</div></div></div>`;
+        return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label">📌 To do <span style="font-size:10px;color:#aaa;font-weight:400;">${openCount} open</span></div><div id="od-todos-${e.id}"><div class="od-todo-checks">${checks}</div></div></div>`;
+      })();
+      return `
+      <div class="od-item"${urgentOpen>0?' style="border-left:3px solid var(--clay);"':''}>
         <div class="od-item-header">
           <div class="od-item-name">
             <span class="od-shift-badge od-shift-${e.shift||'ochtend'}">${e.shift==='avond'?'🌙':'🌅'} ${e.shift||'ochtend'}</span>
             ${esc(e.name||'')}
           </div>
+          ${urgentOpen>0?`<span style="font-size:10px;font-weight:700;color:var(--clay-dark);font-family:'DM Mono',monospace;background:rgba(193,68,14,.12);padding:3px 8px;border-radius:5px;letter-spacing:.03em;">!! ${urgentOpen}</span>`:''}
         </div>
         <div class="od-sections-grid">
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
-          ${(()=>{
-            if(!e.todo) return '';
-            if(typeof e.todo === 'string') return e.todo ? `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-section-text">${esc(e.todo)}</div></div>` : '';
-            if(!e.todo.length) return '';
-            const checks = e.todo.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span><span class="od-todo-check-meta">${item.done&&item.doneTs?`${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}`:''}</span></div></div>`).join('');
-            return `<div class="od-section"><div class="od-section-label">📌 To do volgende ploeg</div><div class="od-todo-checks">${checks}</div></div>`;
-          })()}
+          ${todoHtml}
         </div>
         ${((e.user||e.name)===getCurrentUser() || window._adminMode) ? `
         <div class="od-item-actions">
           <button class="od-action-btn" onclick="openOdEdit(${e.id})" style="touch-action:manipulation;">✏️ Aanpassen</button>
           <button class="od-action-btn delete" onclick="deleteOverdracht(${e.id})" style="touch-action:manipulation;">🗑 Verwijderen</button>
         </div>` : ''}
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     return `<div class="section" style="padding:0;background:none;border:none;box-shadow:none;margin-bottom:8px;">
       <div class="od-day-header" onclick="odToggle('${gid}')" style="background:${col.bg};border-color:${col.border};color:${col.text}">
@@ -3591,6 +3601,43 @@ function odToggle(id){
   const open = el.style.display !== 'none';
   el.style.display = open ? 'none' : 'block';
   if(chev) chev.textContent = open ? '▸' : '▾';
+}
+
+function odExpandTodos(id){
+  const container = document.getElementById('od-todos-'+id);
+  const chev = document.getElementById('od-todos-chev-'+id);
+  if(!container) return;
+  const open = container.style.display !== 'none';
+  container.style.display = open ? 'none' : 'block';
+  if(chev) chev.textContent = open ? '▸' : '▾';
+}
+
+function _checkOdTodosCollapse(entryId){
+  const d = load();
+  const entry = (d._overdrachten||[]).find(e=>e.id===entryId);
+  if(!entry || !Array.isArray(entry.todo) || !entry.todo.length) return;
+  const allDone = entry.todo.every(t=>t.done);
+  const label = document.getElementById('od-todos-label-'+entryId);
+  const container = document.getElementById('od-todos-'+entryId);
+  if(!label) return;
+  if(allDone){
+    label.className = 'od-section-label od-todos-done-label';
+    label.style.cssText = 'cursor:pointer;display:flex;align-items:center;gap:6px;';
+    label.onclick = ()=>odExpandTodos(entryId);
+    label.innerHTML = `<span style="color:var(--green);">✓</span> ${entry.todo.length} actie${entry.todo.length>1?'s':''} afgerond <span id="od-todos-chev-${entryId}" style="font-size:9px;color:#aaa;margin-left:auto;">▸</span>`;
+    if(container) container.style.display = 'none';
+    const item = label.closest('.od-item');
+    if(item) item.style.borderLeft = '';
+    const badge = item?.querySelector('[style*="clay-dark"]');
+    if(badge && badge.tagName === 'SPAN') badge.remove();
+  } else {
+    label.className = 'od-section-label';
+    label.style.cssText = '';
+    label.onclick = null;
+    const open = entry.todo.filter(t=>!t.done).length;
+    label.innerHTML = `📌 To do <span style="font-size:10px;color:#aaa;font-weight:400;">${open} open</span>`;
+    if(container) container.style.display = '';
+  }
 }
 
 let _odEditId = null;
