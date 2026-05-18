@@ -3522,7 +3522,7 @@ window.renderOdLog = function renderOdLog(){
         if(!todoItems.length) return '';
         const checks = todoItems.map((item,i)=>`<div class="od-todo-check${item.done?' od-todo-done':''}${item.urgent&&!item.done?' od-todo-urgent':''}" id="od-td-${e.id}-${i}" onclick="toggleOdTodo(${e.id},${i})" style="touch-action:manipulation;"><div class="od-todo-check-box${item.done?' on':''}"><span class="ck">✓</span></div><div class="od-todo-check-right">${item.urgent&&!item.done?'<span class="od-todo-urgent-badge">!!</span>':''}<span class="od-todo-check-text">${esc(item.text)}</span><span class="od-todo-check-meta">${item.done&&item.doneTs?`${esc(item.doneBy||'')}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}`:''}</span></div></div>`).join('');
         if(allDone) return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label od-todos-done-label" onclick="odExpandTodos(${e.id})" style="cursor:pointer;display:flex;align-items:center;gap:6px;"><span style="color:var(--green);">✓</span> ${todoItems.length} actie${todoItems.length>1?'s':''} afgerond <span id="od-todos-chev-${e.id}" style="font-size:9px;color:#aaa;margin-left:auto;">▸</span></div><div id="od-todos-${e.id}" style="display:none;"><div class="od-todo-checks" style="margin-top:6px;">${checks}</div></div></div>`;
-        return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label">📌 To do <span style="font-size:10px;color:#aaa;font-weight:400;">${openCount} open</span></div><div id="od-todos-${e.id}"><div class="od-todo-checks">${checks}</div></div></div>`;
+        return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label">📌 To do</div><div id="od-todos-${e.id}"><div class="od-todo-checks">${checks}</div></div></div>`;
       })();
       return `
       <div class="od-item"${urgentOpen>0?' style="border-left:3px solid var(--clay);"':''}>
@@ -3634,8 +3634,7 @@ function _checkOdTodosCollapse(entryId){
     label.className = 'od-section-label';
     label.style.cssText = '';
     label.onclick = null;
-    const open = entry.todo.filter(t=>!t.done).length;
-    label.innerHTML = `📌 To do <span style="font-size:10px;color:#aaa;font-weight:400;">${open} open</span>`;
+    label.innerHTML = `📌 To do`;
     if(container) container.style.display = '';
   }
 }
