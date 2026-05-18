@@ -1100,6 +1100,10 @@ window._loadXLSX = function(cb){
         <button class="overdracht-btn" onclick="saveOverdracht()" style="touch-action:manipulation;">Overdracht opslaan</button>
       </div>
     </div>
+    <div class="section" id="od-open-section" style="margin-top:8px;display:none;">
+      <div class="section-header"><div class="section-icon">⚡</div><span class="section-title">Openstaande acties</span><span id="od-open-count" style="margin-left:auto;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;color:var(--clay);letter-spacing:.04em;"></span></div>
+      <div id="od-open-items"></div>
+    </div>
     <div class="section" style="margin-top:8px;">
       <div class="section-header"><div class="section-icon">📁</div><span class="section-title">Overdrachten</span></div>
       <div id="od-log"><div class="od-empty">Nog geen overdrachten</div></div>

@@ -3340,6 +3340,7 @@ function toggleOdTodo(entryId, idx){
     const meta = row.querySelector('.od-todo-check-meta');
     if(meta) meta.textContent = item.done ? `${item.doneBy||''}${item.doneBy?' · ':''}${fmtTime(item.doneTs)}` : '';
   }
+  renderOdOpenItems();
   if(navigator.vibrate) navigator.vibrate(15);
 }
 
@@ -3481,6 +3482,7 @@ window.renderOdLog = function renderOdLog(){
 
   if(!entries.length){
     wrap.innerHTML = '<div class="od-empty">Nog geen overdrachten</div>';
+    renderOdOpenItems();
     return;
   }
 
@@ -3498,6 +3500,7 @@ window.renderOdLog = function renderOdLog(){
     {bg:'rgba(180,130,20,.12)',border:'rgba(180,130,20,.35)',text:'#7a5800'},
   ];
   const today = new Date().toISOString().split('T')[0];
+  renderOdOpenItems();
   const sortedDates = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
   wrap.innerHTML = sortedDates.map((date, idx) => {
     const items = groups[date];
@@ -3539,6 +3542,44 @@ window.renderOdLog = function renderOdLog(){
         <span class="od-day-chev" id="chev-${gid}">▾</span>
       </div>
       <div id="${gid}">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderOdOpenItems(){
+  const section = document.getElementById('od-open-section');
+  const wrap    = document.getElementById('od-open-items');
+  const countEl = document.getElementById('od-open-count');
+  if(!wrap) return;
+  const d = load();
+  const allOpen = [];
+  (d._overdrachten||[]).filter(e=>!e.deleted).forEach(e=>{
+    if(!Array.isArray(e.todo)) return;
+    e.todo.forEach((item,i)=>{
+      if(!item.done && item.text) allOpen.push({entryId:e.id,idx:i,item,entry:e});
+    });
+  });
+  if(!allOpen.length){
+    if(section) section.style.display='none';
+    return;
+  }
+  if(section) section.style.display='';
+  if(countEl) countEl.textContent = allOpen.length + ' open';
+  allOpen.sort((a,b)=>{
+    if(a.item.urgent !== b.item.urgent) return a.item.urgent ? -1 : 1;
+    return (b.entry.ts||0) - (a.entry.ts||0);
+  });
+  wrap.innerHTML = allOpen.map(({entryId,idx,item,entry})=>{
+    const d2 = new Date((entry.date||'')+'T12:00:00');
+    const dateLabel = isNaN(d2) ? '' : d2.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
+    const shiftIcon = entry.shift==='avond' ? '🌙' : '🌅';
+    return `<div class="od-todo-check${item.urgent?' od-todo-urgent':''}" id="od-open-td-${entryId}-${idx}" onclick="toggleOdTodo(${entryId},${idx})" style="touch-action:manipulation;">
+      <div class="od-todo-check-box"><span class="ck">✓</span></div>
+      <div class="od-todo-check-right">
+        ${item.urgent?'<span class="od-todo-urgent-badge">!!</span>':''}
+        <span class="od-todo-check-text">${esc(item.text)}</span>
+        <span class="od-todo-check-meta">${shiftIcon} ${dateLabel}${entry.name?' · '+esc(entry.name):''}</span>
+      </div>
     </div>`;
   }).join('');
 }
