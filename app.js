@@ -1042,6 +1042,8 @@ function logout(){
     delete d.loggedIn;
     localStorage.setItem(SK, JSON.stringify(d));
   } catch(e){}
+  window._adminMode = false;
+  try{ sessionStorage.removeItem('rg_admin'); }catch(e){}
   if(navigator.vibrate) navigator.vibrate(20);
   _updateAdminBtn();
   // Navigate first, always
@@ -1114,7 +1116,7 @@ window.rebuildPage = function rebuildPage(id){
     case 'page-comm-sm':     buildPosList("list-comm-sm","comm_sm",COMMSM_POSITIONS); break;
     case 'page-galleries':   buildGallery(); break;
     case 'page-overdracht':  buildOverdracht(); break;
-    case 'page-users':       if(!window._adminMode){ goTo('page-home'); return; } buildUsers(); break;
+    case 'page-users':       if(!_isAdmin()){ goTo('page-home'); return; } buildUsers(); break;
     case 'page-problems':    buildProblems(); break;
     case 'page-persons':     buildPersons(); break;
     case 'page-activity':    buildActivity(); break;
@@ -1146,7 +1148,7 @@ navigator.serviceWorker?.addEventListener('message', e => {
 
 function initApp(){
   // Restore admin session across page reloads
-  try{ if(sessionStorage.getItem('rg_admin')==='1') window._adminMode = true; }catch(e){}
+  try{ if(sessionStorage.getItem('rg_admin')==='1' && ADMIN_USERS.includes(getCurrentUser())) window._adminMode = true; }catch(e){}
 
 
   // Apply saved theme immediately before anything renders
@@ -2547,7 +2549,7 @@ async function checkAdminPw(){
     password: input.value
   });
 
-  if(!error){
+  if(!error && ADMIN_USERS.includes(getCurrentUser())){
     loginSection.style.display = "none";
     panel.style.display = "block";
     err.style.display = "none";
@@ -2857,7 +2859,7 @@ function buildPersons(){
     const pct = Math.round(items.length/total*100);
     const recentItems = [...items].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,5);
     const isUnknown = name === 'Onbekend';
-    const assignUI = (isUnknown && window._adminMode) ? `
+    const assignUI = (isUnknown && _isAdmin()) ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <span style="font-size:10px;color:var(--clay);font-weight:600;">Toewijzen aan:</span>
         <select id="reassign-select" style="font-family:'DM Mono',monospace;font-size:11px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);flex:1;">
@@ -3537,7 +3539,7 @@ window.renderOdLog = function renderOdLog(){
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
           ${todoHtml}
         </div>
-        ${((e.user||e.name)===getCurrentUser() || window._adminMode) ? `
+        ${((e.user||e.name)===getCurrentUser() || _isAdmin()) ? `
         <div class="od-item-actions">
           <button class="od-action-btn" onclick="openOdEdit(${e.id})" style="touch-action:manipulation;">✏️ Aanpassen</button>
           <button class="od-action-btn delete" onclick="deleteOverdracht(${e.id})" style="touch-action:manipulation;">🗑 Verwijderen</button>
