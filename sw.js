@@ -1,4 +1,4 @@
-const CACHE = 'rg2026-v72';
+const CACHE = 'rg2026-v73';
 const STATIC = [
   './',
   './index.html',
@@ -34,6 +34,33 @@ self.addEventListener('activate', e => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
+  );
+});
+
+// Push: toon notificatie ook als app dicht is
+self.addEventListener('push', e => {
+  let data = { title: 'RG 2026', body: 'Nieuwe overdracht geschreven' };
+  try { data = e.data.json(); } catch {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: './icon.svg',
+      badge: './icon.svg',
+      tag: 'rg-overdracht',
+      renotify: true,
+      vibrate: [200, 100, 200],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const existing = list.find(c => c.url.includes(self.location.origin));
+      if (existing) { existing.focus(); existing.postMessage({ type: 'open-overdracht' }); }
+      else clients.openWindow('/?page=overdracht');
+    })
   );
 });
 

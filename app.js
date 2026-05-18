@@ -938,6 +938,44 @@ function goTo(id){
 const TEAM_AUTH_EMAIL  = "team@rg2026.app";
 const ADMIN_AUTH_EMAIL = "admin@rg2026.app";
 const ADMIN_USERS = ["Pim"];
+const VAPID_PUBLIC_KEY = 'VPwCZa_ig9uZ9bEPhnuhndWyNvoYwj-VfbY8hjp77qx-EtBRi-vN_wPzKhjqjwbDxRef2NwjoRaLEYzGOFf1Gw';
+
+async function _subscribePush(userName){
+  try{
+    if(!('PushManager' in window) || !('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: VAPID_PUBLIC_KEY,
+      });
+    }
+    // Sla op in Supabase (upsert op endpoint)
+    if(window._supaClient){
+      await window._supaClient.from('push_subscriptions').upsert({
+        user_name: userName,
+        subscription: sub.toJSON(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'endpoint' });
+    }
+  } catch(e){ console.warn('Push subscribe mislukt:', e); }
+}
+
+async function _sendPushOverdracht(sender, shiftLabel){
+  try{
+    const url = `${window._SUPABASE_URL}/functions/v1/send-push`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._SUPABASE_KEY}` },
+      body: JSON.stringify({
+        title: '📋 Nieuwe overdracht — RG 2026',
+        body: `${sender || 'Iemand'} heeft een ${shiftLabel}-overdracht geschreven`,
+        sender,
+      }),
+    });
+  } catch(e){ console.warn('Push versturen mislukt:', e); }
+}
 
 async function doLogin(){
   const name = document.getElementById('login-name').value.trim();
@@ -978,6 +1016,7 @@ async function doLogin(){
     acquireWakeLock();
     goTo('page-home');
     setTimeout(initPresence, 800);
+    if(name) setTimeout(()=> _subscribePush(name), 2000);
   } else {
     inp.style.borderColor = "#C1440E";
     inp.value = "";
@@ -1094,6 +1133,11 @@ function showOfflineBanner(){
 }
 window.addEventListener('online',  ()=>{ document.getElementById('offline-banner')?.remove(); });
 window.addEventListener('offline', ()=>showOfflineBanner());
+
+// Service worker stuurt dit als gebruiker op notificatie tikt terwijl app dicht was
+navigator.serviceWorker?.addEventListener('message', e => {
+  if(e.data?.type === 'open-overdracht') { buildOverdracht(); goTo('page-overdracht'); }
+});
 
 function initApp(){
   // Restore admin session across page reloads
@@ -3365,6 +3409,7 @@ function saveOverdracht(){
 
   if(navigator.vibrate) navigator.vibrate([20, 30, 20]);
   showOdToast('✅ Overdracht opgeslagen!', 'success');
+  _sendPushOverdracht(getCurrentUser(), shift || 'nieuwe');
   renderOdLog();
 
   // Scroll to log
