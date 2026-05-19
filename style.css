@@ -109,8 +109,6 @@
     border-radius:14px;
     padding:22px;
     box-shadow:0 2px 12px rgba(0,0,0,.06);
-    position:sticky;
-    top:16px;
   }
   #page-overdracht main .section:first-child .section-header{
     padding:0 0 14px;
