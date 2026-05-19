@@ -3535,14 +3535,19 @@ window.renderOdLog = function renderOdLog(){
         if(allDone) return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label od-todos-done-label" onclick="odExpandTodos(${e.id})" style="cursor:pointer;display:flex;align-items:center;gap:6px;"><span style="color:var(--green);">✓</span> ${todoItems.length} actie${todoItems.length>1?'s':''} afgerond <span id="od-todos-chev-${e.id}" style="font-size:9px;color:#aaa;margin-left:auto;">▸</span></div><div id="od-todos-${e.id}" style="display:none;"><div class="od-todo-checks" style="margin-top:6px;">${checks}</div></div></div>`;
         return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label">📌 To do</div><div id="od-todos-${e.id}"><div class="od-todo-checks">${checks}</div></div></div>`;
       })();
+      const av = getUserAvatar(e.name||'');
+      const avatarHtml = av ? `<img src="${av}" class="od-item-avatar" alt="${esc(e.name||'')}">` : '';
+      const timeLabel = e.ts ? fmtTime(e.ts) : '';
       return `
       <div class="od-item"${urgentOpen>0?' style="border-left:3px solid var(--clay);"':''}>
         <div class="od-item-header">
+          ${avatarHtml}
           <div class="od-item-name">
             <span class="od-shift-badge od-shift-${e.shift||'ochtend'}">${e.shift==='avond'?'🌙':'🌅'} ${e.shift||'ochtend'}</span>
             ${esc(e.name||'')}
           </div>
           ${urgentOpen>0?`<span class="od-urgent-badge">!! ${urgentOpen}</span>`:''}
+          ${timeLabel?`<span class="od-item-meta">${timeLabel}</span>`:''}
         </div>
         <div class="od-sections-grid">
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
