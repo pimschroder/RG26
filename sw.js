@@ -1,4 +1,4 @@
-const CACHE = 'rg2026-v78';
+const CACHE = 'rg2026-v79';
 const STATIC = [
   './',
   './index.html',
