@@ -95,14 +95,8 @@
         const remTs = remote._usersTs || 0;
         const locUsers = local[key] || [];
         const remUsers = remote[key] || [];
-        if(locTs > remTs){
-          merged[key] = locUsers;
-        } else if(remTs > locTs){
-          merged[key] = remUsers;
-        } else {
-          // Same or unknown — take union so nobody loses names
-          merged[key] = [...new Set([...locUsers, ...remUsers])].sort((a,b)=>a.localeCompare(b,'nl'));
-        }
+        // Prefer newer timestamp; on tie prefer local so deleted users can't come back
+        merged[key] = remTs > locTs ? remUsers : locUsers;
         continue;
       }
 

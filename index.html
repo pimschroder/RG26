@@ -1081,7 +1081,11 @@ window._loadXLSX = function(cb){
     <div><div class="rg-badge" style="margin-bottom:6px">Ploeg</div><div class="sub-title">📋 <em>Shift Handover</em></div></div>
   </div></div>
   <main>
-    <div class="section">
+    <div class="section" id="od-open-section" style="display:none;">
+      <div class="section-header"><div class="section-icon">⚡</div><span class="section-title">Openstaande acties</span><span id="od-open-count" style="margin-left:auto;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;color:var(--clay);letter-spacing:.04em;"></span></div>
+      <div id="od-open-items"></div>
+    </div>
+    <div class="section" style="margin-top:8px;">
       <div class="section-header"><div class="section-icon">📋</div><span class="section-title">Nieuwe overdracht</span></div>
       <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 12px;">
         <div style="display:flex;gap:8px;">
@@ -1099,10 +1103,6 @@ window._loadXLSX = function(cb){
         <button class="od-add-todo-btn" onclick="addOdTodoInput(false)" type="button" style="touch-action:manipulation;">+ Punt toevoegen</button>
         <button class="overdracht-btn" onclick="saveOverdracht()" style="touch-action:manipulation;">Overdracht opslaan</button>
       </div>
-    </div>
-    <div class="section" id="od-open-section" style="margin-top:8px;display:none;">
-      <div class="section-header"><div class="section-icon">⚡</div><span class="section-title">Openstaande acties</span><span id="od-open-count" style="margin-left:auto;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;color:var(--clay);letter-spacing:.04em;"></span></div>
-      <div id="od-open-items"></div>
     </div>
     <div class="section" style="margin-top:8px;">
       <div class="section-header"><div class="section-icon">📁</div><span class="section-title">Overdrachten</span></div>
