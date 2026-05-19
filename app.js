@@ -2475,7 +2475,7 @@ function initPresence(){
 function updateOnlineList(){
   if(!presenceChannel) return;
   const state = presenceChannel.presenceState();
-  const users = Object.values(state).flat().map(p=>p.user).filter(Boolean);
+  const users = [...new Set(Object.values(state).flat().map(p=>p.user).filter(Boolean))];
   const el = document.getElementById("online-users-list");
   if(!el) return;
   if(users.length === 0){
@@ -2532,6 +2532,15 @@ function openAdminModal(){
 function closeAdminModal(e){
   if(e && e.target !== document.getElementById("admin-modal")) return;
   document.getElementById("admin-modal").classList.remove("open");
+}
+
+function adminTogglePw(){
+  const sec  = document.getElementById('admin-pw-section');
+  const chev = document.getElementById('admin-pw-chev');
+  if(!sec) return;
+  const open = sec.style.display !== 'none';
+  sec.style.display  = open ? 'none' : 'flex';
+  if(chev) chev.textContent = open ? '▸' : '▾';
 }
 
 async function checkAdminPw(){

@@ -1144,43 +1144,54 @@ window._loadXLSX = function(cb){
       <button class="modal-confirm-btn" onclick="checkAdminPw()">Toegang →</button>
     </div>
     <div id="admin-panel" style="display:none">
-      <div style="font-size:11px;color:#aaa;letter-spacing:.06em;margin-bottom:14px;text-align:center;">🟢 Nu online: <span id="online-users-list">—</span></div>
-      <div class="admin-actions">
-        <button class="admin-action-btn" onclick="closeAdminModal();buildOverdracht();goTo('page-overdracht')" style="touch-action:manipulation;">📝 Overdrachten beheren</button>
-        <button class="admin-action-btn" onclick="closeAdminModal();buildActivity();goTo('page-activity')" style="touch-action:manipulation;">📋 Activiteit log</button>
-        <button class="admin-action-btn" onclick="closeAdminModal();buildProblems();goTo('page-problems')" style="touch-action:manipulation;">⚠️ Bekijk problemen</button>
-        <button class="admin-action-btn" onclick="closeAdminModal();buildPersons();goTo('page-persons')" style="touch-action:manipulation;">👥 Voortgang per persoon</button>
-        <button class="admin-action-btn" onclick="closeAdminModal();buildUsers();goTo('page-users')" style="touch-action:manipulation;">👤 Gebruikersbeheer</button>
-        <button class="admin-action-btn" onclick="exportToExcel()" style="touch-action:manipulation;">📊 Exporteren naar Excel</button>
-        <button class="admin-action-btn" onclick="backupToJSON()" style="touch-action:manipulation;">💾 Backup downloaden</button>
+      <!-- Online -->
+      <div class="admin-online">🟢 <span id="online-users-list">—</span></div>
+
+      <!-- Navigatie shortcuts: 2×2 -->
+      <div class="admin-grid-2">
+        <button class="admin-nav-btn" onclick="closeAdminModal();buildOverdracht();goTo('page-overdracht')" style="touch-action:manipulation;"><span class="admin-nav-icon">📝</span><span>Overdrachten</span></button>
+        <button class="admin-nav-btn" onclick="closeAdminModal();buildActivity();goTo('page-activity')" style="touch-action:manipulation;"><span class="admin-nav-icon">📋</span><span>Activiteit</span></button>
+        <button class="admin-nav-btn" onclick="closeAdminModal();buildProblems();goTo('page-problems')" style="touch-action:manipulation;"><span class="admin-nav-icon">⚠️</span><span>Problemen</span></button>
+        <button class="admin-nav-btn" onclick="closeAdminModal();buildPersons();goTo('page-persons')" style="touch-action:manipulation;"><span class="admin-nav-icon">👥</span><span>Per persoon</span></button>
       </div>
-      <div style="margin-top:14px;border-top:1.5px solid var(--border);padding-top:12px;">
-        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:8px;text-align:center;font-weight:700;">🔑 Wachtwoord wijzigen</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <input id="admin-pw-cur"  type="password" placeholder="Huidig wachtwoord"   class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="current-password">
-          <input id="admin-pw-new"  type="password" placeholder="Nieuw wachtwoord"    class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="new-password">
-          <input id="admin-pw-new2" type="password" placeholder="Bevestig wachtwoord" class="modal-input" style="font-size:12px;padding:8px 10px;" autocomplete="new-password">
-          <button onclick="changeAdminPassword()" class="admin-action-btn" style="touch-action:manipulation;">Wachtwoord opslaan</button>
+
+      <!-- Beheer: 3 knoppen -->
+      <div class="admin-grid-3">
+        <button class="admin-mgmt-btn" onclick="closeAdminModal();buildUsers();goTo('page-users')" style="touch-action:manipulation;"><span>👤</span><span>Gebruikers</span></button>
+        <button class="admin-mgmt-btn" onclick="exportToExcel()" style="touch-action:manipulation;"><span>📊</span><span>Export</span></button>
+        <button class="admin-mgmt-btn" onclick="backupToJSON()" style="touch-action:manipulation;"><span>💾</span><span>Backup</span></button>
+      </div>
+
+      <!-- Wachtwoord: inklapbaar -->
+      <div class="admin-section-toggle" onclick="adminTogglePw()" style="touch-action:manipulation;">
+        <span>🔑 Wachtwoord wijzigen</span><span id="admin-pw-chev">▸</span>
+      </div>
+      <div id="admin-pw-section" style="display:none;padding:10px 0 4px;display:flex;flex-direction:column;gap:6px;display:none;">
+        <input id="admin-pw-cur"  type="password" placeholder="Huidig wachtwoord"   class="modal-input" style="font-size:12px;padding:8px 10px;margin:0;" autocomplete="current-password">
+        <input id="admin-pw-new"  type="password" placeholder="Nieuw wachtwoord"    class="modal-input" style="font-size:12px;padding:8px 10px;margin:0;" autocomplete="new-password">
+        <input id="admin-pw-new2" type="password" placeholder="Bevestig wachtwoord" class="modal-input" style="font-size:12px;padding:8px 10px;margin:0;" autocomplete="new-password">
+        <button onclick="changeAdminPassword()" class="admin-mgmt-save-btn" style="touch-action:manipulation;">Opslaan</button>
+      </div>
+
+      <!-- Destructief -->
+      <div class="admin-section-toggle" style="color:var(--clay);margin-top:4px;cursor:default;">
+        <span>⚠️ Reset per court</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">
+        <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['pc','audio_pc','sb_pc'],'Philippe-Chatrier')" style="touch-action:manipulation;">🔄 PC</button>
+        <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['sl','audio_sl','sb_sl'],'Suzanne-Lenglen')" style="touch-action:manipulation;">🔄 SL</button>
+        <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['sm','audio_sm','sb_sm'],'Simonne-Mathieu')" style="touch-action:manipulation;">🔄 SM</button>
+        <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['c14','audio_c14','sb_c14'],'Court 14')" style="touch-action:manipulation;">🔄 C14</button>
+      </div>
+      <div id="admin-reset-confirm" style="display:none;margin-top:10px;background:rgba(193,68,14,.08);border:1.5px solid var(--clay);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--clay-dark);margin-bottom:6px;font-weight:500;">⚠️ Reset <span id="admin-reset-label"></span>?</div>
+        <div style="font-size:10px;color:#888;margin-bottom:10px;">Er wordt automatisch een backup gemaakt.</div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button onclick="adminResetConfirm()" style="background:var(--clay-dark);color:var(--cream);border:none;font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Ja, reset</button>
+          <button onclick="adminResetCancel()" style="background:none;border:1.5px solid var(--border);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;padding:8px 14px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
         </div>
       </div>
-      <div style="margin-top:16px;border-top:2px solid var(--clay);padding-top:14px;background:rgba(193,68,14,.04);border-radius:0 0 10px 10px;margin-left:-2px;margin-right:-2px;padding-left:14px;padding-right:14px;">
-        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:10px;text-align:center;font-weight:700;">⚠️ Destructieve acties — Reset per court</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['pc','audio_pc','sb_pc'],'Philippe-Chatrier')" style="touch-action:manipulation;">🔄 PC</button>
-          <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['sl','audio_sl','sb_sl'],'Suzanne-Lenglen')" style="touch-action:manipulation;">🔄 SL</button>
-          <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['sm','audio_sm','sb_sm'],'Simonne-Mathieu')" style="touch-action:manipulation;">🔄 SM</button>
-          <button class="admin-action-btn admin-reset-btn" onclick="adminResetCourt(['c14','audio_c14','sb_c14'],'Court 14')" style="touch-action:manipulation;">🔄 C14</button>
-        </div>
-        <div id="admin-reset-confirm" style="display:none;margin-top:10px;background:rgba(193,68,14,.08);border:1.5px solid var(--clay);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:11px;color:var(--clay-dark);margin-bottom:6px;font-weight:500;">⚠️ Reset <span id="admin-reset-label"></span>?</div>
-          <div style="font-size:10px;color:#888;margin-bottom:10px;">Er wordt automatisch een backup gemaakt.</div>
-          <div style="display:flex;gap:8px;justify-content:center;">
-            <button onclick="adminResetConfirm()" style="background:var(--clay-dark);color:var(--cream);border:none;font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Ja, reset</button>
-            <button onclick="adminResetCancel()" style="background:none;border:1.5px solid var(--border);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;padding:8px 14px;border-radius:6px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
-          </div>
-        </div>
-        <div id="admin-restore-wrap" style="display:none;margin-top:10px;background:rgba(45,90,27,.07);border:1.5px solid rgba(45,90,27,.3);border-radius:10px;padding:10px;"></div>
-      </div>
+      <div id="admin-restore-wrap" style="display:none;margin-top:10px;background:rgba(45,90,27,.07);border:1.5px solid rgba(45,90,27,.3);border-radius:10px;padding:10px;"></div>
     </div>
   </div>
 </div>
