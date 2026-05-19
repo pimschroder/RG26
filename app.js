@@ -3541,9 +3541,9 @@ window.renderOdLog = function renderOdLog(){
       return `
       <div class="od-item"${urgentOpen>0?' style="border-left:3px solid var(--clay);"':''}>
         <div class="od-item-header">
-          ${avatarHtml}
           <div class="od-item-name">
             <span class="od-shift-badge od-shift-${e.shift||'ochtend'}">${e.shift==='avond'?'🌙':'🌅'} ${e.shift||'ochtend'}</span>
+            ${avatarHtml}
             ${esc(e.name||'')}
           </div>
           ${urgentOpen>0?`<span class="od-urgent-badge">!! ${urgentOpen}</span>`:''}
