@@ -3533,7 +3533,7 @@ window.renderOdLog = function renderOdLog(){
             <span class="od-shift-badge od-shift-${e.shift||'ochtend'}">${e.shift==='avond'?'🌙':'🌅'} ${e.shift||'ochtend'}</span>
             ${esc(e.name||'')}
           </div>
-          ${urgentOpen>0?`<span style="font-size:10px;font-weight:700;color:var(--clay-dark);font-family:'DM Mono',monospace;background:rgba(193,68,14,.12);padding:3px 8px;border-radius:5px;letter-spacing:.03em;">!! ${urgentOpen}</span>`:''}
+          ${urgentOpen>0?`<span class="od-urgent-badge">!! ${urgentOpen}</span>`:''}
         </div>
         <div class="od-sections-grid">
           ${e.verslag?`<div class="od-section"><div class="od-section-label">📋 Dagverslag</div><div class="od-section-text">${esc(e.verslag)}</div></div>`:''}
