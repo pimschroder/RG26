@@ -1065,6 +1065,10 @@ window._loadXLSX = function(cb){
     <div><div class="rg-badge" style="margin-bottom:6px">Overzicht</div><div class="sub-title">⚠️ <em>Problemen & Notities</em></div></div>
   </div></div>
   <main>
+    <div class="section" id="quick-prob-section" style="display:none;margin-bottom:12px">
+      <div class="section-header"><div class="section-icon">⚠</div><span class="section-title">Gemeld door team</span><span class="section-count" id="quick-prob-count">0</span></div>
+      <div id="quick-prob-list"></div>
+    </div>
     <div class="section">
       <div class="section-header"><div class="section-icon">⚠️</div><span class="section-title">Openstaande items</span><span class="section-count" id="problems-count">0</span></div>
       <div id="problems-list"><p style="color:#aaa;font-size:12px;padding:20px 0;text-align:center;">Geen problemen gevonden 🎾</p></div>
@@ -1124,6 +1128,23 @@ window._loadXLSX = function(cb){
       <button onclick="closeOdEdit()" style="flex:1;padding:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;touch-action:manipulation;">Annuleer</button>
       <button onclick="confirmOdEdit()" style="flex:1;padding:11px;background:var(--green);color:white;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;touch-action:manipulation;">Opslaan</button>
     </div>
+  </div>
+</div>
+
+<!-- Quick Problem Modal -->
+<div class="modal-overlay" id="quick-prob-modal" onclick="closeQuickProb(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-title">⚠ Probleem melden</span>
+      <button class="modal-close" onclick="closeQuickProb()">✕</button>
+    </div>
+    <div class="modal-sub" id="quick-prob-loc-text" style="text-align:left;margin-bottom:10px;color:var(--clay-dark);font-weight:600"></div>
+    <textarea id="quick-prob-text" class="modal-input" style="text-align:left;height:90px;letter-spacing:0;font-size:13px;resize:none;line-height:1.5" placeholder="Beschrijf het probleem…" maxlength="500"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink);margin:8px 0 12px;cursor:pointer">
+      <input type="checkbox" id="quick-prob-urgent" style="width:16px;height:16px;accent-color:var(--clay-dark)">
+      <span>Urgent — directe aandacht nodig</span>
+    </label>
+    <button class="modal-confirm-btn" onclick="submitQuickProb()">Meld probleem</button>
   </div>
 </div>
 

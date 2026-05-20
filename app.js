@@ -853,7 +853,7 @@ const FILTER_PAGES = new Set([
 function _updateFilterBtn(pageId){
   let btn = document.getElementById('filter-btn');
   let colBtn = document.getElementById('collapse-all-btn');
-  const isCamCheck = pageId && pageId.startsWith('page-camcheck-');
+  const isCamCheck = pageId && (pageId.startsWith('page-camcheck-') || ['page-pc','page-sl','page-sm','page-c14'].includes(pageId));
   const isFilter = FILTER_PAGES.has(pageId) || (pageId && pageId.startsWith('page-gal-'));
 
   if(isFilter){
@@ -900,6 +900,19 @@ function _updateFilterBtn(pageId){
     }
   } else {
     if(colBtn) colBtn.remove();
+  }
+
+  // Probleem-knop: altijd aanwezig behalve op home/login
+  document.getElementById('quick-prob-btn')?.remove();
+  if(pageId && pageId !== 'page-home' && pageId !== 'page-login'){
+    const probBtn = document.createElement('button');
+    probBtn.id = 'quick-prob-btn';
+    probBtn.className = 'quick-prob-sub-btn';
+    probBtn.title = 'Probleem melden';
+    probBtn.textContent = '⚠';
+    probBtn.onclick = openQuickProb;
+    const subHdr = document.querySelector('.page.active .sub-header-inner');
+    if(subHdr) subHdr.appendChild(probBtn);
   }
 }
 
@@ -1360,9 +1373,10 @@ function buildCamPage(containerId, storageKey, cams){
       const hdr = block.querySelector(".cam-header");
       if(hdr) hdr.classList.add("cam-header-done");
     }
-    if(rows.some(r => !!(d[storageKey]?.[`cam${cam.num}`]?.[r]?.note))){
+    const noteCount = rows.filter(r => !!(d[storageKey]?.[`cam${cam.num}`]?.[r]?.note)).length;
+    if(noteCount > 0){
       const dot = block.querySelector('.cam-note-dot');
-      if(dot) dot.classList.add('has-note');
+      if(dot){ dot.classList.add('has-note'); dot.textContent = '📝 '+noteCount; }
     }
   });
 }
@@ -1916,9 +1930,12 @@ function camNote(sk, camNum, row, ta){
 }
 function updateCamNoteDot(sk, camNum){
   const d = load();
-  const hasNote = getRows(sk, camNum).some(r => !!(d[sk]?.[`cam${camNum}`]?.[r]?.note));
+  const noteCount = getRows(sk, camNum).filter(r => !!(d[sk]?.[`cam${camNum}`]?.[r]?.note)).length;
   const dot = document.getElementById(`list-${sk.replace(/_/g,'-')}-notedot-${camNum}`);
-  if(dot) dot.classList.toggle('has-note', hasNote);
+  if(dot){
+    dot.classList.toggle('has-note', noteCount > 0);
+    dot.textContent = noteCount > 0 ? '📝 '+noteCount : '';
+  }
 }
 
 function simpleDone(sk, total){
@@ -2277,7 +2294,8 @@ function buildDash(totals, dones){
         <div class="dash-card-track"><div class="dash-card-fill" id="dc-bar-${card.key}"></div></div>
         <div class="dash-card-footer">
           <span class="dash-card-count" id="dc-count-${card.key}"></span>
-          <span class="dash-card-pct" id="dc-pct-${card.key}" style="opacity:.8"></span>
+          <span class="dash-card-status" id="dc-status-${card.key}"></span>
+          <span class="dash-card-pct" id="dc-pct-${card.key}"></span>
         </div>`;
       grid.appendChild(div);
       div._card = card;
@@ -2291,10 +2309,19 @@ function buildDash(totals, dones){
     const t=keys.reduce((a,k)=>a+(totals[k]||0),0), d=keys.reduce((a,k)=>a+(dones[k]||0),0), p=pct(d,t);
     const color = p===100?"#2D5A1B":p>=50?"#C1440E":"#8B2E07";
     div.style.borderLeftColor = color;
+    div.style.background = p===100?"rgba(45,90,27,.05)":p>0&&p<50?"rgba(139,46,7,.06)":"var(--surface)";
     bar("dc-bar-"+card.key, p);
+    const barEl = document.getElementById("dc-bar-"+card.key);
+    if(barEl) barEl.style.background = p===100?"var(--green)":p>=50?"var(--clay)":"var(--clay-dark)";
     txt("dc-count-"+card.key, d+" / "+t);
     const pctEl = document.getElementById("dc-pct-"+card.key);
     if(pctEl){ pctEl.textContent=p+"%"; pctEl.style.color=color; }
+    const statusEl = document.getElementById("dc-status-"+card.key);
+    if(statusEl){
+      statusEl.textContent = p===100?'✓ Klaar':p>0?'Bezig':'Niet gestart';
+      statusEl.style.color = color;
+      statusEl.style.background = p===100?"rgba(45,90,27,.12)":p>0?"rgba(193,68,14,.1)":"rgba(0,0,0,.05)";
+    }
   });
 }
 
@@ -2526,6 +2553,44 @@ function openAdminModal(){
 function closeAdminModal(e){
   if(e && e.target !== document.getElementById("admin-modal")) return;
   document.getElementById("admin-modal").classList.remove("open");
+}
+
+function openQuickProb(){
+  const active = document.querySelector('.page.active');
+  const badge    = active?.querySelector('.rg-badge')?.textContent?.trim() || '';
+  const subTitle = active?.querySelector('.sub-title')?.textContent?.trim() || '';
+  const location = [badge, subTitle].filter(Boolean).join(' — ') || 'Algemeen';
+  document.getElementById('quick-prob-loc-text').textContent = location;
+  document.getElementById('quick-prob-text').value = '';
+  document.getElementById('quick-prob-urgent').checked = false;
+  document.getElementById('quick-prob-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('quick-prob-text')?.focus(), 100);
+}
+function closeQuickProb(e){
+  if(e && e.target !== document.getElementById('quick-prob-modal')) return;
+  document.getElementById('quick-prob-modal').classList.remove('open');
+}
+function submitQuickProb(){
+  const text = document.getElementById('quick-prob-text').value.trim();
+  if(!text) return;
+  const urgent   = document.getElementById('quick-prob-urgent').checked;
+  const location = document.getElementById('quick-prob-loc-text').textContent;
+  const d = load();
+  if(!d._quickProblems) d._quickProblems = [];
+  d._quickProblems.push({
+    id: Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    text, urgent, location, user: getCurrentUser(), ts: Date.now(), resolved: false
+  });
+  save(d);
+  document.getElementById('quick-prob-modal').classList.remove('open');
+  if(document.getElementById('page-problems')?.classList.contains('active')) buildProblems();
+}
+function resolveQuickProb(id){
+  const d = load();
+  const prob = (d._quickProblems||[]).find(p=>p.id===id);
+  if(prob){ prob.resolved=true; prob.resolvedTs=Date.now(); prob.resolvedBy=getCurrentUser(); }
+  save(d);
+  buildProblems();
 }
 
 function adminTogglePw(){
@@ -2889,6 +2954,31 @@ function buildProblems(){
   const d = load();
   const wrap = document.getElementById("problems-list");
   if(!wrap) return;
+
+  // Snel gemelde problemen bovenaan
+  const qpSection = document.getElementById('quick-prob-section');
+  const qpList = document.getElementById('quick-prob-list');
+  const qpCount = document.getElementById('quick-prob-count');
+  const quickProbs = (d._quickProblems||[]).filter(p=>!p.resolved).sort((a,b)=>(b.urgent?1:0)-(a.urgent?1:0)||(b.ts||0)-(a.ts||0));
+  if(qpList){
+    if(quickProbs.length){
+      if(qpSection) qpSection.style.display='';
+      if(qpCount) qpCount.textContent=quickProbs.length;
+      qpList.innerHTML=quickProbs.map(p=>`
+        <div class="quick-prob-item${p.urgent?' quick-prob-urgent':''}">
+          <div class="quick-prob-header">
+            ${p.urgent?'<span class="od-urgent-badge">!! Urgent</span>':''}
+            <span class="quick-prob-loc">📍 ${esc(p.location||'Algemeen')}</span>
+            <span class="quick-prob-time">${fmtTime(p.ts)}</span>
+          </div>
+          <div class="quick-prob-text">${esc(p.text)}</div>
+          <div class="quick-prob-meta">👤 ${esc(p.user||'—')} · <button class="quick-prob-resolve" onclick="resolveQuickProb('${p.id}')">✓ Opgelost</button></div>
+        </div>`).join('');
+    } else {
+      if(qpSection) qpSection.style.display='none';
+    }
+  }
+
   const items = [];
 
   const courtMap = {c14:C14_CAMS, pc:PC_CAMS, sl:SL_CAMS, sm:SM_CAMS};
