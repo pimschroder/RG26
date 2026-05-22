@@ -313,6 +313,11 @@
         setSyncStatus("receiving");
         applyRemote(payload.data);
       })
+      .on("broadcast", { event: "celebrate" }, ()=>{
+        let seen = false;
+        try{ seen = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
+        if(!seen) setTimeout(()=>window.triggerAvatarCelebration?.(), 800);
+      })
       .subscribe(status=>{
         if(status === "SUBSCRIBED"){
           setSyncStatus("synced");
@@ -530,6 +535,40 @@
       osc.stop(ctx.currentTime + 0.9);
     } catch(e){}
   }
+
+  window._sendCelebrateBroadcast = function(){
+    if(!broadcastChannel) return;
+    broadcastChannel.send({ type:'broadcast', event:'celebrate', payload:{} }).catch(()=>{});
+  };
+
+  function playFanfare(){
+    const ctx = _getAudioCtx(); if(!ctx) return;
+    try{
+      const notes = [
+        { freq:523,  t:0,    dur:0.14, vol:0.28 },
+        { freq:659,  t:0.13, dur:0.14, vol:0.28 },
+        { freq:784,  t:0.26, dur:0.14, vol:0.28 },
+        { freq:1047, t:0.39, dur:0.9,  vol:0.32 },
+        { freq:784,  t:0.44, dur:0.75, vol:0.22 },
+        { freq:523,  t:0.44, dur:0.75, vol:0.18 },
+      ];
+      notes.forEach(({freq,t,dur,vol})=>{
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, ctx.currentTime+t);
+        gain.gain.linearRampToValueAtTime(vol, ctx.currentTime+t+0.02);
+        gain.gain.setValueAtTime(vol, ctx.currentTime+t+dur-0.06);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+t+dur);
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime+t);
+        osc.connect(gain);
+        osc.start(ctx.currentTime+t);
+        osc.stop(ctx.currentTime+t+dur+0.02);
+      });
+    } catch(e){}
+  }
+  window.playFanfare = playFanfare;
 
   document.addEventListener("DOMContentLoaded", ()=>{
     setTimeout(()=>window.initSupabase(), 300);
@@ -2062,6 +2101,20 @@ function chip(id,d,t){ const el=document.getElementById(id); if(!el) return; con
 function triggerAvatarCelebration(){
   if(document.getElementById('av-celebration')) return;
   try{ sessionStorage.setItem('rg_seen_celebration','1'); }catch(e){}
+
+  // Broadcast zodat verbonden teamleden het ook zien
+  window._sendCelebrateBroadcast?.();
+
+  // Sla op in Supabase zodat late arrivals het ook krijgen
+  const _dCel = load();
+  if(!_dCel._celebrationTs){
+    _dCel._celebrationTs = Date.now();
+    if(window.pushToSupabase) window.pushToSupabase(_dCel);
+  }
+
+  // Fanfare
+  setTimeout(()=>window.playFanfare?.(), 300);
+
   unlockMiniGame();
 
   const overlay = document.createElement('div');
@@ -2312,10 +2365,13 @@ function _doRefresh(){
   }
 
   const hMsg=document.getElementById("home-done-msg"); if(hMsg) gD===gT&&gT>0?hMsg.classList.add("visible"):hMsg.classList.remove("visible");
-  if(gP>=100 && gT>0 && refreshAll._lastP!==100){
-    let _seenCel = false;
-    try{ _seenCel = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
-    if(!_seenCel){
+  let _seenCel = false;
+  try{ _seenCel = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
+  if(!_seenCel){
+    const _celTs = load()._celebrationTs || 0;
+    const _justHit = gP>=100 && gT>0 && refreshAll._lastP!==100;
+    // Trigger als: zojuist 100% bereikt, OF 100% al bereikt + _celebrationTs gezet (late arrival)
+    if(_justHit || (_celTs > 0 && gP>=100 && gT>0 && refreshAll._lastP===undefined)){
       const _wasUndef = refreshAll._lastP === undefined;
       setTimeout(triggerAvatarCelebration, _wasUndef ? 2000 : 0);
     }
