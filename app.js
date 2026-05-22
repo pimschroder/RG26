@@ -2369,9 +2369,10 @@ function _doRefresh(){
   try{ _seenCel = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
   if(!_seenCel){
     const _celTs = load()._celebrationTs || 0;
+    const _celFresh = _celTs > 0 && (Date.now() - _celTs) < 24 * 60 * 60 * 1000; // max 1 dag
     const _justHit = gP>=100 && gT>0 && refreshAll._lastP!==100;
-    // Trigger als: zojuist 100% bereikt, OF 100% al bereikt + _celebrationTs gezet (late arrival)
-    if(_justHit || (_celTs > 0 && gP>=100 && gT>0 && refreshAll._lastP===undefined)){
+    // Trigger als: zojuist 100% bereikt, OF 100% al bereikt + _celebrationTs recent (late arrival)
+    if(_justHit || (_celFresh && gP>=100 && gT>0 && refreshAll._lastP===undefined)){
       const _wasUndef = refreshAll._lastP === undefined;
       setTimeout(triggerAvatarCelebration, _wasUndef ? 2000 : 0);
     }
