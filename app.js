@@ -232,10 +232,20 @@
       suppressRemote = true;
       setSyncStatus("saving");
       try{
+        // Lees DB eerst: bewaar de nieuwste _users als die in DB nieuwer is dan lokaal.
+        // Voorkomt dat een volle push van een teamlid de net-toegevoegde gebruikerslijst overschrijft.
+        let dataToSave = offlineQueue;
+        try{
+          const { data: cur } = await supaClient.from("checklist_state").select("data").eq("id",1).single();
+          if(cur?.data && (cur.data._usersTs||0) > (dataToSave._usersTs||0)){
+            dataToSave = Object.assign({}, dataToSave, { _users: cur.data._users, _usersTs: cur.data._usersTs });
+            if(window._localSaveRaw) window._localSaveRaw(dataToSave);
+          }
+        } catch(e){}
         const _ctrl = new AbortController();
         const _to = setTimeout(()=>_ctrl.abort(), 10000);
         const { error } = await supaClient.from("checklist_state")
-          .upsert({ id:1, data: offlineQueue }, { onConflict:"id" })
+          .upsert({ id:1, data: dataToSave }, { onConflict:"id" })
           .abortSignal(_ctrl.signal);
         clearTimeout(_to);
         if(error) throw error;
