@@ -982,6 +982,21 @@ async function _subscribePush(userName){
   } catch(e){ console.warn('Push subscribe mislukt:', e); }
 }
 
+async function _sendPushCourtDone(courtLabel, user){
+  try{
+    const url = `${window._SUPABASE_URL}/functions/v1/send-push`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._SUPABASE_KEY}` },
+      body: JSON.stringify({
+        title: `✓ ${courtLabel} — 100% klaar`,
+        body: `${user || 'Iemand'} heeft ${courtLabel} volledig afgevinkt`,
+        sender: user,
+      }),
+    });
+  } catch(e){ console.warn('Push court-klaar mislukt:', e); }
+}
+
 async function _sendPushOverdracht(sender, shiftLabel){
   try{
     const url = `${window._SUPABASE_URL}/functions/v1/send-push`;
@@ -2257,6 +2272,19 @@ function _doRefresh(){
 
   buildDash(totals, dones);
 
+  // Feature 1: push notification als individuele court 100% bereikt
+  const COURT_PUSH_LABELS = { pc:'Philippe-Chatrier', sl:'Suzanne-Lenglen', sm:'Simonne-Mathieu', c14:'Court 14' };
+  if(!refreshAll._courtLastP) refreshAll._courtLastP = {};
+  for(const [sk, label] of Object.entries(COURT_PUSH_LABELS)){
+    const p = pct(dones[sk]||0, totals[sk]||0);
+    const last = refreshAll._courtLastP[sk];
+    if(last !== undefined && last < 100 && p >= 100 && (totals[sk]||0) > 0){
+      showToast(`✓ ${label} — 100% klaar!`);
+      _sendPushCourtDone(label, getCurrentUser());
+    }
+    refreshAll._courtLastP[sk] = p;
+  }
+
   const TOP_KEYS = ["courts","audio","comm","gal"];
   const gT = TOP_KEYS.reduce((a,k)=>a+(totals[k]||0),0);
   const gD = TOP_KEYS.reduce((a,k)=>a+(dones[k]||0),0);
@@ -2267,12 +2295,27 @@ function _doRefresh(){
     bar("home-bar",gP); txt("home-lbl",gD+" / "+gT);
     txt("home-done",gD); txt("home-left",gT-gD); txt("home-pct",gP+"%");
   }
+
+  // Feature 2: countdown label als >90%
+  const leftLabel = document.getElementById('home-left-label');
+  const leftNum   = document.getElementById('home-left');
+  if(leftLabel && gT > 0){
+    if(gP >= 100){
+      leftLabel.textContent = 'items over'; if(leftNum) leftNum.style.color = 'var(--green)';
+    } else if(gP >= 90){
+      leftLabel.textContent = 'items over 🔥'; if(leftNum) leftNum.style.color = 'var(--clay-dark)';
+    } else if(gP >= 75){
+      leftLabel.textContent = 'bijna klaar'; if(leftNum) leftNum.style.color = 'var(--clay)';
+    } else {
+      leftLabel.textContent = 'Resterend'; if(leftNum) leftNum.style.color = '';
+    }
+  }
+
   const hMsg=document.getElementById("home-done-msg"); if(hMsg) gD===gT&&gT>0?hMsg.classList.add("visible"):hMsg.classList.remove("visible");
   if(gP>=100 && gT>0 && refreshAll._lastP!==100){
     let _seenCel = false;
     try{ _seenCel = sessionStorage.getItem('rg_seen_celebration')==='1'; }catch(e){}
     if(!_seenCel){
-      // Fresh load: delay 2s so user sees the app before the party starts
       const _wasUndef = refreshAll._lastP === undefined;
       setTimeout(triggerAvatarCelebration, _wasUndef ? 2000 : 0);
     }
@@ -2299,6 +2342,7 @@ function buildDash(totals, dones){
       div.style.borderLeftWidth="4px";
       div.onclick=()=>goTo(card.page);
       div.innerHTML=`
+        <div class="dash-card-stamp" id="dc-stamp-${card.key}" style="display:none">✓ KLAAR</div>
         <div class="dash-card-icon">${card.icon}</div>
         <div class="dash-card-title">${card.label}</div>
         <div class="dash-card-track"><div class="dash-card-fill" id="dc-bar-${card.key}"></div></div>
@@ -2332,6 +2376,8 @@ function buildDash(totals, dones){
       statusEl.style.color = color;
       statusEl.style.background = p===100?"rgba(45,90,27,.12)":p>0?"rgba(193,68,14,.1)":"rgba(0,0,0,.05)";
     }
+    const stampEl = document.getElementById("dc-stamp-"+card.key);
+    if(stampEl) stampEl.style.display = p===100 ? 'block' : 'none';
   });
 }
 
