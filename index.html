@@ -49,6 +49,12 @@ window._loadXLSX = function(cb){
           <button type="button" onclick="(function(b){var i=document.getElementById('login-pw');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';})(this)" style="position:absolute;right:0;top:0;bottom:0;width:44px;background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;touch-action:manipulation;">👁</button>
         </div>
         <button class="login-btn" onclick="doLogin()">Toegang →</button>
+        <button type="button" class="access-req-link" onclick="toggleAccessRequest()" style="touch-action:manipulation;">Geen account? Toegang aanvragen →</button>
+        <div id="access-req-form" style="display:none;flex-direction:column;gap:8px;">
+          <input type="text" id="access-req-name" class="login-input" placeholder="Jouw naam" maxlength="40" onkeydown="if(event.key==='Enter')submitAccessRequest()">
+          <button type="button" class="login-btn access-req-send-btn" onclick="submitAccessRequest()" style="touch-action:manipulation;">Verzoek versturen →</button>
+        </div>
+        <div id="access-req-feedback" style="display:none;font-size:11px;color:rgba(255,255,255,.65);text-align:center;margin-top:2px;"></div>
       </div>
       <p class="login-hint">Gravity Media · Production</p>
       <div id="login-sync-status" style="margin-top:12px;font-size:10px;color:#aaa;letter-spacing:.08em;">☁️ Supabase sync actief</div>
@@ -72,7 +78,7 @@ window._loadXLSX = function(cb){
     <span id="sync-status" class="offline">Offline</span>
     <span class="user-bar-label" id="logged-in-user"></span>
     <span id="user-bar-avatar"></span>
-    <button id="admin-btn" class="admin-btn" onclick="openAdminModal()" style="display:none;touch-action:manipulation;">🔒</button>
+    <button id="admin-btn" class="admin-btn" onclick="openAdminModal()" style="display:none;touch-action:manipulation;">🔒<span id="admin-req-dot" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--clay);color:#fff;border-radius:8px;font-size:9px;font-weight:700;padding:1px 5px;font-family:'DM Mono',monospace;min-width:14px;text-align:center;"></span></button>
     <button class="dark-toggle" onclick="toggleDark()" title="Donkere modus" style="touch-action:manipulation;">🌙</button>
     <button class="userbar-logout-btn" onclick="logout()" ontouchend="event.preventDefault();logout();" title="Uitloggen" style="touch-action:manipulation;min-width:44px;min-height:44px;">↩</button>
   </div>
@@ -1085,6 +1091,7 @@ window._loadXLSX = function(cb){
     <div><div class="rg-badge" style="margin-bottom:6px">Ploeg</div><div class="sub-title">📋 <em>Shift Handover</em></div></div>
   </div></div>
   <main>
+    <div id="od-phase-strip"></div>
     <div class="section" id="od-open-section" style="display:none;">
       <div class="section-header"><div class="section-icon">⚡</div><span class="section-title">Openstaande acties</span><span id="od-open-count" style="margin-left:auto;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;color:var(--clay);letter-spacing:.04em;"></span></div>
       <div id="od-open-items"></div>
@@ -1167,6 +1174,12 @@ window._loadXLSX = function(cb){
     <div id="admin-panel" style="display:none">
       <!-- Online -->
       <div class="admin-online">🟢 <span id="online-users-list">—</span></div>
+
+      <!-- Toegangsverzoeken -->
+      <div id="admin-requests-section" style="display:none;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:6px;display:flex;align-items:center;gap:6px;">🙋 Toegangsverzoeken <span id="admin-req-badge" style="background:var(--clay);color:#fff;border-radius:8px;padding:1px 7px;font-size:10px;"></span></div>
+        <div id="admin-requests-list"></div>
+      </div>
 
       <!-- Navigatie shortcuts: 2×2 -->
       <div class="admin-grid-2">

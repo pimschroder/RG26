@@ -995,6 +995,7 @@ const ADMIN_USERS = ["Pim"];
 function _updateAdminBtn(){
   const btn = document.getElementById('admin-btn');
   if(btn) btn.style.display = ADMIN_USERS.includes(getCurrentUser()) ? '' : 'none';
+  updateAccessRequestBadge();
 }
 function _isAdmin(){ return window._adminMode && ADMIN_USERS.includes(getCurrentUser()); }
 const VAPID_PUBLIC_KEY = 'VPwCZa_ig9uZ9bEPhnuhndWyNvoYwj-VfbY8hjp77qx-EtBRi-vN_wPzKhjqjwbDxRef2NwjoRaLEYzGOFf1Gw';
@@ -2636,6 +2637,85 @@ function saveFirebaseConfig(){
 }
 
 
+function toggleAccessRequest(){
+  const form = document.getElementById('access-req-form');
+  if(!form) return;
+  const open = form.style.display === 'flex';
+  form.style.display = open ? 'none' : 'flex';
+  if(!open) setTimeout(()=>document.getElementById('access-req-name')?.focus(), 50);
+}
+
+function submitAccessRequest(){
+  const nameEl = document.getElementById('access-req-name');
+  const name = nameEl?.value.trim();
+  const fb = document.getElementById('access-req-feedback');
+  const showFb = msg => { if(fb){ fb.textContent = msg; fb.style.display = 'block'; } };
+  if(!name) return;
+  const d = load();
+  if((d._users||[]).includes(name)){
+    showFb(`"${name}" bestaat al — selecteer je naam hierboven.`); return;
+  }
+  if((d._accessRequests||[]).find(r=>r.name===name && r.status==='pending')){
+    showFb('Verzoek al verstuurd — een beheerder voegt je toe.'); return;
+  }
+  if(!d._accessRequests) d._accessRequests = [];
+  d._accessRequests.push({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name, ts: Date.now(), status:'pending' });
+  save(d);
+  document.getElementById('access-req-form').style.display = 'none';
+  showFb('✓ Verzoek verstuurd — een beheerder voegt je toe.');
+  updateAccessRequestBadge();
+}
+
+function approveRequest(id){
+  const d = load();
+  const req = (d._accessRequests||[]).find(r=>r.id===id);
+  if(!req) return;
+  req.status = 'approved';
+  if(!d._users) d._users = [];
+  if(!d._users.includes(req.name)){ d._users.push(req.name); d._usersTs = Date.now(); }
+  save(d);
+  renderAccessRequests();
+  updateAccessRequestBadge();
+  showToast(`✓ ${req.name} toegevoegd`);
+}
+
+function denyRequest(id){
+  const d = load();
+  if(!d._accessRequests) return;
+  d._accessRequests = d._accessRequests.filter(r=>r.id!==id);
+  save(d);
+  renderAccessRequests();
+  updateAccessRequestBadge();
+}
+
+function renderAccessRequests(){
+  const section = document.getElementById('admin-requests-section');
+  const list    = document.getElementById('admin-requests-list');
+  const badge   = document.getElementById('admin-req-badge');
+  if(!section||!list) return;
+  const d = load();
+  const pending = (d._accessRequests||[]).filter(r=>r.status==='pending');
+  if(badge) badge.textContent = pending.length || '';
+  section.style.display = pending.length ? 'block' : 'none';
+  list.innerHTML = pending.map(r=>`
+    <div class="admin-req-item">
+      <span class="admin-req-name">${esc(r.name)}</span>
+      <span class="admin-req-time">${fmtTime(r.ts)}</span>
+      <div class="admin-req-actions">
+        <button class="admin-req-approve" onclick="approveRequest('${r.id}')" style="touch-action:manipulation;">✓ Toevoegen</button>
+        <button class="admin-req-deny"    onclick="denyRequest('${r.id}')"    style="touch-action:manipulation;">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateAccessRequestBadge(){
+  const dot = document.getElementById('admin-req-dot');
+  if(!dot) return;
+  const count = (load()._accessRequests||[]).filter(r=>r.status==='pending').length;
+  dot.textContent = count || '';
+  dot.style.display = count > 0 ? 'block' : 'none';
+}
+
 function openAdminModal(){
   if(!ADMIN_USERS.includes(getCurrentUser())) return;
   const modal = document.getElementById("admin-modal");
@@ -2647,6 +2727,7 @@ function openAdminModal(){
   if(window._adminMode){
     if(loginSection) loginSection.style.display = "none";
     if(panel) panel.style.display = "block";
+    renderAccessRequests();
   } else {
     if(loginSection) loginSection.style.display = "block";
     if(panel) panel.style.display = "none";
@@ -3550,6 +3631,47 @@ function toggleOdTodo(entryId, idx){
   if(navigator.vibrate) navigator.vibrate(15);
 }
 
+function _fmtPhaseDate(str){
+  return new Date(str+'T12:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+}
+
+function renderOdPhaseStrip(){
+  const el = document.getElementById('od-phase-strip');
+  if(!el) return;
+  const phases = [
+    { name:'Rig',        start:'2026-04-27', end:'2026-05-17' },
+    { name:'Qualifiers', start:'2026-05-18', end:'2026-05-23' },
+    { name:'Tournament', start:'2026-05-24', end:'2026-06-07' },
+  ];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  el.innerHTML = '<div class="od-phase-strip-inner">' + phases.map(p => {
+    const start = new Date(p.start+'T00:00:00');
+    const end   = new Date(p.end+'T23:59:59');
+    const totalDays = Math.round((end - start) / 86400000) + 1;
+    let state, sub, dayNum = 0, barHtml = '';
+    if(todayStr > p.end){
+      state = 'past'; sub = '✓ Afgerond';
+    } else if(todayStr >= p.start){
+      state = 'current';
+      dayNum = Math.floor((now - start) / 86400000) + 1;
+      sub = `Dag ${dayNum} / ${totalDays}`;
+      const pct = Math.min(100, ((dayNum - 1) / totalDays * 100)).toFixed(1);
+      barHtml = `<div class="od-phase-bar"><div class="od-phase-bar-fill" style="width:${pct}%"></div></div>`;
+    } else {
+      state = 'future';
+      const daysUntil = Math.ceil((start - now) / 86400000);
+      sub = daysUntil === 1 ? 'Morgen' : `Over ${daysUntil} d`;
+    }
+    return `<div class="od-phase-tile od-phase-${state}">
+      <div class="od-phase-name">${p.name}</div>
+      <div class="od-phase-dates">${_fmtPhaseDate(p.start)} – ${_fmtPhaseDate(p.end)}</div>
+      <div class="od-phase-sub">${sub}</div>
+      ${barHtml}
+    </div>`;
+  }).join('') + '</div>';
+}
+
 function buildOverdracht(){
   try{
   // Set default date to today
@@ -3597,6 +3719,7 @@ function buildOverdracht(){
   dateEl   ?.addEventListener('change', window._odConceptSave);
   shiftEl  ?.addEventListener('change', window._odConceptSave);
 
+  renderOdPhaseStrip();
   renderOdLog();
   } catch(e){ console.error('buildOverdracht error', e); }
 }
@@ -3706,12 +3829,18 @@ window.renderOdLog = function renderOdLog(){
     {bg:'rgba(180,130,20,.12)',border:'rgba(180,130,20,.35)',text:'#7a5800'},
   ];
   const today = new Date().toISOString().split('T')[0];
+  const _fourDaysAgo = new Date(); _fourDaysAgo.setDate(_fourDaysAgo.getDate() - 4);
+  const fourDaysAgoStr = _fourDaysAgo.toISOString().split('T')[0];
   renderOdOpenItems();
   const sortedDates = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
   wrap.innerHTML = sortedDates.map((date, idx) => {
     const items = groups[date];
     const isToday = date === today;
     const gid = 'odg-' + date;
+    const autoCollapse = date < fourDaysAgoStr && items.every(e => {
+      const tl = Array.isArray(e.todo) ? e.todo : [];
+      return tl.length > 0 && tl.every(t => t.done);
+    });
     const d2 = new Date(date + 'T12:00:00');
     const dateLabel = d2.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
     const col = OD_COLORS[idx % OD_COLORS.length];
@@ -3759,9 +3888,9 @@ window.renderOdLog = function renderOdLog(){
       <div class="od-day-header" onclick="odToggle('${gid}')" style="background:${col.bg};border-color:${col.border};color:${col.text}">
         <span class="od-day-label">${dateLabel}${isToday?' <span class="od-today">vandaag</span>':''}</span>
         <span class="od-day-count">${items.length} overdracht${items.length>1?'en':''}</span>
-        <span class="od-day-chev" id="chev-${gid}">▾</span>
+        <span class="od-day-chev" id="chev-${gid}">${autoCollapse?'▸':'▾'}</span>
       </div>
-      <div id="${gid}">${itemsHtml}</div>
+      <div id="${gid}"${autoCollapse?' style="display:none"':''}>${itemsHtml}</div>
     </div>`;
   }).join('');
 }
