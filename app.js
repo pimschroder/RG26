@@ -2544,7 +2544,7 @@ const USER_AVATARS = {
   "Lucas":    "images/avatars/Lucas.png",
   "Anne-Gert": "images/avatars/Anne-Gert.png",
   "Jarno":     "images/avatars/Jarno.png",
-  "Peter":     "images/avatars/Peter.png",
+  "Peter":     "images/avatars/Peter.jpeg",
   "Remco":     "images/avatars/Remco.png",
 };
 function getUserAvatar(name){
