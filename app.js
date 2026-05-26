@@ -3800,12 +3800,26 @@ window.renderOdLog = function renderOdLog(){
   const entries = (d._overdrachten || []).filter(e=>!e.deleted).slice().reverse();
 
   // Update home card
-  const homeSub = document.getElementById('od-home-sub');
+  const homeSub   = document.getElementById('od-home-sub');
   const homeCount = document.getElementById('od-home-count');
-  const homeBar = document.getElementById('od-home-bar');
+  const homeBar   = document.getElementById('od-home-bar');
+  const homeTodos = document.getElementById('od-home-todos');
+  const homeCard  = document.querySelector('.od-badge-wrap');
+
+  const openTodos = entries.reduce((acc, e) => {
+    const tl = Array.isArray(e.todo) ? e.todo : [];
+    return acc + tl.filter(t => !t.done).length;
+  }, 0);
+
   if(homeSub) homeSub.textContent = entries.length ? entries.length + ' overdracht' + (entries.length!==1?'en':'') + ' opgeslagen' : 'Bekijk en schrijf overdrachten';
-  if(homeCount) homeCount.textContent = entries.length ? entries.length+'x' : '';
+  if(homeCount){ homeCount.textContent = entries.length ? entries.length+'x' : ''; homeCount.style.color = openTodos > 0 ? 'var(--clay)' : 'var(--green)'; }
   if(homeBar) homeBar.style.width = entries.length ? Math.min(100, entries.length * 10) + '%' : '0%';
+  if(homeTodos){
+    homeTodos.textContent  = openTodos > 0 ? `⚡ ${openTodos} open` : '';
+    homeTodos.style.display = openTodos > 0 ? '' : 'none';
+    homeTodos.style.color   = 'var(--clay)';
+  }
+  if(homeCard) homeCard.style.borderLeftColor = openTodos > 0 ? 'var(--clay)' : 'var(--green)';
   const badgeEl = document.getElementById('od-badge');
   if(badgeEl){ const u=countUnreadOd(); badgeEl.textContent=u||''; badgeEl.hidden=u===0; }
 
