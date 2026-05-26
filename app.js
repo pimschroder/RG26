@@ -2128,7 +2128,7 @@ function triggerAvatarCelebration(){
   document.body.appendChild(flash);
   setTimeout(()=>flash.remove(), 2600);
 
-  const users = getUsers();
+  const users = getUsers().filter(name => !!getUserAvatar(name));
   const PARTY_COLORS = ['#C9A84C','#fff','#e84040','#4fc3f7','#ff9800','#ab47bc','#66bb6a','#f06292','#ffee58','#ff5252','#69f0ae','#40c4ff'];
 
   function makeAvatarEl(name, cls){
