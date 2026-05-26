@@ -3815,9 +3815,12 @@ window.renderOdLog = function renderOdLog(){
   if(homeCount){ homeCount.textContent = entries.length ? entries.length+'x' : ''; homeCount.style.color = openTodos > 0 ? 'var(--clay)' : 'var(--green)'; }
   if(homeBar) homeBar.style.width = entries.length ? Math.min(100, entries.length * 10) + '%' : '0%';
   if(homeTodos){
-    homeTodos.textContent  = openTodos > 0 ? `⚡ ${openTodos} open` : '';
-    homeTodos.style.display = openTodos > 0 ? '' : 'none';
-    homeTodos.style.color   = 'var(--clay)';
+    if(openTodos > 0){
+      homeTodos.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(193,68,14,.13);border:1.5px solid rgba(193,68,14,.35);color:var(--clay-dark);border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.04em;">⚡ ${openTodos} openstaande actie${openTodos!==1?'s':''}</span>`;
+      homeTodos.style.display = '';
+    } else {
+      homeTodos.style.display = 'none';
+    }
   }
   if(homeCard) homeCard.style.borderLeftColor = openTodos > 0 ? 'var(--clay)' : 'var(--green)';
   const badgeEl = document.getElementById('od-badge');
