@@ -260,6 +260,7 @@
         pushFailCount++;
         if(pushFailCount === 1){
           showToast("Opslaan mislukt — wijzigingen worden lokaal bewaard.", { retry: true, persist: true });
+          setTimeout(()=>{ if(offlineQueue && navigator.onLine){ pushFailCount=0; window.pushToSupabase(offlineQueue); } }, 8000);
         } else if(pushFailCount >= 3){
           showToast("Verbinding verbroken. Controleer je internet.", { retry: true, persist: true });
           pushFailCount = 0;
@@ -832,12 +833,13 @@ function _localSaveRaw(d){
     localStorage.setItem(SK, JSON.stringify(d));
   } catch(e){
     if(e?.name==='QuotaExceededError' || e?.code===22 || e?.code===1014){
-      // Show persistent warning — do NOT silently swallow
       const el = document.getElementById('sync-toast') || document.createElement('div');
       el.id = 'sync-toast';
       el.style.cssText = 'position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#C1440E;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3);text-align:center;max-width:90vw;';
-      el.textContent = '⚠️ Opslag vol — wijzigingen staan wel in Supabase maar niet lokaal.';
+      el.textContent = '⚠️ Opslag vol — wijzigingen worden direct naar Supabase gestuurd.';
       if(!el.parentNode) document.body.appendChild(el);
+      // Bypass debounce: zorg dat data Supabase bereikt ook zonder localStorage
+      if(window.pushToSupabase) setTimeout(()=>window.pushToSupabase(d), 0);
     }
   }
 }
@@ -1236,7 +1238,7 @@ function initApp(){
   const avEl = document.getElementById('user-bar-avatar');
   if(avEl && saved){
     const av = getUserAvatar(saved);
-    avEl.innerHTML = av ? `<img src="${av}" class="userbar-avatar" alt="${saved}" title="${saved}">` : '';
+    avEl.innerHTML = av ? `<img src="${av}" class="userbar-avatar" alt="${saved}" title="${saved}" onerror="this.style.display='none'">` : '';
   }
   _updateAdminBtn();
   updateLastUpdateLabel();
@@ -2138,6 +2140,7 @@ function triggerAvatarCelebration(){
     if(av){
       const img = document.createElement('img');
       img.src = av; img.alt = name;
+      img.onerror = () => { img.style.display='none'; };
       el.appendChild(img);
     } else {
       el.classList.add('av-initials');
@@ -2980,9 +2983,14 @@ function buildActivity(){
     return;
   }
 
+  const PAGE_SIZE = 200;
+  const showAll = filterEl?.dataset.showAll === '1';
+  const visible = (!onlyToday && !showAll && filtered.length > PAGE_SIZE) ? filtered.slice(0, PAGE_SIZE) : filtered;
+  const hiddenCount = filtered.length - visible.length;
+
   // Groepeer op uur
   const groups = {};
-  filtered.forEach(e => {
+  visible.forEach(e => {
     const d2 = new Date(e.ts);
     const hdr = d2.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}) + ' · ' + d2.getHours().toString().padStart(2,'0') + ':00';
     if(!groups[hdr]) groups[hdr] = [];
@@ -3009,6 +3017,14 @@ function buildActivity(){
       ${rows}
     </div>`;
   }).join('');
+
+  if(hiddenCount > 0){
+    wrap.innerHTML += `<div style="text-align:center;padding:16px 0 8px;">
+      <button onclick="document.getElementById('activity-filter').dataset.showAll='1';buildActivity();" style="background:none;border:1.5px solid var(--border);color:var(--clay);font-family:'DM Mono',monospace;font-size:11px;padding:8px 18px;border-radius:8px;cursor:pointer;touch-action:manipulation;letter-spacing:.06em;">
+        Toon alle ${filtered.length} activiteiten →
+      </button>
+    </div>`;
+  }
 }
 
 function buildPersons(){
@@ -3876,7 +3892,7 @@ window.renderOdLog = function renderOdLog(){
         return `<div class="od-section"><div id="od-todos-label-${e.id}" class="od-section-label">📌 To do</div><div id="od-todos-${e.id}"><div class="od-todo-checks">${checks}</div></div></div>`;
       })();
       const av = getUserAvatar(e.name||'');
-      const avatarHtml = av ? `<img src="${av}" class="od-item-avatar" alt="${esc(e.name||'')}">` : '';
+      const avatarHtml = av ? `<img src="${av}" class="od-item-avatar" alt="${esc(e.name||'')}" onerror="this.style.display='none'">` : '';
       const timeLabel = e.ts ? fmtTime(e.ts) : '';
       return `
       <div class="od-item"${urgentOpen>0?' style="border-left:3px solid var(--clay);"':''}>
